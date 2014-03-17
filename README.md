@@ -8,6 +8,24 @@ To set up WLOXE, you will need the following:
 
 Components of WLOXE
 --------------
-1. Web server running a current version of PHP (a shared hosting or VPS account will work, but we strongly recommend a dedicated server).
-2. A MySQL server.
-3. A current version of the **bitcoind** client (available at https://en.bitcoin.it). 
+1. **Web Server:** Web server running a current version of PHP (a shared hosting or VPS account will work, but we strongly recommend a dedicated server).
+2. A **MySQL server**.
+3. A current version of the **bitcoind client** (available at https://en.bitcoin.it). This will be the "hot wallet". 
+4. **Warm/Cold Wallet:** A Bitcoin wallet running on a seperate, secure computer.
+
+It is recommended to keep the first three components on seperate servers to ensure maximum security. The fourth component should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
+
+Once you have these four components, you can proceed to setting up the web application.
+
+Setting Up Web Application
+---------------------
+In order to set up the web app, clone this project on your **web server** using Git or download this project in a ZIP file and unzip it on your web server.
+
+The WLOXE project is divided into six folders:
+
+- /backstage2: The administrative back-end for the web app. 
+- /cfg: Contains the web app's **configuration file**.
+- /cron: Contains PHP files to be run by cron jobs.
+- /htdocs: This should be the web folder (i.e. port 80 of your domain should point here).
+- /lib: A set of libraries used by the web app.
+- /shared2: A set of libraries used by both the web app and *backstage2*.
