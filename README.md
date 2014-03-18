@@ -46,3 +46,14 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->dirroot:** The path to the /htdocs folder on the server, such as /var/www/htdocs/. Makesure to include the trailing slash.
 - **$CFG->support_email:** Users will received automated support emails from this address.
 - **$CFG->accounts_email:** Users will receive automated emails related to address features from this emails.
+- **$CFG->exchange_name:** This is the name of your exchange on the front end app. This value will be used in the website's text and in automated emails sent by the system to users.
+- **$CFG->bitcoin_username:** The username for the bitcoind server.
+- **$CFG->bitcoin_accountname:** The accountname used by the bitcoind server (can be the same as username).
+- **$CFG->bitcoin_passphrase:** This will be used as both the password for the bitcoind server as well as the passphrase to encrypt/decrypt the wallet file.
+- **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
+- **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
+- **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
+- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOXE to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
+- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOXE to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
+- **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
+- **$CFG->authy_api_key:** By default, WLOXE uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
