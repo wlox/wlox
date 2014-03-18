@@ -93,4 +93,12 @@ The back-end is structure in the following manner:
 - **Settings**: You probably don't need to change settings other than the ones mentioned in the previous section.
 - **Users and Groups**: For creating uses and their respective groups. Permissions for users are determined by their respective groups. When editing a user, checking "Is Admin" makes the user an administrator with access to the whole back-end as well as the administrative functions. In order to set up two-factor authentication please fill out the user's "phone" and "country code" fields, as well as checking the "use authy" checkbox. As specified in the configuration files, you must have a valid Authy API key in order to enable this function.
 
-**Content**
+**Content**: This is where the static content pages can be edited using a WYSIWYG text editor.
+- **News**: For editing items that will be displayed on the "News" page.
+
+**Orders**: This page shows you the open orders currently in the system.
+- **Transactions**: Shows all transactions that have taken place on the system.
+- **Order Log**: Shows a complete log of all orders ever made on the system. The "edited from" field allows you to see the previous version of an order that was edited by the user.
+- **Order Types**: The names of the types of orders. *Do not delete* any of these items as the system uses the specific ID of each of these items in the database.
+- **Transaction Types**: The names of the transaction types. *Do not delete*.
+- 
