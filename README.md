@@ -2,7 +2,7 @@ WLOXE - Open Source Currency Exchange
 =========
 WLOXE is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
 
-The purpose of this document is to walk you throught the process of a typical setup using Bitcoin. We will also cover basic (i.e. logo) branding of the exchange.
+The purpose of this document is to walk you throught the process of a typical setup of the app using a bitcoind server. We will also cover basic (i.e. logo) branding of the exchange.
 
 To set up WLOXE, you will need the following:
 
@@ -57,3 +57,7 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOXE to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
 - **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
 - **$CFG->authy_api_key:** By default, WLOXE uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
+
+Setting Up The Back-End
+-------------------
+As mentioned above, WLOXE comes with its own back-end administrative program, *backstage2*, which is really a seperate project developed over a few years. For more information about this project check out [the backstage2 Github repository](https://github.com/mbassan/backstage2).
