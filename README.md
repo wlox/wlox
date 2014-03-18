@@ -43,7 +43,7 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->dbname:** The database name.
 - **$CFG->dbuser:** The database username.
 - **$CFG->dbpass:** The password for the database. Use something secure!
-- **$CFG->dirroot:** The path to the /htdocs folder on the server, such as /var/www/htdocs/. Makesure to include the trailing slash.
+- **$CFG->dirroot:** The path to the /htdocs folder on the server, such as /var/www/htdocs/. Make sure to include the trailing slash.
 - **$CFG->support_email:** Users will received automated support emails from this address.
 - **$CFG->accounts_email:** Users will receive automated emails related to address features from this emails.
 - **$CFG->exchange_name:** This is the name of your exchange on the front end app. This value will be used in the website's text and in automated emails sent by the system to users.
@@ -58,6 +58,25 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
 - **$CFG->authy_api_key:** By default, WLOXE uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
 
-Setting Up The Back-End
+Setting Up The Back-End (backstage2)
 -------------------
 As mentioned above, WLOXE comes with its own back-end administrative program, *backstage2*, which is really a seperate project developed over a few years. For more information about this project check out [the backstage2 Github repository](https://github.com/mbassan/backstage2).
+
+*backstage2* can be run on the web server (we recommend setting up access by means of a different port, such as http://yourserver.com:12345).
+
+The configuration options for *backstage2*, can be found in /backstage2/cfg.php. All paths should be specified relative to the /backstage2 directory. The configuration variables are the following:
+
+- **$CFG->baseurl:** The URL for the web app **front end** in the browser, such as http://www.yourdomain.com/. Make sure tu include the trailing slash at the end.
+- **$CFG->dbhost:** The address of the database server.
+- **$CFG->dbname:** The database name.
+- **$CFG->dbuser:** The database username.
+- **$CFG->dbpass:** The password for the database.
+- **$CFG->dirroot:** The path to the /htdocs (i.e. the front end) folder on the server, such as /var/www/htdocs/. Make sure to include the trailing slash.
+- **$CFG->libdir:** Should be simply "lib" (not to be confused with the same variable in the main configuration file).
+- **$CFG->authy_api_key:** If you would like to integrate two-factor authentication, you can use the same Authy API key that you use for the front end.
+
+First Login to the Back-End
+---------------------
+Once you have correctly configured /backstage2/cfg.php, you are ready for your first login. The default user/pass is **admin/admin** please change this before going into production.
+
+In order for *backstage2* to function correctly, there are a few settings you should set before use. The settings page can be access from the "Admin" menu dropdown on the top right corner of the screen.
