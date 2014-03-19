@@ -40,7 +40,7 @@ The Main Configuration File
 ------------
 The main configuration file, cfg.php (found in the /cfg folder) is used to tell the app's front end where it can find all the different components of the application. It's also where you can specify your preferences for the way the app will function. The following parameters can be configured:
 
-- **$CFG->baseurl:** The URL for the web app in the browser, such as http://www.yourdomain.com/. Make sure tu include the trailing slash at the end.
+- **$CFG->baseurl:** The URL for the web app in the browser, such as http://www.yourdomain.com/. Make sure to include the trailing slash at the end.
 - **$CFG->dbhost:** The address of the database server.
 - **$CFG->dbname:** The database name.
 - **$CFG->dbuser:** The database username.
