@@ -2,6 +2,8 @@ WLOXE - Open Source Currency Exchange
 =========
 WLOXE is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
 
+WLOX is configured to use Crypto Capital Corporation as a banking services provider. For more information about them, please visit http://www.cryptocapital.co.
+
 The purpose of this document is to walk you throught the process of a typical setup of the app using a bitcoind server. We will also cover basic (i.e. logo) branding of the exchange.
 
 To set up WLOXE, you will need the following:
@@ -101,4 +103,11 @@ The back-end is structure in the following manner:
 - **Order Log**: Shows a complete log of all orders ever made on the system. The "edited from" field allows you to see the previous version of an order that was edited by the user.
 - **Order Types**: The names of the types of orders. *Do not delete* any of these items as the system uses the specific ID of each of these items in the database.
 - **Transaction Types**: The names of the transaction types. *Do not delete*.
-- 
+
+**Requests**: On this page, you can see all requests to deposit and withdraw funds from WLOX user accounts. Requests in BTC will be processed automatically by cron/send_bitcoin.php and cron/receive_bitcoin.php. Requests involving fiat currencies must be processed manually. Requests that require your attention will be highlighted in red.
+- **Deposit/Withdraw**: On this page, (1) the first form is to upload an transactions export file from Crypto Capital (this will allow you to credit users for fiat currency transferred into your exchanges' escrow accounts); (2) the second form is to make withdrawals from your Crypto Capital escrow accounts (when you withdraw from one of these accounts, you need to tell the system how much was withdrawn using this form - editing the values directly might cause fiat to be lost to the system because the value might change in the time between loading it on the screen and specifying the new value).
+- **Request Status**: The status names that a request can have. *Do not delete any of these values*.
+- **Request Descriptions**: The descriptions of the different types of requests. *Do not delete*.
+
+**Registered Visitors**: These are the users that have signed up to use WLOX (throught the front end).
+- **Fee Schedule**: This is the fee schedule that will be used to determine the fee charged to users when they make a transaction. Make sure not to leave holes in the schedule - that may lead to strange behavior by WLOX. The cron job that matches users with their fee level is cron/maintenance.php.
