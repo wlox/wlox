@@ -36,7 +36,7 @@ Again, /htdocs is the application's web folder. However, you will need web acces
 
 Once we have set up web access to the appropriate folders, we can configure the web application using the main configuration file.
 
-The Configuration File
+The Main Configuration File
 ------------
 The main configuration file, cfg.php (found in the /cfg folder) is used to tell the app's front end where it can find all the different components of the application. It's also where you can specify your preferences for the way the app will function. The following parameters can be configured:
 
@@ -77,6 +77,26 @@ The configuration options for *backstage2*, can be found in /backstage2/cfg.php.
 - **$CFG->dirroot:** The path to the /htdocs (i.e. the front end) folder on the server, such as /var/www/htdocs/. Make sure to include the trailing slash.
 - **$CFG->libdir:** Should be simply "lib" (not to be confused with the same variable in the main configuration file).
 - **$CFG->authy_api_key:** If you would like to integrate two-factor authentication, you can use the same Authy API key that you use for the front end.
+
+Setting Up Cron Jobs
+------------------
+Please read this section, as it is very important to set up cron jobs for WLOX to function. The first step is to locate the /cron folder outside the web directory, but in a location that it can access both the main configuration file as well as the bitcoind server.
+
+The next step is to set the right permissions so that these files can be run as cron jobs.
+
+When that is ready, we need to set up each file to be run by the server's cron tab. The files in the /cron folder should be scheduled as follows:
+- daily_stats.php - Should run at 0 min, 0 hrs (the very start) of every day.
+- get_stats.php - Every 10 minutes.
+- maintenance.php - Every 5 minutes.
+- monthly_stats.php - 0 min, 0 hrs (the very start) of the first day of every month.
+- receive_bitcoin.php - Every minute.
+- send_bitcoin.php - Every minute.
+
+Setting Up Bitcoind Server
+---------------------
+Aside from downloading and setting up bitcoind server and running it as a daemon (by *bitcoind --daemon*), there are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
+
+1. sd
 
 First Login to the Back-End
 ---------------------
@@ -121,3 +141,5 @@ The back-end is structure in the following manner:
 - **Fees**: This page gives a list of all fees being incurred by WLOX's internal movement of BTC - i.e. when sweeping user's Bitcoin addresses or transferring money to the warm/cold wallet.
 
 **Reports**: Under this tab, you will see "Daily Reports" and "Monthly Reports". You can see switch between a line graph and a table view of these values on the top right side of the respective tables.
+
+    
