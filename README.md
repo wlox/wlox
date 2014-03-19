@@ -96,19 +96,19 @@ Setting Up Bitcoind Server
 ---------------------
 Aside from downloading and setting up bitcoind server and running it as a daemon (by *bitcoind --daemon*), there are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
 
-1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it:
-```
+1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it: ```
 rpcuser=Your user
 rpcpassword=Your password
 rpctimeout=30
-rpcport=8332
-```
+rpcport=8332 ```
 You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
 
 2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. Mark this file as executable on the system. After that, copy the following code into your bitcoin.conf file: ```addnode=173.242.112.53```.
 
-3. **Setting up walletnotify**: Last of all, you need to set up the walletnotify feature of bitcoind to create the mechanism for crediting users for incoming Bitcoin transactions. To do this, copy the following code into your bitcoin.conf file:
+3. **Setting up walletnotify**: You need to set up the walletnotify feature of bitcoind to create the mechanism for crediting users for incoming Bitcoin transactions. To do this, copy the following code into your bitcoin.conf file:
 ```walletnotify=/var/www/cron/receive.sh %s```. If the path of your cron directory is different, please specify it in this line of code. You will need to mark *receive.sh* as executable and give the proper permissions. You also need to give permission for *receive.sh* to create files in the cron/transactions/ folder.
+
+4. **Encrypting wallet.dat**: We recommend encrypting the wallet.dat file by running the following command in your terminal: ```>/path/to/bitcoind encryptwallet <passphrase>```. Make sure <passphrase> is the same as the password set in your *bitcoin.conf* file, as well as the $CFG->bitcoin_passphrase value in the main cfg.php file.
 
 First Login to the Back-End
 ---------------------
