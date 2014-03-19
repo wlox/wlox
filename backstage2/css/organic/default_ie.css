@@ -1,0 +1,4 @@
+.logout { top:70px; }
+.tabs .tabs_pages { z-index:100 !important; }
+.tabs .tabs_pages_blank { display:none;height:0; }
+.ui-tabs-hide { display: none;height:0; }

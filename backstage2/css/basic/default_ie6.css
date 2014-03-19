@@ -1,0 +1,14 @@
+.login_box{position:absolute; }
+img, div, a, input{ behavior: url(../images/iepngfix.htc) }
+.tabs .ui-state-hover { border-top:2px solid #D2FF00;margin-top:-2px;padding-top:1px;}
+.tabs ul li a:hover{margin:0;border-top:0;}
+.tabs ul{height:41px;}
+.tabs ul li a span{font-weight:bold;color:#3E5D09;}
+.tabs .tabs_pages_container {margin-top:-8px;}
+.grid_label{width:100%;}
+.grid_label .label{margin-bottom:-14px;margin-left:10px;}
+.checkbox{padding:0 !important;border:0 !important;background:transparent !important;}
+.grid_select{padding:0 !important;border:0 !important;background:transparent !important;}
+.cats_ul li label{padding-left:7px;top:-4px;}
+.cats_ul li input{top:-6px; left:5px;}
+.form_filters ul{float:left;}
