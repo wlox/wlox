@@ -1,14 +1,14 @@
-WLOXE - Open Source Currency Exchange
+WLOX - Open Source Currency Exchange
 =========
-WLOXE is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
+WLOX is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
 
 WLOX is configured to use Crypto Capital Corporation as a banking services provider. For more information about them, please visit http://www.cryptocapital.co.
 
 The purpose of this document is to walk you throught the process of a typical setup of the app using a bitcoind server. We will also cover basic (i.e. logo) branding of the exchange.
 
-To set up WLOXE, you will need the following:
+To set up WLOX, you will need the following:
 
-Components of WLOXE
+Components of WLOX
 --------------
 1. **Web Server:** Web server running a current version of PHP (a shared hosting or VPS account will work, but we strongly recommend a dedicated server).
 2. A **MySQL server**.
@@ -23,7 +23,7 @@ Web Application Folder Structure
 ---------------------
 In order to set up the web app, clone this project on your **web server** using Git or download this project in a ZIP file and unzip it on your web server.
 
-The WLOXE project is divided into six folders:
+The WLOX project is divided into six folders:
 
 - /backstage2: The administrative back-end for the web app. Can be set up using its own configuration file. 
 - /cfg: Contains the web app's main configuration file.
@@ -55,15 +55,15 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
 - **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
 - **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
-- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOXE to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
-- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOXE to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
+- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOX to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
+- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOX to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
 - **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
 - **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
-- **$CFG->authy_api_key:** By default, WLOXE uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
+- **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
 
 Setting Up The Back-End (backstage2)
 -------------------
-As mentioned above, WLOXE comes with its own back-end administrative program, *backstage2*, which is really a seperate project developed over a few years. For more information about this project check out [the backstage2 Github repository](https://github.com/mbassan/backstage2).
+As mentioned above, WLOX comes with its own back-end administrative program, *backstage2*, which is really a seperate project developed over a few years. For more information about this project check out [the backstage2 Github repository](https://github.com/mbassan/backstage2).
 
 *backstage2* can be run on the web server (we recommend setting up access by means of a different port, such as http://yourserver.com:12345).
 
@@ -105,8 +105,11 @@ rpcport=8332
 ```
 You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
 
-2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. After that, copy the following code into your bitcoin.conf file:
+2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. Mark this file as executable on the system. After that, copy the following code into your bitcoin.conf file:
 ```addnode=173.242.112.53```
+
+3. **Setting up walletnotify**: Last of all, you need to set up the walletnotify feature of bitcoind to create the mechanism for crediting users for incoming Bitcoin transactions. To do this, copy the following code into your bitcoin.conf file:
+```walletnotify=/var/www/cron/receive.sh %s```. If the path of your cron directory is different, please specify it in this line of code. You will need to mark *receive.sh* as executable and give the proper permissions. You also need to give permission for *receive.sh* to create files in the cron/transactions/ folder.
 
 First Login to the Back-End
 ---------------------
@@ -151,5 +154,3 @@ The back-end is structure in the following manner:
 - **Fees**: This page gives a list of all fees being incurred by WLOX's internal movement of BTC - i.e. when sweeping user's Bitcoin addresses or transferring money to the warm/cold wallet.
 
 **Reports**: Under this tab, you will see "Daily Reports" and "Monthly Reports". You can see switch between a line graph and a table view of these values on the top right side of the respective tables.
-
-    
