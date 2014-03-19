@@ -96,7 +96,8 @@ Setting Up Bitcoind Server
 ---------------------
 Aside from downloading and setting up bitcoind server and running it as a daemon (by *bitcoind --daemon*), there are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
 
-1. sd
+1. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. After that, copy the following code into your bitcoin.conf file:
+    addnode=173.242.112.53
 
 First Login to the Back-End
 ---------------------
