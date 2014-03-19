@@ -49,9 +49,9 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->support_email:** Users will received automated support emails from this address.
 - **$CFG->accounts_email:** Users will receive automated emails related to address features from this emails.
 - **$CFG->exchange_name:** This is the name of your exchange on the front end app. This value will be used in the website's text and in automated emails sent by the system to users.
-- **$CFG->bitcoin_username:** The username for the bitcoind server.
+- **$CFG->bitcoin_username:** The username for the bitcoind server. Please make sure this matches the value in the *bitcoin.conf* file.
 - **$CFG->bitcoin_accountname:** The accountname used by the bitcoind server (can be the same as username).
-- **$CFG->bitcoin_passphrase:** This will be used as both the password for the bitcoind server as well as the passphrase to encrypt/decrypt the wallet file.
+- **$CFG->bitcoin_passphrase:** This will be used as both the password for the bitcoind server as well as the passphrase to encrypt/decrypt the wallet file. Please make sure this matches the password in the *bitcoin.conf* file.
 - **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
 - **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
 - **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
@@ -96,8 +96,17 @@ Setting Up Bitcoind Server
 ---------------------
 Aside from downloading and setting up bitcoind server and running it as a daemon (by *bitcoind --daemon*), there are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
 
-1. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. After that, copy the following code into your bitcoin.conf file:
-    addnode=173.242.112.53
+1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it:
+```
+rpcuser=Your user
+rpcpassword=Your password
+rpctimeout=30
+rpcport=8332
+```
+You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
+
+2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. After that, copy the following code into your bitcoin.conf file:
+```addnode=173.242.112.53```
 
 First Login to the Back-End
 ---------------------
