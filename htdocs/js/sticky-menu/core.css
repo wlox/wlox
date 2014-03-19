@@ -1,0 +1,28 @@
+.noanim{-webkit-transition:none !important;-moz-transition:none !important;-ms-transition:none !important;-o-transition:none !important;transition:none !important}@-webkit-keyframes blink{0%{opacity:1;filter:alpha(opacity=100)}33%{opacity:0;filter:alpha(opacity=0)}100%{opacity:0;filter:alpha(opacity=0)}}@-moz-keyframes blink{0%{opacity:1;filter:alpha(opacity=100)}33%{opacity:0;filter:alpha(opacity=0)}100%{opacity:0;filter:alpha(opacity=0)}}@keyframes blink{0%{opacity:1;filter:alpha(opacity=100)}33%{opacity:0;filter:alpha(opacity=0)}100%{opacity:0;filter:alpha(opacity=0)}}
+body{font:12px/28px ;}
+.wrapper,#page{zoom:1;width:100%;margin:0 auto}.wrapper:after,#page:after,.wrapper:before,#page:before{content:"\0020";display:table;height:0;overflow:hidden}.wrapper:after,#page:after{clear:both}*::selection{color:#fafafa;background:#1fdfdf}*::-khtml-selection{color:#fafafa;background:#1fdfdf}*::-webkit-selection{color:#fafafa;background:#1fdfdf}*::-moz-selection{color:#fafafa;background:#1fdfdf}*::-ms-selection{color:#fafafa;background:#1fdfdf}*::-o-selection{color:#fafafa;background:#1fdfdf}
+#header{margin:0px 0 0}
+#trueHeader{z-index:8000;left:0;right:0;padding:10px 0;box-shadow:0 1px 5px rgba(0,0,0,0.1);-khtml-box-shadow:0 1px 5px rgba(0,0,0,0.1);-webkit-box-shadow:0 1px 5px rgba(0,0,0,0.1);-moz-box-shadow:0 1px 5px rgba(0,0,0,0.1);-ms-box-shadow:0 1px 5px rgba(0,0,0,0.1);-o-box-shadow:0 1px 5px rgba(0,0,0,0.1);transition:padding 0.35s ease;-khtml-transition:padding 0.35s ease;-webkit-transition:padding 0.35s ease;-moz-transition:padding 0.35s ease;-ms-transition:padding 0.35s ease;-o-transition:padding 0.35s ease;background-color:transparent;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#FAFFFFFF,endColorstr=#FAFFFFFF);zoom:1}
+
+#trueHeader {
+	background: #eee url(../../images/header-bg.jpg) no-repeat center bottom;
+	border-bottom: 1px solid #fff;
+}
+
+#header.sticky #trueHeader{position:fixed;top:0}#header.sticky.condensed #trueHeader{padding:0px 0}#header.sticky.condensed #trueHeader #logo{height:34px;}
+
+
+@media only screen and (min-width: 480px) and (max-width: 767px){
+	
+#trueHeader {
+	background: #eee url(../../images/header-bg.jpg) no-repeat left top;
+}
+	
+}
+
+@media only screen and (max-width: 479px){
+#trueHeader {
+	background: #eee url(../../images/header-bg.jpg) no-repeat left top;
+}
+	
+}

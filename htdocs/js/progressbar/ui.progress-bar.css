@@ -1,0 +1,116 @@
+
+/* Webkit animation keyframes */
+@-webkit-keyframes animate-stripes {
+  from {
+    background-position: 0 0;
+  }
+  
+  to {
+   background-position: 44px 0;
+  }
+}
+
+/* Bar which is placed behind the progress */
+.ui-progress-bar {
+  /* Usual setup stuff */
+  position: relative;
+  height: 35px;
+  margin-bottom: 14px;
+  
+  /* Pad right so we don't cover the borders when fully progressed */
+  padding-right: 2px;
+  
+  /* For browser that don't support gradients, we'll set a blanket background colour */
+  background-color: #eee;
+  
+  /* Rounds the ends, we specify an excessive amount to make sure they are completely rounded */
+  /* Adjust to your liking, and don't forget to adjust to the same amount in .ui-progress */
+  border-radius: 0px;
+  -moz-border-radius: 0px;
+  -webkit-border-radius: 0px;
+  
+  /* Webkit background gradient */
+  background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #f3f3f3), color-stop(1, #eeeeee));
+  /* Mozilla background gradient */
+  background: -moz-linear-gradient(#eeeeee 0%, #f3f3f3 100%);
+  
+  /* Give it the inset look by adding some shadows and highlights */
+  -webkit-box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.1), 0px 1px 0px 0px #FFF;
+  -moz-box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.1), 0px 1px 0px 0px #FFF;
+  box-shadow: inset 0px 1px 1px 0px rgba(0, 0, 0, 0.1), 0px 1px 0px 0px #FFF;
+}
+
+/* Progress part of the progress bar */
+.ui-progress {
+  /* Usual setup stuff */
+  position: relative;
+  display: block;
+  overflow: hidden;
+  
+  /* Height should be 2px less than .ui-progress-bar so as to not cover borders and give it a look of being inset */
+  height: 33px;
+  
+  /* Rounds the ends, we specify an excessive amount to make sure they are completely rounded */
+  /* Adjust to your liking, and don't forget to adjust to the same amount in .ui-progress-bar */
+  -moz-border-radius: 0px;
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
+  
+  /* Set the background size so the stripes work correctly */
+  -webkit-background-size: 44px 44px; /* Webkit */
+  
+  /* For browser that don't support gradients, we'll set a blanket background colour */
+  background-color: #6bd83c;
+  
+  /* Webkit background stripes and gradient */
+  background: -webkit-gradient(linear, 0 0, 44 44,
+    color-stop(0.00, rgba(255,255,255,0.17)),
+    color-stop(0.25, rgba(255,255,255,0.17)),
+    color-stop(0.26, rgba(255,255,255,0)),
+    color-stop(0.50, rgba(255,255,255,0)),
+    color-stop(0.51, rgba(255,255,255,0.17)),
+    color-stop(0.75, rgba(255,255,255,0.17)),
+    color-stop(0.76, rgba(255,255,255,0)),
+    color-stop(1.00, rgba(255,255,255,0))
+  ), -webkit-gradient(linear, left bottom, left top, color-stop(0, #74d04c), color-stop(1, #9bdd62));
+  
+  /* Mozilla (Firefox etc) background stripes */
+  /* Note: Mozilla's support for gradients is more true to the original design, allowing gradients at 30 degrees, as apposed to 45 degress in webkit. */
+  background: -moz-repeating-linear-gradient(top left -30deg, 
+    rgba(255,255,255,0.17), 
+    rgba(255,255,255,0.17) 15px, 
+    rgba(255,255,255,0) 15px, 
+    rgba(255,255,255,0) 30px
+  ), -moz-linear-gradient(#9bdd62 0%, #74d04c 100%);
+  
+  /* Webkit embossing */
+  -webkit-box-shadow: inset 0px 1px 0px 0px #dbf383, inset 0px -1px 1px #58c43a;
+  /* Mozilla embossing */
+  -moz-box-shadow: inset 0px 1px 0px 0px #dbf383, inset 0px -1px 1px #58c43a;
+  /* IE9 and Opera embossing */
+  box-shadow: inset 0px 1px 0px 0px #dbf383, inset 0px -1px 1px #58c43a;
+  
+  /* Give it a higher contrast outline */
+  border: 1px solid #59b233;
+  
+  /* Webkit magic */
+  -webkit-animation: animate-stripes 2s linear infinite;
+  
+  /* TODO: Wait for Mozilla to support animation, then implement */
+}
+
+/* Progress indicator text */
+.ui-progress span.ui-label {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: normal;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #fff;
+  position: absolute;
+  right: 0;
+  line-height: 33px;
+  padding-right: 12px;
+  white-space: nowrap;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
