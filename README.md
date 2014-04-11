@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 WLOX - Open Source Currency Exchange
 =========
 WLOX is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
@@ -153,3 +154,9 @@ The back-end is structure in the following manner:
 - **Fees**: This page gives a list of all fees being incurred by WLOX's internal movement of BTC - i.e. when sweeping user's Bitcoin addresses or transferring money to the warm/cold wallet.
 
 **Reports**: Under this tab, you will see "Daily Reports" and "Monthly Reports". You can see switch between a line graph and a table view of these values on the top right side of the respective tables.
+=======
+wlox
+====
+
+White Label Open Exchange
+>>>>>>> 5793d954ba702d8b9a63a659214cf8a3b6542206
