@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 WLOX - Open Source Currency Exchange
 =========
 WLOX is an open source alternative currency exchange, created to facilitate the exchange of alternative currencies (*alt-currencies*) for multiple fiat currencies. At this point, the only alt-currency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other alt-currencies.
@@ -61,6 +60,12 @@ The main configuration file, cfg.php (found in the /cfg folder) is used to tell 
 - **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
 - **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
 - **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
+
+Setting Up The Database
+-------------------
+To set up the database, the first step is to create an empty database on your database server. Then, create a user with the following priviledges: SELECT, INSERT, UPDATE and DELETE.
+
+You will find a file called *dbinit.sql.gz* in the main project directory. Import this file into the database that you have created.
 
 Setting Up The Back-End (backstage2)
 -------------------
@@ -154,9 +159,3 @@ The back-end is structure in the following manner:
 - **Fees**: This page gives a list of all fees being incurred by WLOX's internal movement of BTC - i.e. when sweeping user's Bitcoin addresses or transferring money to the warm/cold wallet.
 
 **Reports**: Under this tab, you will see "Daily Reports" and "Monthly Reports". You can see switch between a line graph and a table view of these values on the top right side of the respective tables.
-=======
-wlox
-====
-
-White Label Open Exchange
->>>>>>> 5793d954ba702d8b9a63a659214cf8a3b6542206
