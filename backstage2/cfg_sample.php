@@ -5,11 +5,11 @@ class object {
 $CFG = new object ( );
 
 $CFG->dbhost = "localhost";
-$CFG->dbname = '1btcxe';
-$CFG->dbuser = '1btcxeadmin';
-$CFG->dbpass = 'GexrewuMGtLJLxwcYTZCMcVd';
+$CFG->dbname = "openbtcexchange";
+$CFG->dbuser = "openbtcexchanged";
+$CFG->dbpass = "aMCMwqyX3sxhaYS";
 
-$CFG->baseurl = "http://www.1btcxe.com/";
+$CFG->baseurl = "";
 $CFG->dirroot = "/var/www/htdocs/";
 $CFG->libdir = "lib";
 $CFG->img_dir = "images";

@@ -2,23 +2,24 @@
 class object {
 }
 
-$CFG = new object ( );
+$CFG = new object();
 
-$CFG->baseurl = "http://www.1btcxe.com/";
+/*main configuration */
+
+$CFG->baseurl = "";
 $CFG->sslurl = "";
 $CFG->dbhost = "localhost";
-$CFG->dbname = "1btcxe";
-$CFG->dbuser = "1btcxedb";
-$CFG->dbpass = "KfRnwWsS8uTuXDHp";
+$CFG->dbname = "";
+$CFG->dbuser = "";
+$CFG->dbpass = "";
 
 $CFG->dirroot = "/var/www/htdocs/";
 $CFG->libdir = "../lib";
 $CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
-$CFG->fck_baseurl = $CFG->baseurl;
 
 /* debugging */
-$DB_DEBUG = true;
-$DB_DIE_ON_FAIL = true;
+$DB_DEBUG = false;
+$DB_DIE_ON_FAIL = false;
 
 /* Load up standard libraries */
 require_once ("../shared2/autoload.php");
@@ -30,10 +31,9 @@ db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
 $ses_class = new Session();
 
 /* Change the save_handler to use the class functions */
-session_set_save_handler(array(&$ses_class, '_open' ), array (&$ses_class, '_close' ), array (&$ses_class, '_read' ), array (&$ses_class, '_write' ), array (&$ses_class, '_destroy' ), array (&$ses_class, '_gc' ) );
+session_set_save_handler( array (&$ses_class, '_open' ), array (&$ses_class, '_close' ), array (&$ses_class, '_read' ), array (&$ses_class, '_write' ), array (&$ses_class, '_destroy' ), array (&$ses_class, '_gc' ) );
 session_start ();
 Session::deleteExpired();
-//ini_set('session.cookie_httponly',true);
 
 /* Load settings and timezone */
 Settings::assign ($CFG);
@@ -52,10 +52,15 @@ $CFG->language = ($lang) ? $lang : ereg_replace("[^a-z]", "",$_SESSION['language
 $CFG->language = (empty($CFG->language)) ? 'en' : $CFG->language;
 $CFG->lang_table = Lang::getTable();
 
+/* Emails */
+$CFG->support_email = '';
+$CFG->accounts_email = '';
+
 /* Currencies */
 $CFG->currencies = Currencies::get();
 
 /* Constants */
+$CFG->exchange_name = 'WLOX';
 $CFG->btc_currency_id = 28;
 $CFG->order_type_bid = 1;
 $CFG->order_type_ask = 2;
@@ -76,9 +81,9 @@ $CFG->default_fee_schedule_id = 1;
 $CFG->req_img = '<em>*</em>';
 
 /* Bitcoin */
-$CFG->bitcoin_username = '1btcxe';
-$CFG->bitcoin_accountname = '1btcxe';
-$CFG->bitcoin_passphrase = 'refjwygQ9EkF7a52fzfStqLA';
+$CFG->bitcoin_username = '';
+$CFG->bitcoin_accountname = '';
+$CFG->bitcoin_passphrase = '';
 $CFG->bitcoin_host = 'localhost';
 $CFG->bitcoin_port = 8332;
 $CFG->bitcoin_protocol = 'http';
@@ -86,15 +91,15 @@ $CFG->bitcoin_reserve_ratio = 0.1;
 $CFG->bitcoin_reserve_min = 1;
 $CFG->bitcoin_directory = '/home/bitcoin/bin/64/';
 $CFG->bitcoin_sending_fee = 0.0001;
-$CFG->bitcoin_warm_wallet_address = 'mgBPeyC22D8ppFnNY6zCHar7okGMj74JD6';
+$CFG->bitcoin_warm_wallet_address = '';
 
 /* API Keys */
-$CFG->quandl_api_key = 'ia3sRpJxZwssqVTEFA1y';
-$CFG->authy_api_key = 'b218b2b72cb5ca05e90126b3643e44b8';
-$CFG->freshdesk_key = 'e4d6a2827176ca3852f3a77c767d3c36';
+$CFG->quandl_api_key = '';
+$CFG->authy_api_key = '';
+$CFG->helpdesk_key = '';
 
 /* Log In/Out */
-User::logIn($_REQUEST['login']['user'],$_REQUEST['login']['pass'],'site','1btcxe_user');
+User::logIn($_REQUEST['login']['user'],$_REQUEST['login']['pass'],'site','openbtcexchange_user');
 User::logOut($_REQUEST['log_out']);
 
 ?>
