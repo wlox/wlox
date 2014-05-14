@@ -36,7 +36,6 @@ if ($_REQUEST['users_form']) {
 	PermissionEditor::save();
 }
 
-//Gallery::multiple('video_files',$_REQUEST['id'],'video','large',0,'videoimg',1);
 if ($CFG->action == 'record') {
 	$view = new Record($_REQUEST['table'],$_REQUEST['id']);
 	

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# CheapSweep v0.1
+# Scott Alfter
+# scott@alfter.us
+# Donations: 1TipSAXbE6owdU24bcBDJKmL8JRxQe5Yu
+
+BITCOIND="/usr/bin/bitcoind"
+
+help()
+{
+cat <<EOF >&2
+Usage: $0 [options] -d destaddr addr1 addr2 ...
+
+options: -d|--destaddr  destination address (REQUIRED)
+         -f|--fee       fee to subtract from inputs (default: 0)
+         -c|--confirm   minimum confirmations to include input (default: 6)
+         -n|--no-send   don't send; dump the raw transaction to stdout
+EOF
+}
+
+fee=0.0
+minconfirm=6
+OPTS=$(getopt -o d:f:c:hn --long destaddr:,fee:,confirm:,help,no-send -- "$@")
+eval set -- "$OPTS"
+while true; do
+  case "$1" in
+    -d|--destaddr)  destaddr="$2"; shift 2;;
+    -f|--fee)       fee="$2"; shift 2;;
+    -c|--confirm)   minconfirm="$2"; shift 2;;
+    -n|--no-send)   nosend=1; shift 1;;
+    -h|--help)      help; exit 1;;
+    --)             shift; break;;
+    *)              echo "Internal error"; exit 1;;
+  esac
+done
+if [ "$destaddr" == "" ]
+then
+  help
+  exit 1
+fi
+
+addrs=$(echo $* | sed "s/^/[\"/;s/ /\",\"/g;s/\$/\"]/")
+total=$($BITCOIND listunspent $minconfirm 21000000 $addrs | grep amount | sed "s/.*: //;s/,//" | tr "\n" "+" | sed "s/+\$/\n/" | bc)
+total=$(echo $total - $fee | bc)
+
+tx=$($BITCOIND signrawtransaction $($BITCOIND createrawtransaction [$($BITCOIND listunspent $minconfirm 21000000 $addrs | egrep "txid|vout" | sed "s/\"txid/{\"txid/;s/\"vout\" : \([0-9]*\),/\"vout\" : \1},/" | tr -d "\n" | tr -d " " | sed "s/,\$//")] {\"$destaddr\":$total}) | grep \"hex\" | sed "s/.*: \"//;s/\",//")
+
+if [ "$nosend" != "" ]
+then
+  echo $tx
+else
+  $BITCOIND sendrawtransaction $tx
+fi

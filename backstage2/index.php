@@ -3,17 +3,16 @@ include 'cfg.php';
 ini_set("memory_limit","200M");
 
 $CFG->print = $_REQUEST['print'];
-$CFG->url = ($_REQUEST['current_url'] != 'index.php') ? ereg_replace("[^a-zA-Z_-]", "",$_REQUEST['current_url']) : '';
-$CFG->action = ereg_replace("[^a-zA-Z]", "",$_REQUEST['action']);
+$CFG->url = ($_REQUEST['current_url'] != 'index.php') ? ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['current_url']) : '';
+$CFG->action = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['action']);
 $CFG->bypass = ($_REQUEST['bypass'] || $CFG->print);
 $CFG->is_tab = (!$CFG->url) ? 1 : $_REQUEST['is_tab'];
 $CFG->id = ereg_replace("[^0-9]", "",$_REQUEST['id']);
-$CFG->target_elem = ereg_replace("[^a-zA-Z_-]", "",$_REQUEST['target_elem']);
+$CFG->target_elem = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['target_elem']);
 $CFG->in_popup = ($CFG->target_elem == 'edit_box' || $CFG->target_elem == 'message_box' || $CFG->target_elem == 'attributes box');
 
 $_SESSION['last_query'] = $_SESSION['this_query'];
 $_SESSION['this_query'] = 'index.php?'.http_build_query((is_array($_POST)) ? $_POST : $_GET);
-
 
 date_default_timezone_set($CFG->default_timezone);
 String::magicQuotesOff();
@@ -70,7 +69,7 @@ if ($_REQUEST['authy_form']) {
 		if (!$response || !is_array($response1))
 			Errors::merge('Authy communication error.');
 
-		if ($response1['success'] == 'false')
+		if ($response1['success'] === false)
 			Errors::merge($response1['errors']);
 
 		if (!is_array(Errors::$errors)) {
@@ -307,7 +306,7 @@ if (User::isLoggedIn() && !(User::$info['verified_authy'] == 'Y' && !($_SESSION[
 		include_once 'includes/settings.php';
 	}
 	else {
-		$form_name = ereg_replace("[^a-zA-Z_-]", "",$_REQUEST['form_name']);
+		$form_name = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['form_name']);
 		if (!empty($form_name) && $form_name != 'form_filters' && $form_name != 'loginform' && !$_REQUEST['return_to_self']) {
 			$form = new Form($form_name);
 			$form->verify();
