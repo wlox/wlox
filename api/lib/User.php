@@ -423,6 +423,21 @@ class User {
 		return $change_request['request'];
 
 	}
+	
+	function notifyLogin($ipaddress) {
+		global $CFG;
+		
+		if (!$CFG->session_active || User::$info['notify_login'] != 'Y')
+			return false;
+		
+		$ipaddress1 = ereg_replace("[^0-9\.]", "",$ipaddress);
+		
+		$email = SiteEmail::getRecord('login-notify');
+		$info = User::$info;
+		$info['ipaddress'] = $ipaddress1;
+
+		Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+	}
 }
 
 ?>

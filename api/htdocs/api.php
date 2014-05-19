@@ -47,8 +47,6 @@ if ($token1 > 0 && $result[0]['authy_id'] > 0) {
 	$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
 	$response1 = json_decode($response,true);
 	
-	$return['habob'] = $response1['success'];
-	
 	if (!$response || !is_array($response1)) {
 		$return['error'] = 'security-com-error';
 	}

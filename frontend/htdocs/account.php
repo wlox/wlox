@@ -13,19 +13,17 @@ if ($_SERVER['HTTP_REFERER'] == 'first_login.php') {
 	API::send();
 }
 
-API::add('SiteEmail','getRecord',array('login-notify'));
 API::add('User','getOnHold');
 API::add('User','getAvailable');
 API::add('User','getVolume');
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 $query = API::send();
 
-if ($_SERVER['HTTP_REFERER'] == 'login.php' || $_SERVER['HTTP_REFERER'] == 'verify_token.php' || $_SERVER['HTTP_REFERER'] == 'first_login.php') {
+$referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
+if ($referer == 'login.php' || $referer == 'verify_token.php' || $referer == 'first_login.php') {
 	if (User::$info['notify_login'] == 'Y') {
-		$info = User::$info;
-		$info['ipaddress'] = $_SERVER['REMOTE_ADDR'];
-		$email = $query['SiteEmail']['getRecord'][0];
-		Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+		API::add('User','notifyLogin',array($_SERVER['REMOTE_ADDR']));
+		$query = API::send();
 	}
 }
 
