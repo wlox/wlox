@@ -1,6 +1,6 @@
 **** Please note: This document is being thoroughly revised *****
 
-WLOX - Open Source Currency Exchange  
+WLOX - Open Source Cryptocurrency Exchange  
 =========
 WLOX is an open source alternative currency exchange, created to facilitate the exchange of cryptocurrencies for multiple fiat currencies. At this point, the only cryptocurrency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other cryptocurrencies.
 
