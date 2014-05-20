@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-chdir('/var/www/cron');
+
 include '../cfg/cfg.php';
 
 // compile historical data

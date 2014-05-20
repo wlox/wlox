@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-chdir('/var/www/cron');
+
 include '../cfg/cfg.php';
 
 /* should run at the very start of every month */

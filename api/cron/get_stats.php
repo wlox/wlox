@@ -1,7 +1,8 @@
 #!/usr/bin/php
 <?php
-chdir('/var/www/cron');
+
 include '../cfg/cfg.php';
+
 
 // GET BITCOIN GLOBAL STATS
 $data = file_get_contents('http://blockchain.info/charts/total-bitcoins?format=csv');
@@ -58,7 +59,7 @@ if ($CFG->currencies) {
 /*
 // QUANDL HISTORICAL DATA
 $currency = 'USD';
-$exchange = 'MTGOX';
+$exchange = 'BITSTAMP';
 
 $data = file_get_contents('http://www.quandl.com/api/v1/datasets/BITCOIN/'.$exchange.$currency.'.csv?trim_start=2011-01-01');
 $data1 = explode("\n",$data);
