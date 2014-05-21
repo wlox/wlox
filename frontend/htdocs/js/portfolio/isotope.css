@@ -1,0 +1,104 @@
+.portfolioFilter {
+	text-align: center;
+}
+.portfolioFilter a { 
+    margin-right: 10px; 
+	color:#383634;
+	background-color: #f3f3f3;
+	text-decoration:none;
+	padding: 10px 20px;
+	border-radius: 2px;
+	font-size: 14px;
+	text-transform: uppercase;
+}
+.portfolioFilter a:hover {
+	color: #fff;
+	background-color: #ff7b29;
+}
+.portfolioFilter a.current {
+	color: #fff;
+	background-color: #ff7b29;
+}
+
+.portfolioContainer {
+	width: 100%;
+}
+
+.isotope-item {
+    z-index: 2;
+	width: 370px;
+	height: 300px;
+	margin-bottom: 20px;
+	margin-right: 20px;
+}
+.isotope-hidden.isotope-item {
+    pointer-events: none;
+    z-index: 1;
+}
+.isotope,
+.isotope .isotope-item {
+  /* change duration value to whatever you like */
+
+    -webkit-transition-duration: 0.8s;
+    -moz-transition-duration: 0.8s;
+    transition-duration: 0.8s;
+}
+.isotope {
+    -webkit-transition-property: height, width;
+    -moz-transition-property: height, width;
+    transition-property: height, width;
+}
+.isotope .isotope-item {
+    -webkit-transition-property: -webkit-transform, opacity;
+    -moz-transition-property: -moz-transform, opacity;
+    transition-property: transform, opacity;
+}
+
+
+
+@media only screen and (min-width: 1000px) and (max-width: 1169px){
+
+.isotope-item {
+    z-index: 2;
+	width: 320px;
+	height: 300px;
+	margin-bottom: 8px;
+	margin-right: 13px;
+}
+
+}
+
+
+@media only screen and (min-width: 768px) and (max-width: 999px){
+
+.isotope-item {
+    z-index: 2;
+	width: 239px;
+	height: 251px;
+	margin-bottom: 9px;
+	margin-right: 9px;
+}
+
+	
+}
+
+
+@media only screen and (min-width: 480px) and (max-width: 767px){
+
+.portfolioContainer {
+	width: 90%;
+	margin-left: 10%;
+}
+
+}
+
+
+@media only screen and (max-width: 479px){
+	
+.portfolioFilter a { 
+	padding: 10px 10px;
+	font-size: 12px;
+	margin-right: 7px;
+}	
+	
+}

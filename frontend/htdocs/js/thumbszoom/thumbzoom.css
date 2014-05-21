@@ -1,0 +1,81 @@
+.item {
+	width:235px;
+	height:200px;	
+	
+	/* required to hide the image after resized */
+	overflow:hidden;
+	
+	/* for child absolute position */
+	position:relative;
+	
+	/* display div in line */
+	float:left;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 600;
+}
+
+.item .caption {
+	width:215px;
+	height:180px;
+	background:#fff;
+	color:#000;
+	font-weight:bold;
+	border: 10px solid #ff8100;
+		
+	/* fix it at the bottom */
+	position:absolute;
+	left:0;
+
+	/* hide it by default */
+	display:none;
+
+	/* opacity setting */
+	filter:alpha(opacity=90);    /* ie  */
+	-moz-opacity:0.9;    /* old mozilla browser like netscape  */
+	-khtml-opacity: 0.9;    /* for really really old safari */  
+	opacity: 0.9;    /* css standard, currently it works in most modern browsers like firefox,  */
+
+}
+
+.item .caption a {
+	text-decoration:none;
+	color:#ff8100;
+	font-size:16px;	
+	
+	/* add spacing and make the whole row clickable*/
+	padding:20px 10px 5px 10px;
+	display:block;
+	text-align: center;
+	text-transform: uppercase;
+}
+.item .caption a:hover {
+	color:#333;
+}
+.item .caption p {
+	padding:0px 10px;	
+	margin:0;
+	font-size:13px;
+	text-align: center;
+	font-family: 'Open Sans', sans-serif;
+	font-weight: 600;
+	color: #333;
+}
+.item .caption p i {
+	padding:27px 0px 0px 0px;	
+	margin:0;
+	font-size:59px;
+	font-family: "Times New Roman", Times, serif;
+	font-weight: normal;
+	color: #ff8100;
+}
+
+.item img {
+	border:0;
+	
+	/* allow javascript moves the img position*/
+	position:absolute;
+}
+
+.clear {
+	clear:both;	
+}

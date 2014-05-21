@@ -1,0 +1,50 @@
+<?php
+class object {
+}
+
+$CFG = new object ( );
+
+$CFG->dirroot = "";
+$CFG->libdir = "../lib/";
+$CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
+$CFG->api_url = '';
+$CFG->auth_login_url = '';
+$CFG->auth_verify_login_url = '';
+$CFG->auth_verify_token_url = '';
+
+require_once ($CFG->libdir."autoload.php");
+
+session_start();
+session_regenerate_id();
+
+User::verifyLogIn();
+User::logOut($_REQUEST['log_out']);
+
+API::add('Settings','getAll');
+API::add('Lang','getTable');
+API::add('Currencies','get');
+$query = API::send();
+
+/* Settings */
+Settings::assign($query['Settings']['getAll']['results'][0]);
+
+/* Timezone */
+date_default_timezone_set($CFG->default_timezone);
+$dtz = new DateTimeZone($CFG->default_timezone);
+$dtz1 = new DateTime('now', $dtz);
+$CFG->timezone_offset = $dtz->getOffset($dtz1);
+$CFG->pass_regex = '/[\p{L}!@#$%&*?+-_.=| ]{8,}/';
+
+/* Language */
+$lang = ereg_replace("[^a-z]", "",$_REQUEST['lang']);
+if ($lang)  {
+	$_SESSION['language'] = $lang;
+}
+$CFG->language = ($lang) ? $lang : ereg_replace("[^a-z]", "",$_SESSION['language']);
+$CFG->language = (empty($CFG->language)) ? 'en' : $CFG->language;
+$CFG->lang_table = $query['Lang']['getTable']['results'][0];
+
+/* Currencies */
+$CFG->currencies = $query['Currencies']['get']['results'][0];
+
+?>

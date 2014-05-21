@@ -1,0 +1,176 @@
+#tabs {
+	padding:0px 1px 2px 1px;
+	float:left;
+	clear:both;
+	width: 98%;
+	background-color: #eee;
+}
+ul.tabs {
+	margin: 0;
+	padding: 0;
+	float: left;
+	list-style: none;
+	height: 43px;
+ 	width: 100%;
+	font-family: 'Roboto', sans-serif;
+}
+ul.tabs li {
+		float: left;
+		margin: 0;
+		padding: 0;
+		height: 43px;
+		width: 80px;
+		line-height: 43px;
+ 		border-left: none;
+		margin-bottom: -1px;
+		overflow: hidden;
+		position: relative;
+		border-right: 1px solid #fff;
+}
+ul.tabs li a {
+		text-decoration: none;
+		color: #333;
+		display: block;
+		font-size: 13px;
+		font-weight: 600;
+ 		outline: none;
+ 		cursor:pointer;
+		background: #eee;
+		text-align: center;
+		text-transform: uppercase;
+}
+ul.tabs li a:hover {
+		background: #454545;
+		color:#fff;
+}
+
+ul.tabs li.last {
+		border-right: 0px solid #fff;
+}
+
+ul.tabs li.active, html ul.tabs li.active a,  html ul.tabs li.active a:hover  {
+		background: #fff;
+		color:#363333;
+		border-top: 1px solid #ff7b29;
+}
+	
+.tab_container {
+ 	overflow: hidden;
+	clear: both;
+	float: left; 
+ 	background: #fff;
+	padding: 15px 20px 20px 20px;
+	width: 86%;
+ }
+.tab_content {
+	padding: 10px 0;
+	font-size: 12px;
+	background: #fff;
+}
+
+.gray_border {
+	width: 100%;
+	height: 10px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid #DCDCDC;
+}
+
+ul.tags {
+	padding: 0px 0px 10px 0px;
+	margin: 0px;
+	float: left;
+}
+.tags li {
+	float: left;
+	padding: 0px;
+	margin: 0px 5px 5px 0px;
+	list-style-type: none;
+	line-height: 25px;
+}
+.tags li a {
+	float: left;
+	padding: 2px 7px;
+	background-color: #f9f9f9;
+	border-radius: 2px;
+	color: #909090;
+	font-size: 12px;
+}
+.tags li a:hover {
+	background-color: #ff7b29;
+	color: #fff;
+}
+
+
+@media only screen and (min-width: 1000px){}
+@media only screen and (min-width: 768px) and (max-width: 999px){
+	
+ul.tabs li a {
+	font-size: 11px;
+}
+ul.tabs li {
+	width: 61px;
+}
+.tab_container {
+	padding: 10px 9px 10px 10px;
+	width: 90%;
+ }
+
+
+
+}
+
+
+@media only screen and (min-width: 480px) and (max-width: 767px){
+
+#tabs {
+	padding:0px 0 3px 0;
+	width: 100%;
+}
+ul.tabs li {
+		float: left;
+		margin: 0;
+		padding: 0;
+		height: 43px;
+		width: 100px;
+		line-height: 43px;
+ 		border-left: none;
+		margin-bottom: -1px;
+		overflow: hidden;
+		position: relative;
+		border-right: 1px solid #fff;
+}
+.tab_container {
+ 	overflow: hidden;
+	clear: both;
+	float: left; 
+ 	background: #fff;
+	padding: 15px 15px 20px 15px;
+	width: 93%;
+}
+
+	
+}
+
+
+@media only screen and (max-width: 479px){
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
