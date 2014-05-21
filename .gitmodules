@@ -1,3 +1,12 @@
 [submodule "frontend"]
 	path = frontend
 	url = https://github.com/wlox/wlox-frontend.git
+[submodule "auth"]
+	path = auth
+	url = https://github.com/wlox/wlox-auth.git
+[submodule "api"]
+	path = api
+	url = https://github.com/wlox/wlox-api.git
+[submodule "backstage2"]
+	path = backstage2
+	url = https://github.com/mbassan/backstage2.git
