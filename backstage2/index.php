@@ -2,22 +2,17 @@
 include 'cfg.php';
 ini_set("memory_limit","200M");
 
-User::logOut($_REQUEST['logout']);
-
 $CFG->print = $_REQUEST['print'];
-$CFG->url = ($_REQUEST['current_url'] != 'index.php') ? $_REQUEST['current_url'] : '';
-$CFG->action = $_REQUEST['action'];
+$CFG->url = ($_REQUEST['current_url'] != 'index.php') ? ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['current_url']) : '';
+$CFG->action = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['action']);
 $CFG->bypass = ($_REQUEST['bypass'] || $CFG->print);
 $CFG->is_tab = (!$CFG->url) ? 1 : $_REQUEST['is_tab'];
-$CFG->id = $_REQUEST['id'];
-$CFG->target_elem = $_REQUEST['target_elem'];
+$CFG->id = ereg_replace("[^0-9]", "",$_REQUEST['id']);
+$CFG->target_elem = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['target_elem']);
 $CFG->in_popup = ($CFG->target_elem == 'edit_box' || $CFG->target_elem == 'message_box' || $CFG->target_elem == 'attributes box');
 
 $_SESSION['last_query'] = $_SESSION['this_query'];
 $_SESSION['this_query'] = 'index.php?'.http_build_query((is_array($_POST)) ? $_POST : $_GET);
-
-// CHECK MESSAGES HERE
-$messages = 4;
 
 date_default_timezone_set($CFG->default_timezone);
 String::magicQuotesOff();
@@ -31,36 +26,60 @@ if (!$CFG->bypass || ($CFG->bypass && $CFG->print)) {
 	$header->metaAuthor();
 	$header->metaDesc();
 	$header->metaKeywords();
-	$header->cssFile('../shared2/css/colorpicker.css');
-	$header->cssFile('../shared2/css/reset.css');
+	$header->cssFile('css/colorpicker.css');
+	$header->cssFile('css/reset.css');
 	$header->cssFile('css/'.$CFG->skin.'/default.css','all');
 	$header->cssFile('css/'.$CFG->skin.'/default_ie6.css','all','IE 6');
 	$header->cssFile('css/'.$CFG->skin.'/default_ie7.css','all','IE 7');
 	$header->cssFile('css/'.$CFG->skin.'/default_ie8.css','all','IE 8');
-	$header->jsFile('../shared2/js/jquery-1.4.2.min.js');
-	$header->jsFile('../shared2/js/jquery-ui-1.8.5.custom.min.js');
-	$header->jsFile('../shared2/js/ajax.js');
-	$header->jsFile('../shared2/js/calendar.js');
-	$header->jsFile('../shared2/js/colorpicker.js');
-	$header->jsFile('../shared2/js/comments.js');
-	$header->jsFile('../shared2/js/form.js');
-	$header->jsFile('../shared2/js/file_manager.js');
-	$header->jsFile('../shared2/js/flow_chart.js');
-	$header->jsFile('../shared2/js/gallery.js');
-	$header->jsFile('../shared2/js/grid.js');
-	$header->jsFile('../shared2/js/multi_list.js');
-	$header->jsFile('../shared2/js/popups.js');
-	$header->jsFile('../shared2/js/page_maker.js');
-	$header->jsFile('../shared2/js/permissions.js');
-	$header->jsFile('../shared2/js/swfupload.js');
-	$header->jsFile('../shared2/js/jquery.swfupload.js');
+	$header->jsFile('js/jquery-1.4.2.min.js');
+	$header->jsFile('js/jquery-ui-1.8.5.custom.min.js');
+	$header->jsFile('js/ajax.js');
+	$header->jsFile('js/calendar.js');
+	$header->jsFile('js/colorpicker.js');
+	$header->jsFile('js/comments.js');
+	$header->jsFile('js/form.js');
+	$header->jsFile('js/file_manager.js');
+	$header->jsFile('js/flow_chart.js');
+	$header->jsFile('js/gallery.js');
+	$header->jsFile('js/grid.js');
+	$header->jsFile('js/multi_list.js');
+	$header->jsFile('js/popups.js');
+	$header->jsFile('js/page_maker.js');
+	$header->jsFile('js/permissions.js');
+	$header->jsFile('js/swfupload.js');
+	$header->jsFile('js/jquery.swfupload.js');
 	$header->jsFile('ckeditor/ckeditor.js');
 	$header->jsFile('js/Ops.js');
 	$header->display();
 	$header->getJsGlobals();
 }
 
-if (User::logIn($_REQUEST['loginform']['user'],$_REQUEST['loginform']['pass'])) {
+if ($_REQUEST['authy_form']) {
+	$token1 = ereg_replace("[^0-9]", "",$_REQUEST['authy_form']['token']);
+	
+	if (!($token1 > 0))
+		Errors::add('Invalid token.');
+
+	if (!is_array(Errors::$errors)) {
+		$authy_id = User::$info['authy_id'];
+		$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.User::$info['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
+		$response1 = json_decode($response,true);
+
+		if (!$response || !is_array($response1))
+			Errors::merge('Authy communication error.');
+
+		if ($response1['success'] === false)
+			Errors::merge($response1['errors']);
+
+		if (!is_array(Errors::$errors)) {
+			$_SESSION['token_verified'] = 1;
+			Errors::$errors = false;
+		}
+	}
+}
+
+if (User::isLoggedIn() && !(User::$info['verified_authy'] == 'Y' && !($_SESSION['token_verified'] > 0))) {
 	$CFG->user_id = User::$info['id'];
 	$CFG->group_id = User::$info['f_id'];
 	if (!$CFG->bypass || ($CFG->url == 'edit_page' && !$_REQUEST['tab_bypass'])) {
@@ -287,7 +306,7 @@ if (User::logIn($_REQUEST['loginform']['user'],$_REQUEST['loginform']['pass'])) 
 		include_once 'includes/settings.php';
 	}
 	else {
-		$form_name = $_REQUEST['form_name'];
+		$form_name = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['form_name']);
 		if (!empty($form_name) && $form_name != 'form_filters' && $form_name != 'loginform' && !$_REQUEST['return_to_self']) {
 			$form = new Form($form_name);
 			$form->verify();
@@ -313,6 +332,28 @@ if (User::logIn($_REQUEST['loginform']['user'],$_REQUEST['loginform']['pass'])) 
 		echo '</div>';
 	}
 }
+elseif (User::isLoggedIn() && (User::$info['verified_authy'] == 'Y' && !($_SESSION['token_verified'] > 0))) {
+	if ($_REQUEST['authy_form']) {
+		Errors::display();
+		Messages::display();
+	}
+	
+	$logos = DB::getFiles('settings_files',1,'logo',1);
+	$logo_img = ($logos) ? 'uploads/'.$logos[0]['name'].'_logo.png' : 'images/logo.png';
+	
+	echo '<div class="login_box">
+				<div class="login_logo"><img src="'.$logo_img.'" title="Logo" alt="Logo" /></div>
+				<div class="logform">
+		';
+	
+	$l_form = new Form('authy_form');
+	$l_form->info['token'] = ereg_replace("[^0-9]", "",$l_form->info['token']);
+	$l_form->textInput('token','Enter token');
+	$l_form->submitButton('submit','Verify Token');
+	$l_form->display();
+	
+	echo '</div><div class="clear"></div></div>';
+}
 else {
 	
 	if ($_REQUEST['loginform']) {
@@ -329,6 +370,8 @@ else {
 	';
 	
 	$l_form = new Form('loginform');
+	$l_form->info['user'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$l_form->info['user']);
+	$l_form->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$l_form->info['pass']);
 	$l_form->textInput('user',$CFG->user_username,false,false,false,false,false,false,false,false,false,false,false,true);
 	$l_form->passwordInput('pass',$CFG->user_password);
 	$l_form->submitButton('submit','Log In');
@@ -339,7 +382,7 @@ else {
 }
 if (!$CFG->bypass || ($CFG->url == 'edit_page' && !$_REQUEST['tab_bypass'])) {
 	echo '
-	<div class="credits" id="credits"><div>&copy; 2011 <a href="http://www.tecnorganica.com">Organic Technologies</a>. Derechos reservados.</div></div>
+	<div class="credits" id="credits"><div>&copy; 2011 <a href="http://www.organic.com.pa">Organic Technologies</a>. Derechos reservados.</div></div>
 	</body></html>'; 
 }
 

@@ -322,7 +322,7 @@ iframe{}
 .right .box_bar{background:transparent url(box_bar_grey.png) repeat-x;height:43px;position:absolute;left:6px;right:6px;top:0px;}
 .right .box_tl{background:transparent url(box_tl_g.png) no-repeat;height:53px;width:18px;position:absolute;left:-10px;top:-10px;}
 .right .box_tr{background:transparent url(box_tr_g.png) no-repeat;height:53px;width:17px;position:absolute;right:-10px;top:-10px;}
-.box {float:left;width:96%;border:1px solid #D4FE90;background:#F2FFDC;clear:both;}
+.box {float:left;width:auto;clear:both;}
 .alert{background-color: #FFEFF0;border: 1px solid #FFBFC3;}
 .alert h2{border-bottom: 2px solid #FFC6CA;color: #DD4D56;}
 

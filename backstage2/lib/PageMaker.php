@@ -83,6 +83,8 @@ class PageMaker {
 						
 						<a href=\"#\" class=\"pm_control pm_icon\" id=\"Redirect\"><div class=\"icon\"></div>$CFG->pmt_redirect</a>
 						
+						<a href=\"#\" class=\"pm_control pm_icon\" id=\"CustomPHP\"><div class=\"icon\"></div>Custom PHP</a>
+						
 						<div class=\"clear\"></div>
 					</div>";
 			}

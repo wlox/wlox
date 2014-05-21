@@ -10,9 +10,32 @@ if ($_REQUEST['users_form']) {
 	$form->show_errors();
 	$form->show_messages();
 	
+	if (!$form->errors && $form->info['verified_authy'] == 'Y') {
+		$response = shell_exec("
+				curl https://api.authy.com/protected/json/users/new?api_key=$CFG->authy_api_key \
+				-d user[email]='".$form->info['email']."' \
+				-d user[cellphone]='".$form->info['phone']."' \
+				-d user[country_code]='".$form->info['country_code']."'");
+		$response1 = json_decode($response,true);
+		$authy_id = $response1['user']['id'];
+
+		if (!$response || !is_array($response1))
+			Errors::merge(Lang::string('security-com-error'));
+		
+		if ($response1['success'] == 'false')
+			Errors::merge($response1['errors']);
+		
+		if (!is_array(Errors::$errors)) {
+			db_update('admin_users',$form->record_id,array('authy_id'=>$authy_id));
+		}
+		else {
+			db_update('admin_users',$form->record_id,array('verified_authy'=>'N'));
+		}
+	}
+
 	PermissionEditor::save();
 }
-Gallery::multiple('video_files',$_REQUEST['id'],'video','large',0,'videoimg',1);
+
 if ($CFG->action == 'record') {
 	$view = new Record($_REQUEST['table'],$_REQUEST['id']);
 	
@@ -56,9 +79,11 @@ elseif ($CFG->action == 'form') {
 		$edit->textInput('first_name',$CFG->user_first_name,true);
 		$edit->textInput('last_name',$CFG->user_last_name,true);
 		$edit->textInput('phone',$CFG->user_phone);
+		$edit->textInput('country_code','Country Code');
 		$edit->textInput('email',$CFG->user_email);
 		$edit->selectInput('f_id',$CFG->user_group,false,$_REQUEST['f_id'],false,'admin_groups',array('name'));
 		$edit->checkBox('is_admin',$CFG->user_is_admin);
+		$edit->checkBox('verified_authy','Use Authy?');
 	}
 	$edit->submitButton('submit',$CFG->save_caption);
 	//$edit->button(false,$CFG->cancel_button,false,false,false,false,'onclick="$(\'#edit_box\').fadeOut(\'slow\');"');

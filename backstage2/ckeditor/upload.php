@@ -5,7 +5,7 @@ if (file_exists('cfg.php'))
 else
 	include 'cfg/cfg.php';
 
-$url = $CFG->dirroot.$CFG->default_upload_location.'/ckeditor_'.$_FILES['upload']['name'];
+$url = $CFG->dirroot.$CFG->default_upload_location.'ckeditor_'.$_FILES['upload']['name'];
  
 //extensive suitability check before doing anything with the file…
 if (($_FILES['upload'] == "none") OR (empty($_FILES['upload']['name'])) ) {
@@ -26,8 +26,9 @@ else {
 	
 	if(!$move) {
 		$message = "Error moving uploaded file. Check the script is granted Read/Write/Modify permissions.";
+		$message = $_FILES['upload']['tmp_name'].' '.$url;
 	}
-	$url = $CFG->baseurl.$CFG->default_upload_location.'/ckeditor_'.$_FILES['upload']['name'];
+	$url = $CFG->baseurl.$CFG->default_upload_location.'ckeditor_'.$_FILES['upload']['name'];
 }
 
 $funcNum = $_GET['CKEditorFuncNum'] ;

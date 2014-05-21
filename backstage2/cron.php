@@ -1,4 +1,4 @@
-# This is my fix for #1
+
 
 <?php
 #!/usr/bin/php
