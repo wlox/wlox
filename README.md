@@ -10,14 +10,19 @@ The purpose of this document is to walk you throught the process of a typical se
 
 To set up WLOX, you will need the following:
 
-Components of WLOX
+Physical Components of WLOX
 --------------
-1. **Web Server:** Web server running a current version of PHP (a shared hosting or VPS account will work, but we strongly recommend a dedicated server).
-2. A **MySQL server**.
-3. A current version of the **bitcoind client** (available at https://en.bitcoin.it). This will be the "hot wallet". 
-4. **Warm/Cold Wallet:** A Bitcoin wallet running on a seperate, secure computer.
+1. **Frontend Server:** Web server running a current version of PHP with CURL.
+2. **Api Server**: Web server running a current version of PHP with CURL.
+3. **Auth Server**: Web server running a current version of PHP with CURL.
+4. **MySQL Database Server**: Database server running MySQL.
+5. **Bitcoind Server**: A server running a current version of the **bitcoind client** (available at https://en.bitcoin.it). This will be the "hot wallet". 
+6. **Backend Server:** A server (can be VPS) running the backend administration program.
+7. **Warm Wallet**: A Bitcoin wallet running on a secure computer of your choice.
 
-It is recommended to keep the first three components on seperate servers to ensure maximum security. The fourth component should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
+<!-- start revise -->
+It is recommended to keep the first three components on seperate servers to ensure maximum security. The last component should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
+<!-- end revise -->
 
 Once you have these four components, you can proceed to setting up the web application.
 
