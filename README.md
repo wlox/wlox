@@ -119,8 +119,7 @@ When that is ready, we need to set up each file to be run by the server's cron t
 - receive_bitcoin.php - Every minute.
 - send_bitcoin.php - Every minute.
 
-Last of all, we need to open the file called lib/cheapsweap and modify the following line to point to your bitcoind executable:
-```BITCOIND="/path/to/bitcoind"```
+Last of all, we need to open the file called lib/cheapsweap and modify the following line to point to your bitcoind executable: ```BITCOIND="/path/to/bitcoind"```
 
 
 5. Setting up the Bitcoind Server
@@ -132,14 +131,17 @@ This should be running on the **same folder** as the cron files provided in wlox
 
 There are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
 
-1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it: ```
+1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it:
+
+```
 rpcuser=Your user
 rpcpassword=Your password
 rpctimeout=30
 rpcport=8332
 walletnotify= path to the receive.sh file provided in wlox-cron (example path/to receive.sh %s)
 ```
-You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
+
+You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet (which we highly recommend when starting off).
 
 2. **Encrypting wallet.dat**: We recommend encrypting the wallet.dat file by running the following command in your terminal: ```>/path/to/bitcoind encryptwallet <passphrase>```. Make sure <passphrase> is the same as the password set in your *bitcoin.conf* file, as well as the $CFG->bitcoin_passphrase value in the main cfg.php file.
 
