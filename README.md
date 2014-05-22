@@ -13,21 +13,19 @@ To set up WLOX, you will need the following:
 Components of WLOX
 --------------
 
-WLOX requires the following physical components to function. Each one will be discussed in detail further below.
+WLOX requires the following components to function. Each one will be discussed in detail further below.
 
 1. **MySQL Database Server**: Secure database server running MySQL.
 2. **Api Server**: Secure web server running a current version of PHP with CURL.
 3. **Auth Server**: Secure web server running a current version of PHP with CURL.
-4. **Bitcoind Server**: A secure server running a current version of the **bitcoind client** (available at https://en.bitcoin.it). This will be the "hot wallet". 
-5. **Backend Server:** Web server (can be VPS) running the backend administration program.
-6. **Frontend Server:** Secure web server running a current version of PHP with CURL.
-7. **Warm Wallet**: A Bitcoin wallet running on a secure computer of your choice.
-8. **2 Factor Authentication**: WLOX uses Authy for this purpose by default. Please read more below.
+4. **Cron Jobs**: These should be set up on the same server as your Bitcoind installation.
+5. **Bitcoind Server**: A secure server running a current version of the **bitcoind client** (available at https://en.bitcoin.it). This will be the "hot wallet". 
+6. **Backend Server:** Web server (can be VPS) running the backend administration program.
+7. **Frontend Server:** Secure web server running a current version of PHP with CURL.
+8. **Warm Wallet**: A Bitcoin wallet running on a secure computer of your choice.
+9. **2 Factor Authentication**: WLOX uses Authy for this purpose by default. Please read more below.
 
-
-** -- Section being revised -- ***
-It is recommended to keep the first three components on seperate servers to ensure maximum security. The last component should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
-** -- end section -- ***
+It is recommended to keep that items 1. 2. 3. 4/5 and 7 seperate servers to ensure maximum security. The warm wallet should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
 
 Once you have set up these 7 components, we can start installing the required packages and setting up their respective cfg.php files.
 
@@ -88,10 +86,49 @@ As with the API server, rename the file cfg.php.example to cfg.php and fill in t
 - **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com (see more about this process below).
 
 
-4. Setting up the Bitcoind Server
+4. Setting up Cron Jobs
+-------------------
+
+The Cron Jobs necessary for WLOX to run are provided in the repository [wlox/wlox-cron](http://github.com/wlox/wlox-cron), which should be cloned onto the **same folder** as your Bitcoind installation.
+
+As with the API server, rename the file cfg.php.example to cfg.php and fill in the following information:
+
+- **$CFG->dbhost:** The address of the database server.
+- **$CFG->dbname:** The database name.
+- **$CFG->dbuser:** The database username.
+- **$CFG->dbpass:** The password for the database. Use something secure!
+- **$CFG->bitcoin_username:** The username for the bitcoind server. Please make sure this matches the value in the *bitcoin.conf* file.
+- **$CFG->bitcoin_accountname:** The accountname used by the bitcoind server (can be the same as username).
+- **$CFG->bitcoin_passphrase:** This will be used as both the password for the bitcoind server as well as the passphrase to encrypt/decrypt the wallet file. Please make sure this matches the password in the *bitcoin.conf* file.
+- **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
+- **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
+- **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
+- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOX to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
+- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOX to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
+- **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
+- **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
+
+
+The next step is to set the right permissions so that these files can be run as cron jobs. This includes setting up the appropriate permissions for the /transactions directory so that the provided *receive.sh* file can create files in there.
+
+When that is ready, we need to set up each file to be run by the server's cron tab. The cron jobs should be scheduled as follows:
+- daily_stats.php - Should run at 0 min, 0 hrs (the very start) of every day.
+- get_stats.php - Every 10 minutes.
+- maintenance.php - Every 5 minutes.
+- monthly_stats.php - 0 min, 0 hrs (the very start) of the first day of every month.
+- receive_bitcoin.php - Every minute.
+- send_bitcoin.php - Every minute.
+
+Last of all, we need to open the file called lib/cheapsweap and modify the following line to point to your bitcoind executable:
+```BITCOIND="/path/to/bitcoind"```
+
+
+5. Setting up the Bitcoind Server
 ---------------------
 
 Please download the bitcoin server from the official site at https://en.bitcoin.it and install it onto your intended Bitcoind server. Then initialize it by running it as a daemon (by *./bitcoind --daemon*).
+
+This should be running on the **same folder** as the cron files provided in wlox-cron.
 
 There are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
 
@@ -99,22 +136,15 @@ There are a few extra steps that you need to take for WLOX to be able to manipul
 rpcuser=Your user
 rpcpassword=Your password
 rpctimeout=30
-rpcport=8332 ```
+rpcport=8332
+walletnotify= path to the receive.sh file provided in wlox-cron (example path/to receive.sh %s)
+```
 You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
 
-2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX main project into it. Mark this file as executable on the system. After that, copy the following code into your bitcoin.conf file: ```addnode=192.3.11.20```. This node is used in order for the *cheapsweap* script to function properly as specified in https://en.bitcoin.it/wiki/Free_transaction_relay_policy.
-
-** -- Section being revised -- ***
-
-3. **Setting up walletnotify**: You need to set up the walletnotify feature of bitcoind to create the mechanism for crediting users for incoming Bitcoin transactions. To do this, copy the following code into your bitcoin.conf file:
-```walletnotify=/var/www/cron/receive.sh %s```. If the path of your cron directory is different, please specify it in this line of code. You will need to mark *receive.sh* as executable and give the proper permissions. You also need to give permission for *receive.sh* to create files in the cron/transactions/ folder.
-
-** -- end section -- **
-
-4. **Encrypting wallet.dat**: We recommend encrypting the wallet.dat file by running the following command in your terminal: ```>/path/to/bitcoind encryptwallet <passphrase>```. Make sure <passphrase> is the same as the password set in your *bitcoin.conf* file, as well as the $CFG->bitcoin_passphrase value in the main cfg.php file.
+2. **Encrypting wallet.dat**: We recommend encrypting the wallet.dat file by running the following command in your terminal: ```>/path/to/bitcoind encryptwallet <passphrase>```. Make sure <passphrase> is the same as the password set in your *bitcoin.conf* file, as well as the $CFG->bitcoin_passphrase value in the main cfg.php file.
 
 
-5. Setting up the Backend Server
+6. Setting up the Backend Server
 -------------------
 
 As mentioned above, WLOX comes with its own back-end administrative program, *backstage2*, which is really a seperate project developed over a few years. For more information about this project check out [the backstage2 Github repository](https://github.com/mbassan/backstage2).
@@ -133,7 +163,7 @@ The configuration options for *backstage2*, can be found in cfg.php. All paths s
 - **$CFG->authy_api_key:** If you would like to integrate two-factor authentication, you can use the same Authy API key that you use for the front end.
 
 
-6. Setting up the Frontend Server
+7. Setting up the Frontend Server
 -------------------
 
 The frontend server is intended to be the only part of the app which should be accesible to the user. 
@@ -151,77 +181,14 @@ As with all other repositories, rename the file cfg.php.example to cfg.php and t
 - **$CFG->auth_verify_login_url:** 'http://your.api.server/verify_login.php';
 - **$CFG->auth_verify_token_url:** 'http://your.api.server/verify_token.php';
 
-More coming soon...
+8. Warm Wallet
+-------------------
 
-<!--
-The purpose of the Auth server is to allow users to initiate sessions and obtain a session key so that they can access protected methods on the API. 
+The "Warm Wallet" is simply a Bitcoin wallet running on a secure PC. The cron job receive_bitcoin.php (provided in wlox-cron) will channel all Bitcoin above the reserve ratio specified in wlox/wlox-cron/cfg.php -> $CFG->bitcoin_reserve_ratio to this address. You can do whatever you like with it once it arrives there (for example, you can transfer it to cold storage using a Piper wallet).
 
-The Auth server source is provided in the repository [wlox/wlox-auth], which should be cloned onto your intended Auth server.
-
-As with the API server, rename the file cfg.php.example to cfg.php and fill in the following information:
-
-- **$CFG->dbhost:** The address of the database server.
-- **$CFG->dbname:** The database name.
-- **$CFG->dbuser:** The database username.
-- **$CFG->dbpass:** The password for the database. Use something secure!
-- **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com (see more about this process below).
+In order to load Bitcoin back into the Hot Wallet (when the amount needed for outgoing transfers exceeds the amount in the Hot Wallet), simply send Bitcoin from your Warm Wallet back to the dedicated Hot Wallet address (this will be explained below).
 
 
-- **$CFG->baseurl:** The URL for the web app in the browser, such as http://www.yourdomain.com/. Make sure to include the trailing slash at the end.
-- **$CFG->dbhost:** The address of the database server.
-- **$CFG->dbname:** The database name.
-- **$CFG->dbuser:** The database username.
-- **$CFG->dbpass:** The password for the database. Use something secure!
-- **$CFG->dirroot:** The path to the /htdocs folder on the server, such as /var/www/htdocs/. Make sure to include the trailing slash.
-- **$CFG->support_email:** Users will received automated support emails from this address.
-- **$CFG->accounts_email:** Users will receive automated emails related to address features from this emails.
-- **$CFG->exchange_name:** This is the name of your exchange on the front end app. This value will be used in the website's text and in automated emails sent by the system to users.
-- **$CFG->bitcoin_username:** The username for the bitcoind server. Please make sure this matches the value in the *bitcoin.conf* file.
-- **$CFG->bitcoin_accountname:** The accountname used by the bitcoind server (can be the same as username).
-- **$CFG->bitcoin_passphrase:** This will be used as both the password for the bitcoind server as well as the passphrase to encrypt/decrypt the wallet file. Please make sure this matches the password in the *bitcoin.conf* file.
-- **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
-- **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
-- **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
-- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOX to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
-- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOX to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
-- **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
-- **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
-- **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com.
-
-
-
-
-Setting Up Cron Jobs
-------------------
-Please read this section, as it is very important to set up cron jobs for WLOX to function. The first step is to locate the /cron folder outside the web directory, but in a location that it can access both the main configuration file as well as the bitcoind server.
-
-The next step is to set the right permissions so that these files can be run as cron jobs.
-
-When that is ready, we need to set up each file to be run by the server's cron tab. The files in the /cron folder should be scheduled as follows:
-- daily_stats.php - Should run at 0 min, 0 hrs (the very start) of every day.
-- get_stats.php - Every 10 minutes.
-- maintenance.php - Every 5 minutes.
-- monthly_stats.php - 0 min, 0 hrs (the very start) of the first day of every month.
-- receive_bitcoin.php - Every minute.
-- send_bitcoin.php - Every minute.
-
-Setting Up Bitcoind Server
----------------------
-Aside from downloading and setting up bitcoind server and running it as a daemon (by *bitcoind --daemon*), there are a few extra steps that you need to take for WLOX to be able to manipulate Bitcoin correctly:
-
-1. **Setting up bitcoin.conf**: Look for the directory that contains your wallet.dat file (usually in /home/your_user/.bitcoin/ or /root/.bitcoin/) and create a file called *bitcoin.conf* in it, if it doesn't already exist. Copy the following directives into it: ```
-rpcuser=Your user
-rpcpassword=Your password
-rpctimeout=30
-rpcport=8332 ```
-You can also add `testnet=1` if you want to test out WLOX using Bitcoin testnet.
-
-2. **Setting up cheapsweap**: WLOX uses a script called *cheapsweap* to sweep all user addresses for Bitcoin received. Please create a file called "cheapsweap" in the same directory as your bitcoind executable and copy the code from the file "cheapsweap" in the WLOX project into it. Mark this file as executable on the system. After that, copy the following code into your bitcoin.conf file: ```addnode=192.3.11.20```. This node is used in order for the *cheapsweap* script to function properly as specified in https://en.bitcoin.it/wiki/Free_transaction_relay_policy.
-
-3. **Setting up walletnotify**: You need to set up the walletnotify feature of bitcoind to create the mechanism for crediting users for incoming Bitcoin transactions. To do this, copy the following code into your bitcoin.conf file:
-```walletnotify=/var/www/cron/receive.sh %s```. If the path of your cron directory is different, please specify it in this line of code. You will need to mark *receive.sh* as executable and give the proper permissions. You also need to give permission for *receive.sh* to create files in the cron/transactions/ folder.
-
-4. **Encrypting wallet.dat**: We recommend encrypting the wallet.dat file by running the following command in your terminal: ```>/path/to/bitcoind encryptwallet <passphrase>```. Make sure <passphrase> is the same as the password set in your *bitcoin.conf* file, as well as the $CFG->bitcoin_passphrase value in the main cfg.php file.
 
 First Login to the Back-End
 ---------------------
@@ -266,4 +233,3 @@ The back-end is structure in the following manner:
 - **Fees**: This page gives a list of all fees being incurred by WLOX's internal movement of BTC - i.e. when sweeping user's Bitcoin addresses or transferring money to the warm/cold wallet.
 
 **Reports**: Under this tab, you will see "Daily Reports" and "Monthly Reports". You can see switch between a line graph and a table view of these values on the top right side of the respective tables.
--->
