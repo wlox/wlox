@@ -1,5 +1,3 @@
-**** Please note: This document is being thoroughly revised *****
-
 WLOX - Open Source Cryptocurrency Exchange  
 =========
 WLOX is an open source alternative currency exchange, created to facilitate the exchange of cryptocurrencies for multiple fiat currencies. At this point, the only cryptocurrency supported is **Bitcoin**. It is not difficult, however, to adapt this project for the use of other cryptocurrencies.
@@ -188,8 +186,12 @@ As with all other repositories, rename the file cfg.php.example to cfg.php and t
 
 The "Warm Wallet" is simply a Bitcoin wallet running on a secure PC. The cron job receive_bitcoin.php (provided in wlox-cron) will channel all Bitcoin above the reserve ratio specified in wlox/wlox-cron/cfg.php -> $CFG->bitcoin_reserve_ratio to this address. You can do whatever you like with it once it arrives there (for example, you can transfer it to cold storage using a Piper wallet).
 
-In order to load Bitcoin back into the Hot Wallet (when the amount needed for outgoing transfers exceeds the amount in the Hot Wallet), simply send Bitcoin from your Warm Wallet back to the dedicated Hot Wallet address (this will be explained below).
+In order to load Bitcoin back into the Hot Wallet (when the amount needed for outgoing transfers exceeds the amount in the Hot Wallet), simply send Bitcoin from your Warm Wallet back to the dedicated Hot Wallet address. This can be found in the Back End under Registered Visitors -> Bitcoin Addresses (it will be the one with both "System" and "Hot Wallet" checked).
 
+9. 2 Factor Authentication
+-----------------------------
+
+You can sign up for an API key with Authy at www.authy.com. You can then use this in all the config files listed above.
 
 
 First Login to the Back-End
