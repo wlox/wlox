@@ -8,5 +8,8 @@ class CustomPHP{
 		
 		include 'custom/'.$url;
 	}
+	
+	function display() {
+	}
 }
 ?>
