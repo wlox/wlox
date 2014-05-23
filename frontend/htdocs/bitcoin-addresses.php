@@ -24,7 +24,6 @@ if ($_REQUEST['action'] == 'add') {
 		API::add('BitcoinAddresses','getNew');
 		API::add('BitcoinAddresses','get',array(false,false,30,User::$info['id']));
 		$query = API::send();
-		print_ar($query);
 		$bitcoin_addresses = $query['BitcoinAddresses']['get']['results'][0];
 		
 		Messages::add(Lang::string('bitcoin-addresses-added'));

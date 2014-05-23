@@ -66,7 +66,6 @@ $personal->verify();
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
 	$errors = array();
-	print_ar($personal->errors);
 	foreach ($personal->errors as $key => $error) {
 		if (stristr($error,'login-required-error')) {
 			$errors[] = Lang::string('settings-'.str_replace('_','-',$key)).' '.Lang::string('login-required-error');

@@ -19,6 +19,12 @@ API::add('User','getVolume');
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 $query = API::send();
 
+$currencies = $CFG->currencies;
+$on_hold = $query['User']['getOnHold']['results'][0];
+$available = $query['User']['getAvailable']['results'][0];
+$volume = $query['User']['getVolume']['results'][0];
+$fee_bracket = $query['FeeSchedule']['getRecord']['results'][0];
+
 $referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
 if ($referer == 'login.php' || $referer == 'verify_token.php' || $referer == 'first_login.php') {
 	if (User::$info['notify_login'] == 'Y') {
@@ -26,12 +32,6 @@ if ($referer == 'login.php' || $referer == 'verify_token.php' || $referer == 'fi
 		$query = API::send();
 	}
 }
-
-$currencies = $CFG->currencies;
-$on_hold = $query['User']['getOnHold']['results'][0];
-$available = $query['User']['getAvailable']['results'][0];
-$volume = $query['User']['getVolume']['results'][0];
-$fee_bracket = $query['FeeSchedule']['getRecord']['results'][0];
 
 $page_title = Lang::string('account');
 

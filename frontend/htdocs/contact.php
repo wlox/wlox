@@ -27,15 +27,9 @@ if ($_REQUEST['contact'] && is_array($contact->errors)) {
 	Errors::$errors = $errors;
 }
 elseif ($_REQUEST['contact'] && !is_array($contact->errors)) {
-	API::add('SiteEmail','getRecord',array('login-notify'));
-	API::add('SiteEmail','getCountry',array($contact->info['country']));
+	API::add('SiteEmail','contactForm',array($contact->info));
 	$query = API::send();
 	
-	$email = $query['SiteEmail']['getRecord']['results'][0];
-	$pais = $query['SiteEmail']['getCountry']['results'][0];
-	$contact->info['country'] = $pais['name'];
-
-	Email::send($contact->info['email'],$CFG->support_email,$email['title'],$CFG->form_email_from,false,$email['content'],$contact->info);
 	Messages::$messages = array(Lang::string('contact-message'));
 	$show_message = true;
 	$show_mask = true;
