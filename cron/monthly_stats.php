@@ -24,3 +24,4 @@ $result = db_query_array($sql);
 $gross_profit = $total_fees - $result[0]['fees_incurred'];
 
 db_insert('monthly_reports',array('date'=>date('Y-m-d',strtotime('-1 day')),'transactions_btc'=>$transactions_btc,'avg_transaction_size_btc'=>$avg_transaction,'transaction_volume_per_user'=>$trans_per_user,'total_fees_btc'=>$total_fees,'fees_per_user_btc'=>$fees_per_user,'gross_profit_btc'=>$gross_profit));
+echo 'done';

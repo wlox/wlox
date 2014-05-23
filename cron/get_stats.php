@@ -56,6 +56,8 @@ if ($CFG->currencies) {
 	}
 }
 
+echo 'done';
+
 /*
 // QUANDL HISTORICAL DATA
 $currency = 'USD';

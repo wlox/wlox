@@ -1,10 +1,10 @@
 #!/usr/bin/php
 <?php
-
+error_reporting(E_PARSE || E_ERROR);
 include 'cfg.php';
 
 $CFG->session_active = true;
-$transactions_dir = 'transactions/';
+$transactions_dir = $CFG->dirroot.'transactions/';
 
 db_start_transaction();
 

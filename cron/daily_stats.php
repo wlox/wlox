@@ -6,7 +6,8 @@ include 'cfg.php';
 /* should run at the very start of every day */
 
 // get total of each currency
-foreach ($CFG->currencies as $currency) {
+$currencies = Currencies::get();
+foreach ($currencies as $currency) {
 	$totals[] = 'SUM('.strtolower($currency['currency']).' * '.$currency['usd'].') AS '.strtolower($currency['currency']);
 }
 $sql = 'SELECT COUNT(id) AS total_users, SUM(btc) AS btc, '.implode(',',$totals).' FROM site_users';
@@ -44,3 +45,4 @@ $result = db_query_array($sql);
 $gross_profit = $total_fees - $result[0]['fees_incurred'];
 
 db_insert('daily_reports',array('date'=>date('Y-m-d',strtotime('-1 day')),'total_btc'=>$total_btc,'total_fiat_usd'=>$total_usd,'btc_per_user'=>$btc_per_user,'usd_per_user'=>$usd_per_user,'open_orders_btc'=>$open_orders_btc,'transactions_btc'=>$transactions_btc,'avg_transaction_size_btc'=>$avg_transaction,'transaction_volume_per_user'=>$trans_per_user,'total_fees_btc'=>$total_fees,'fees_per_user_btc'=>$fees_per_user,'gross_profit_btc'=>$gross_profit));
+

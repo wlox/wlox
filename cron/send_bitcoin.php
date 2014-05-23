@@ -12,18 +12,23 @@ $deficit = $status['deficit_btc'];
 
 $sql = "SELECT site_user,amount,send_address,id FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency = {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} FOR UPDATE";
 $result = db_query_array($sql);
+
 if ($result) {
 	$pending = 0;
+	
 	foreach ($result as $row) {
 		$pending += $row['amount'];
 		
 		if ($row['amount'] > $available)
 			continue;
+
+		if (bcsub($row['amount'],$CFG->bitcoin_sending_fee,8) > 0) {
+			$transactions[$row['send_address']] = bcadd($row['amount'],$transactions[$row['send_address']],8);
+		}
 		
-		$transactions[$row['send_address']] += $row['amount'];
-		$users[$row['site_user']] += $row['amount'];
+		$users[$row['site_user']] = bcadd($row['amount'],$users[$row['site_user']],8);
 		$requests[] = $row['id'];
-		$available -= $row['amount'];
+		$available = bcsub($row['amount'],$available,8);
 	}
 	
 	$sql = "SELECT id, btc FROM site_users ";
@@ -51,12 +56,12 @@ if (count($transactions) > 1) {
 elseif (count($transactions) == 1) {
 	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 	foreach ($transactions as $address => $amount) {
-		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,floatval(($amount - $CFG->bitcoin_sending_fee)));
+		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,bcsub($amount,$CFG->bitcoin_sending_fee,8));
 		echo $bitcoin->error;
 	}
 }
 
-if ($response) {
+if ($response || $users) {
 	echo 'Transactions sent: '.$response.'<br>';
 	$total = 0;
 	foreach ($users as $site_user => $amount) {
@@ -80,3 +85,4 @@ if ($response) {
 if (!$pending) db_update('status',1,array('deficit_btc'=>'0'));
 
 db_commit();
+echo 'done';

@@ -37,7 +37,7 @@ class BitcoinAddresses{
 			return $result[0]['total'];
 	}
 	
-	function getNew() {
+	function getNew($hot_wallet=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -45,8 +45,12 @@ class BitcoinAddresses{
 		
 		$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 		$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
-		$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
 		
+		if (!$hot_wallet)
+			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
+		else
+			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'system_address'=>'Y', 'hot_wallet'=>'Y','date'=>date('Y-m-d H:i:s')));
+			
 		return $new_id;
 	}
 	
@@ -127,6 +131,12 @@ class BitcoinAddresses{
 		
 		$sql = "SELECT * FROM bitcoin_addresses WHERE system_address = 'Y' AND hot_wallet = 'Y' ORDER BY `date` ASC LIMIT 0,1";
 		$result = db_query_array($sql);
+		
+		if (!$result) {
+			$new_id = self::getNew(true);
+			return DB::getRecord('bitcoin_addresses',$new_id,0,1);
+		}
+		
 		return $result[0];
 	}
 	

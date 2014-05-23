@@ -8,6 +8,8 @@ $CFG->dbname = "";
 $CFG->dbuser = "";
 $CFG->dbpass = "";
 
+$CFG->dirroot = '';
+
 /* Bitcoin */
 $CFG->bitcoin_username = '';
 $CFG->bitcoin_accountname = '';

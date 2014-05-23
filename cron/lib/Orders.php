@@ -1,14 +1,17 @@
 <?php
 class Orders {
+	static $currencies;
 	function getCurrentBid($currency,$currency_id=false) {
 		global $CFG;
 		
-		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $CFG->currencies[strtoupper($currency)];
+		$currencies = (self::$currencies) ? self::$currencies : Currencies::get();
+		
+		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $currencies[strtoupper($currency)];
 		$sql = "SELECT orders.btc_price AS fiat_price FROM orders WHERE currency = {$currency_info['id']} AND order_type = {$CFG->order_type_bid} ORDER BY btc_price DESC LIMIT 0,1";
 		$result = db_query_array($sql);
 		
 		if (!$result) {
-			$currency_info1 = $CFG->currencies['USD'];
+			$currency_info1 = $currencies['USD'];
 			$sql = "SELECT ROUND((orders.btc_price/{$currency_info['usd']}),2) AS fiat_price FROM orders WHERE currency = {$currency_info1['id']} AND order_type = {$CFG->order_type_bid} ORDER BY btc_price DESC LIMIT 0,1";
 			$result = db_query_array($sql);
 			
@@ -29,12 +32,14 @@ class Orders {
 	function getCurrentAsk($currency,$currency_id=false) {
 		global $CFG;
 		
-		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $CFG->currencies[strtoupper($currency)];
+		$currencies = (self::$currencies) ? self::$currencies : Currencies::get();
+		
+		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $currencies[strtoupper($currency)];
 		$sql = "SELECT orders.btc_price AS fiat_price FROM orders WHERE currency = {$currency_info['id']} AND order_type = {$CFG->order_type_ask} ORDER BY btc_price ASC LIMIT 0,1";
 		$result = db_query_array($sql);
 		
 		if (!$result) {
-			$currency_info1 = $CFG->currencies['USD'];
+			$currency_info1 = $currencies['USD'];
 			$sql = "SELECT ROUND((orders.btc_price/{$currency_info['usd']}),2) AS fiat_price FROM orders WHERE currency = {$currency_info1['id']} AND order_type = {$CFG->order_type_ask} ORDER BY btc_price ASC LIMIT 0,1";
 			$result = db_query_array($sql);
 			
@@ -62,7 +67,9 @@ class Orders {
 		if (!$type || !$price || !$currency)
 			return false;
 		
-		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$currencies = (self::$currencies) ? self::$currencies : Currencies::get();
+		
+		$currency_info = $currencies[strtoupper($currency)];
 		$comparison = ($type == $CFG->order_type_ask) ? '<=' : '>=';
 		$order_asc = ($type == $CFG->order_type_ask) ? 'ASC' : 'DESC';
 		
@@ -89,8 +96,9 @@ class Orders {
 		if (!$external_transaction)
 			db_start_transaction();
 		
+		$currencies = (self::$currencies) ? self::$currencies : Currencies::get();
 		$this_user_id = ($this_user_id > 0) ? $this_user_id : User::$info['id'];
-		$currency_info = $CFG->currencies[strtoupper($currency1)];
+		$currency_info = $currencies[strtoupper($currency1)];
 		$transactions = 0;
 		$new_order = 0;
 		$edit_order = 0;
