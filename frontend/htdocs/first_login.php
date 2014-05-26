@@ -13,9 +13,12 @@ if (User::$info['no_logins'] != 'Y' && !$_REQUEST['settings']) {
 	Link::redirect('account.php');
 }
 
+API::add('User','getInfo',array($_SESSION['session_id']));
+$query = API::send();
+
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->verify();
-$personal->get(User::$info['id']);
+$personal->get($query['User']['getInfo']['results'][0]);
 $personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-_]", "",$personal->info['pass']);
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
