@@ -22,5 +22,15 @@ class SiteEmail{
 	function getCountry($country_id) {
 		return DB::getRecord('iso_countries',$country_id,0,1);
 	}
+	
+	function contactForm($contact_info) {
+		global $CFG;
+		
+		$email = SiteEmail::getRecord('login-notify');
+		$pais = SiteEmail::getCountry($contact_info['country']);
+		$contact_info = $pais['name'];
+		
+		return Email::send($contact_info['email'],$CFG->support_email,$email['title'],$CFG->form_email_from,false,$email['content'],$contact_info);
+	}
 }
 ?>
