@@ -26,7 +26,7 @@ $total = $query['Requests']['get']['results'][0];
 $requests = $query['Requests']['get']['results'][1];
 $bank_instructions = ($bank_account) ? $query['Content']['getRecord']['results'][0] : $query['Content']['getRecord']['results'][1];
 
-API::add('Currencies','getRecord',array(false,$bank_account['currency']));
+API::add('Currencies','getRecord',array($bank_account['currency']));
 API::add('Transactions','pagination',array('deposit.php',$page1,$total,15,5,$CFG->pagination_label));
 $query = API::send();
 

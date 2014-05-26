@@ -3,7 +3,7 @@
 include '../cfg/cfg.php';
 
 $page_title = Lang::string('login-forgot');
-$email1 = ereg_replace("[^0-9a-zA-Z\!@#\$%&\*\?]", "",$_REQUEST['forgot']['email']);
+$email1 = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$_REQUEST['forgot']['email']);
 
 if ($_REQUEST['forgot']) {
 	API::add('User','userExists',array($email1));

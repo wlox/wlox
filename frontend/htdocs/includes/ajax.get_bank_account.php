@@ -2,10 +2,8 @@
 chdir('..');
 include '../cfg/cfg.php';
 
-$account1 = ereg_replace("[^0-9]", "",$_REQUEST['account']);
-
 API::add('User','getAvailable');
-API::add('BankAccounts','getRecord',array($account1));
+API::add('BankAccounts','getRecord',array($_REQUEST['account']));
 $query = API::send();
 
 $bank_account = $query['BankAccounts']['getRecord']['results'][0];

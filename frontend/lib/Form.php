@@ -851,11 +851,24 @@ class Form {
 			}
 		}
 		
+		if (is_array($options_array) && !$subtable) {
+			if (is_array($options_array[0])) {
+				foreach ($options_array as $i => $option_array) {
+					if (is_array($subtable_fields)) {
+						$arr = array();
+						foreach ($subtable_fields as $field) {
+							$arr[] = $option_array[$field];
+						}
+						$options_array[$i] = implode(' ',$arr);
+					}
+					else {
+						$options_array[$i] = implode(' ',$option_array);
+					}
+				}
+			}
+		} 
+		
 		if ($subtable) {
-			API::add('DB','getSubTable',array($subtable,$subtable_fields,$subtable_f_id,false,$f_id_field));
-			$query = API::send();
-			
-			$db_output = $query['DB']['getSubTable']['results'][0];
 			if (in_array('p_id',$subtable_fields))
 				$db_output = DB::sortCats($db_output,0,1,$level);
 
@@ -878,7 +891,7 @@ class Form {
 			$jscript = false;
 			$outside_jscript = false;
 		}
-		
+
 		$mult = ($static) ? '['.$j.']'.(($grid_input) ? '['.$grid_input.']' : '') : '';
 		$HTML = $req_img."<div class=\"label_extend\"></div><label for=\"{$this->name}_{$id}{$j}\">$caption $method_name</label><select name=\"{$this->name}[$name]{$mult}\" id=\"{$this->name}_{$id}{$j}\" $class ".$jscript." $style>";
 		if (!$first_is_default)
@@ -2953,12 +2966,7 @@ class Form {
 							if (strlen(trim($value)) == 0) 
 								$this->errors[$name] = $CFG->verify_default_error;
 							elseif (!$CFG->backstage_mode) {
-								if ($_REQUEST['db_fields'][$name] == 'vchar' || $_REQUEST['db_fields'][$name] == 'int') {
-									$delete_whitespace = @in_array($name,$this->delete_whitespace);
-									if (String::sanitize($value,true,$delete_whitespace)) {
-										$this->errors[$name] = $CFG->verify_invalid_char_error;
-									}
-								}	
+								
 							}
 						break;
 						default:

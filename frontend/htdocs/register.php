@@ -1,13 +1,14 @@
 <?php
 include '../cfg/cfg.php';
 
-$register = new Form('register',false,false,'form3','site_users');
+$register = new Form('register',false,false,'form3');
 //$register->get(User::$info['id']);
 $register->info['first_name'] = ereg_replace("/[^\da-z]/i", "",$register->info['first_name']);
 $register->info['last_name'] = ereg_replace("/[^\da-z]/i", "",$register->info['last_name']);
 $register->info['country'] = ereg_replace("[^0-9]", "",$register->info['country']);
-$register->info['email'] = ereg_replace("[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]", "",$register->info['email']);
+$register->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$register->info['email']);
 $register->verify();
+
 
 if ($_REQUEST['register'] && !$register->info['terms'])
 	$register->errors[] = Lang::string('settings-terms-error');
@@ -49,6 +50,10 @@ elseif ($_REQUEST['register'] && !is_array($register->errors)) {
 	Link::redirect('login.php?message=registered');
 }
 
+API::add('User','getCountries');
+$query = API::send();
+$countries = $query['User']['getCountries']['results'][0];
+
 $page_title = Lang::string('home-register');
 
 include 'includes/head.php';
@@ -76,7 +81,7 @@ include 'includes/head.php';
                 <?
                 $register->textInput('first_name',Lang::string('settings-first-name'),1);
                 $register->textInput('last_name',Lang::string('settings-last-name'),1);
-                $register->selectInput('country',Lang::string('settings-country'),1,false,false,'iso_countries',array('name'));
+                $register->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $register->textInput('email',Lang::string('settings-email'),'email');
                 $register->checkBox('terms',Lang::string('settings-terms-accept'),false,false,false,false,false,false,'checkbox_label');
                 $register->captcha(Lang::string('settings-capcha'));

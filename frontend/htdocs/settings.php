@@ -61,7 +61,7 @@ $personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$persona
 $personal->info['first_name'] = ereg_replace("/[^\da-z]/i", "",$personal->info['first_name']);
 $personal->info['last_name'] = ereg_replace("/[^\da-z]/i", "",$personal->info['last_name']);
 $personal->info['country'] = ereg_replace("[^0-9]", "",$personal->info['country']);
-$personal->info['email'] = ereg_replace("[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]", "",$personal->info['email']);
+$personal->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$personal->info['email']);
 $personal->verify();
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
