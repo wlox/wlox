@@ -10,6 +10,14 @@ $status = DB::getRecord('status',1,0,1,false,false,false,1);
 $available = $status['hot_wallet_btc'];
 $deficit = $status['deficit_btc'];
 
+$sql = "SELECT id, btc FROM site_users FOR UPDATE";
+$result = db_query_array($sql);
+if ($result) {
+	foreach ($result as $row) {
+		$user_balances[$row['id']] = $row['btc'];
+	}
+}
+
 $sql = "SELECT site_user,amount,send_address,id FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency = {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} FOR UPDATE";
 $result = db_query_array($sql);
 
@@ -17,6 +25,9 @@ if ($result) {
 	$pending = 0;
 	
 	foreach ($result as $row) {
+		if (bcadd($row['amount'],$users[$row['site_user']],8) > $user_balances[$row['site_user']])
+			continue;
+		
 		$pending += $row['amount'];
 		
 		if ($row['amount'] > $available)
@@ -29,14 +40,6 @@ if ($result) {
 		$users[$row['site_user']] = bcadd($row['amount'],$users[$row['site_user']],8);
 		$requests[] = $row['id'];
 		$available = bcsub($row['amount'],$available,8);
-	}
-	
-	$sql = "SELECT id, btc FROM site_users ";
-	$result = db_query_array($sql);
-	if ($result) {
-		foreach ($result as $row) {
-			$user_balances[$row['id']] = $row['btc'];
-		}
 	}
 
 	if ($pending > $available) {

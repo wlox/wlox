@@ -53,6 +53,7 @@ require_once ("lib/BitcoinAddresses.php");
 require_once ("lib/easybitcoin.php");
 require_once ("lib/Orders.php");
 require_once ("lib/Status.php");
+require_once ("lib/Currencies.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
