@@ -27,7 +27,9 @@ class BankAccounts{
 		if (!$CFG->session_active || !($id > 0))
 			return false;
 		
-		return DB::getRecord('bank_accounts',$id,0,1);
+		$id1 = ereg_replace("[^0-9]", "",$id);
+		
+		return DB::getRecord('bank_accounts',$id1,0,1);
 	}
 	
 	function find($account_number) {

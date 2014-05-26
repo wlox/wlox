@@ -438,6 +438,11 @@ class User {
 
 		Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
 	}
+	
+	function getCountries() {
+		$sql = "SELECT * FROM iso_countries ORDER BY name ASC";
+		return db_query_array($sql);
+	}
 }
 
 ?>

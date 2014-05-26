@@ -3,6 +3,7 @@
 
 // get built-in php classes
 $system_classes = get_declared_classes();
+$system_classes[] = 'DB';
 
 include '../cfg/cfg.php';
 
