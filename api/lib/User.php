@@ -234,15 +234,15 @@ class User {
 	function registerNew($info) {
 		global $CFG;
 		
-		if (is_array($info))
+		if (!is_array($info))
 			return false;
-		
+
 		$new_id = self::getNewId();
 		if ($new_id > 0) {
 			$info['first_name'] = ereg_replace("/[^\da-z]/i", "",$info['first_name']);
 			$info['last_name'] = ereg_replace("/[^\da-z]/i", "",$info['last_name']);
 			$info['country'] = ereg_replace("[^0-9]", "",$info['country']);
-			$info['email'] = ereg_replace("[^0-9a-zA-Z\!@#\$%&\*\?]", "",$info['email']);
+			$info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$info['email']);
 			$info['user'] = $new_id;
 			$info['pass'] = self::randomPassword(12);
 			$info['date'] = date('Y-m-d H:i:s');
@@ -254,6 +254,7 @@ class User {
 			$info['no_logins'] = 'Y';
 			$info['fee_schedule'] = $CFG->default_fee_schedule_id;
 			unset($info['terms']);
+			
 			$record_id = db_insert('site_users',$info);
 		
 			require_once('../lib/easybitcoin.php');
@@ -267,7 +268,6 @@ class User {
 			$email = SiteEmail::getRecord('register-notify');
 			$info['pass'] = false;
 			Email::send($CFG->form_email,$CFG->accounts_email,$email['title'],$CFG->form_email_from,false,$email['content'],$info);
-		
 			return true;
 		}
 	}
