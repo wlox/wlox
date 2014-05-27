@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-error_reporting(E_PARSE || E_ERROR);
+
 include 'cfg.php';
 
 $CFG->session_active = true;
@@ -155,8 +155,8 @@ if ($total_received > 0) {
 	$warm_wallet_a['address'] = $CFG->bitcoin_warm_wallet_address;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
-	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
-	$response = BitcoinAddresses::cheapsweep($bitcoin,$hot_wallet_a['address']);
+	/*
+	$response = BitcoinAddresses::cheapsweep($hot_wallet_a['address']);
 	echo 'Cheapsweep: '.$response.'<br>';
 	if ($response) {
 		$transaction = $bitcoin->gettransaction($response);
@@ -179,6 +179,7 @@ if ($total_received > 0) {
 		echo 'Error: Cheapsweep unsuccessful.<br>';
 	
 	db_update('status',1,array('received_btc_pending'=>'0','hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
+	*/
 	
 	if ($reserve_surplus > $CFG->bitcoin_reserve_min) {
 		$bitcoin->settxfee(0.00);

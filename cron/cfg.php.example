@@ -19,7 +19,6 @@ $CFG->bitcoin_port = 8332;
 $CFG->bitcoin_protocol = 'http';
 $CFG->bitcoin_reserve_ratio = 0.1;
 $CFG->bitcoin_reserve_min = 1;
-$CFG->bitcoin_directory = '';
 $CFG->bitcoin_sending_fee = 0.0001;
 $CFG->bitcoin_warm_wallet_address = '';
 

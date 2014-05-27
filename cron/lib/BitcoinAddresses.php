@@ -1,10 +1,15 @@
 <?php
 class BitcoinAddresses{
+	static $bitcoin;
+	
 	function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		
 		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
@@ -37,20 +42,22 @@ class BitcoinAddresses{
 			return $result[0]['total'];
 	}
 	
-	function getNew($hot_wallet=false) {
+	function getNew() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
 		
-		$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
-		$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
-		
-		if (!$hot_wallet)
-			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
+		if (!self::$bitcoin) {
+			require_once('lib/easybitcoin.php');
+			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+		}
 		else
-			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'system_address'=>'Y', 'hot_wallet'=>'Y','date'=>date('Y-m-d H:i:s')));
-			
+			$bitcoin = self::$bitcoin;
+		
+		$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
+		$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
+		
 		return $new_id;
 	}
 	
@@ -59,6 +66,8 @@ class BitcoinAddresses{
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$address = preg_replace("/[^0-9a-zA-Z]/",'',$address);
 		
 		$sql = "SELECT id, site_user,`date` FROM bitcoin_addresses WHERE address = '$address' ";
 		$result = db_query_array($sql);
@@ -76,11 +85,18 @@ class BitcoinAddresses{
 		return $result[0]['balance'];
 	}
 	
-	function getBitcoindBalance($bitcoin) {
+	function getBitcoindBalance() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		if (!self::$bitcoin) {
+			require_once('lib/easybitcoin.php');
+			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+		}
+		else
+			$bitcoin = self::$bitcoin;
 		
 		$accounts = $bitcoin->listaccounts(3);
 		$total = 0;
@@ -92,15 +108,24 @@ class BitcoinAddresses{
 		return $total;
 	}
 	
-	function cheapsweep($bitcoin,$destination) {
+	function cheapsweep($destination) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
 		
-		if (!$destination || !$bitcoin)
+		$destination = preg_replace("/[^0-9a-zA-Z]/",'',$destination);
+		if (!$destination)
 			return false;
 		
+		if (!self::$bitcoin) {
+			require_once('lib/easybitcoin.php');
+			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+		}
+		else
+			$bitcoin = self::$bitcoin;
+		
+		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 		$addresses1 = $bitcoin->listaddressgroupings();
 		if ($addresses1) {
 			foreach ($addresses1 as $address1) {
@@ -117,8 +142,7 @@ class BitcoinAddresses{
 		
 		if ($addresses) {
 			$address_str = implode(' ', $addresses);
-			$dir = realpath(dirname(__FILE__));
-			$response = shell_exec('cd '.$dir.' && ./cheapsweap -d '.$destination.' '.$address_str);
+			$response = shell_exec('cd '.$CFG->dirroot.'lib/ && ./cheapsweap -d '.$destination.' '.$address_str);
 			return $response;
 		}
 	}
@@ -131,12 +155,6 @@ class BitcoinAddresses{
 		
 		$sql = "SELECT * FROM bitcoin_addresses WHERE system_address = 'Y' AND hot_wallet = 'Y' ORDER BY `date` ASC LIMIT 0,1";
 		$result = db_query_array($sql);
-		
-		if (!$result) {
-			$new_id = self::getNew(true);
-			return DB::getRecord('bitcoin_addresses',$new_id,0,1);
-		}
-		
 		return $result[0];
 	}
 	
@@ -153,8 +171,19 @@ class BitcoinAddresses{
 	
 	function validateAddress($btc_address) {
 		global $CFG;
+		
+		$btc_address = preg_replace("/[^0-9a-zA-Z]/",'',$btc_address);
+		
+		if (!$btc_address)
+			return false;
 	
-		$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+		if (!self::$bitcoin) {
+			require_once('lib/easybitcoin.php');
+			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+		}
+		else
+			$bitcoin = self::$bitcoin;
+		
 		$response = $bitcoin->validateaddress($btc_address);
 	
 		if (!$response['isvalid'] || !is_array($response))
