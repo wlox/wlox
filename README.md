@@ -117,8 +117,6 @@ When that is ready, we need to set up each file to be run by the server's cron t
 - receive_bitcoin.php - Every minute.
 - send_bitcoin.php - Every minute.
 
-Last of all, we need to open the file called lib/cheapsweap and modify the following line to point to your bitcoind executable: ```BITCOIND="/path/to/bitcoind"```
-
 
 5. Setting up the Bitcoind Server
 ---------------------
