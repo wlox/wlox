@@ -853,15 +853,19 @@ class Form {
 		
 		if (is_array($options_array) && !$subtable) {
 			if (is_array($options_array[0])) {
-				foreach ($options_array as $i => $option_array) {
+				$options_array1 = $options_array;
+				unset($options_array);
+				foreach ($options_array1 as $i => $option_array) {
 					if (is_array($subtable_fields)) {
 						$arr = array();
 						foreach ($subtable_fields as $field) {
 							$arr[] = $option_array[$field];
 						}
+						$i = ($option_array['id'] > 0) ? $option_array['id'] : $i;
 						$options_array[$i] = implode(' ',$arr);
 					}
 					else {
+						$i = ($option_array['id'] > 0) ? $option_array['id'] : $i;
 						$options_array[$i] = implode(' ',$option_array);
 					}
 				}

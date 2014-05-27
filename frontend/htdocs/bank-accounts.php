@@ -10,8 +10,9 @@ elseif (!User::isLoggedIn())
 
 $account1 = ereg_replace("[^0-9]", "",$_REQUEST['account']);
 $currency1 = ereg_replace("[^0-9]", "",$_REQUEST['currency']);
-$description1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['description']);
+$description1 = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$_REQUEST['description']);
 $remove_id1 = ereg_replace("[^0-9]", "",$_REQUEST['remove_id']);
+
 
 API::add('Content','getRecord',array((($_REQUEST['action'] == 'add') ? 'bank-accounts-add' : 'bank-accounts')));
 API::add('BankAccounts','get');
