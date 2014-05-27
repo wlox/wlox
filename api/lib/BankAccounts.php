@@ -6,6 +6,8 @@ class BankAccounts{
 		if (!$CFG->session_active)
 			return false;
 		
+		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
+		
 		$sql = "SELECT bank_accounts.*, currencies.currency AS currency FROM bank_accounts LEFT JOIN currencies ON (bank_accounts.currency = currencies.id) WHERE 1 AND site_user = ".User::$info['id'];
 
 		if ($currency_id > 0)
@@ -27,7 +29,7 @@ class BankAccounts{
 		if (!$CFG->session_active || !($id > 0))
 			return false;
 		
-		$id1 = ereg_replace("[^0-9]", "",$id);
+		$id1 = preg_replace("/[^0-9]/", "",$id);
 		
 		return DB::getRecord('bank_accounts',$id1,0,1);
 	}
@@ -37,6 +39,8 @@ class BankAccounts{
 		
 		if (!$CFG->session_active || !$account_number)
 			return false;
+		
+		$account_number = preg_replace("/[^0-9]/", "",$account_number);
 		
 		$sql = "SELECT * FROM bank_accounts WHERE account_number = $account_number";
 		$result = db_query_array($sql);
@@ -51,6 +55,10 @@ class BankAccounts{
 		if (!$CFG->session_active)
 			return false;
 		
+		$account = preg_replace("/[^0-9]/", "",$account);
+		$currency = preg_replace("/[^0-9]/", "",$currency);
+		$description = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/",$description);
+		
 		db_insert('bank_accounts',array('account_number'=>$account,'currency'=>$currency,'description'=>$description,'site_user'=>User::$info['id']));
 	}
 	
@@ -59,6 +67,8 @@ class BankAccounts{
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$remove_id = preg_replace("/[^0-9]/", "",$remove_id);
 		
 		db_delete('bank_accounts',$remove_id);
 	}

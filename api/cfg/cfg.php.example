@@ -53,19 +53,6 @@ $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
 $CFG->req_img = '<em>*</em>';
 
-/* Bitcoin */
-$CFG->bitcoin_username = '';
-$CFG->bitcoin_accountname = '';
-$CFG->bitcoin_passphrase = '';
-$CFG->bitcoin_host = 'localhost';
-$CFG->bitcoin_port = 8332;
-$CFG->bitcoin_protocol = 'http';
-$CFG->bitcoin_reserve_ratio = 0.1;
-$CFG->bitcoin_reserve_min = 1;
-$CFG->bitcoin_directory = '';
-$CFG->bitcoin_sending_fee = 0.0001;
-$CFG->bitcoin_warm_wallet_address = '';
-
 /* Emails */
 $CFG->accounts_email = '';
 $CFG->support_email = '';

@@ -87,7 +87,7 @@ if (is_array($commands)) {
 						if (is_array($args)) {
 							foreach ($args as $i => $arg) {
 								if (!is_array($args) && $method != 'getSettingsChangeRequest')
-									$args[$i] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-_]", "",$arg);
+									$args[$i] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$arg);
 							}
 						}
 						else {
