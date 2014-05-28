@@ -19,18 +19,14 @@ $CFG->method_id = 0;
 $DB_DEBUG = true;
 $DB_DIE_ON_FAIL = true;
 
-require_once ("../shared2/autoload.php");
+require_once ("shared2/autoload.php");
 
 /* connect to the database */
-if (!empty($CFG->dbname)) {
-	db_connect ( $CFG->dbhost, $CFG->dbname, $CFG->dbuser, $CFG->dbpass );
-
-	$ses_class = new Session ( );
-	session_set_save_handler ( array (&$ses_class, '_open' ), array (&$ses_class, '_close' ), array (&$ses_class, '_read' ), array (&$ses_class, '_write' ), array (&$ses_class, '_destroy' ), array (&$ses_class, '_gc' ) );
-	session_start ();
-	
-	Settings::assign ( $CFG );
-}
+db_connect ( $CFG->dbhost, $CFG->dbname, $CFG->dbuser, $CFG->dbpass );
+mysql_set_charset('utf8');
+session_start();
+session_regenerate_id();
+Settings::assign ( $CFG );
 
 /* url options */
 $CFG->backstage_mode = true;
