@@ -16,8 +16,8 @@ class Currencies {
 		if (!$currency_abbr && !$currency_id)
 			return false;
 		
-		$currency_id1 = ereg_replace("[^0-9]", "",$currency_id);
-		$currency_abbr1 = ereg_replace("[^a-zA-Z]", "",$currency_abbr);
+		$currency_id1 = preg_replace("/[^0-9]/", "",$currency_id);
+		$currency_abbr1 = preg_replace("/[^a-zA-Z]/", "",$currency_abbr);
 
 		if ($currency_abbr1)
 			return DB::getRecord('currencies',false,$currency_abbr1,0,'currency');

@@ -4,6 +4,8 @@ class Content{
 	function getRecord($url){
 		global $CFG;
 		
+		$url = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$url);
+		
 		if(empty($url))
 			return false;
 			

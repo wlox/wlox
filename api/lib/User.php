@@ -9,6 +9,8 @@ class User {
 	function getInfo($session_id=false) {
 		global $CFG;
 		
+		$session_id = preg_replace("/[^0-9]/", "",$session_id);
+		
 		if (!($session_id > 0) || !$CFG->session_active)
 			return false;
 	
@@ -19,6 +21,8 @@ class User {
 	function logOut($session_id=false) {
 		if (!($session_id > 0))
 			return false;
+		
+		$session_id = preg_replace("/[^0-9]/", "",$session_id);
 		
 		return db_delete('sessions',$session_id,'session_id');
 	}
@@ -129,6 +133,8 @@ class User {
 	function sendSMS($authy_id=false) {
 		global $CFG;
 		
+		$authy_id = preg_replace("/[^0-9]/", "",$authy_id);
+		
 		if (!($CFG->session_active || $CFG->session_locked))
 			return false;
 		
@@ -155,8 +161,8 @@ class User {
 		if (!($CFG->session_active || $CFG->session_locked))
 			return false;
 		
-		$token1 = ereg_replace("[^0-9]", "",$token);
-		$authy_id1 = ereg_replace("[^0-9]", "",$authy_id);
+		$token1 = preg_replace("/[^0-9]/", "",$token);
+		$authy_id1 = preg_replace("/[^0-9]/", "",$authy_id);
 		$authy_id = ($authy_id > 0) ? $authy_id : User::$info['authy_id'];
 		
 		if (!($token1 > 0) || !($authy_id > 0))
@@ -195,6 +201,8 @@ class User {
 	function firstLoginPassChange($pass) {
 		global $CFG;
 		
+		$pass = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$pass);
+		
 		if (!$CFG->session_active || strlen($pass) < 8 || User::$info['no_logins'] != 'Y')
 			return false;
 		
@@ -202,6 +210,8 @@ class User {
 	}
 	
 	function userExists($email) {
+		$email = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$email);
+		
 		if (!$email)
 			return false;
 		
@@ -215,6 +225,8 @@ class User {
 	}
 	
 	function resetUser($id) {
+		$id = preg_replace("/[^0-9]/", "",$id);
+		
 		if (!($id > 0))
 			return false;
 		
@@ -239,8 +251,8 @@ class User {
 
 		$new_id = self::getNewId();
 		if ($new_id > 0) {
-			$info['first_name'] = ereg_replace("/[^\da-z]/i", "",$info['first_name']);
-			$info['last_name'] = ereg_replace("/[^\da-z]/i", "",$info['last_name']);
+			$info['first_name'] = ereg_replace("/[^\da-z ]/i", "",$info['first_name']);
+			$info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$info['last_name']);
 			$info['country'] = ereg_replace("[^0-9]", "",$info['country']);
 			$info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$info['email']);
 			$info['user'] = $new_id;
@@ -275,6 +287,9 @@ class User {
 	function registerAuthy($cell,$country_code) {
 		global $CFG;
 		
+		$cell = preg_replace("/[^0-9]/", "",$cell);
+		$country_code = preg_replace("/[^0-9]/", "",$country_code);
+		
 		if (!$CFG->session_active)
 			return false;
 		
@@ -289,6 +304,10 @@ class User {
 	
 	function enableAuthy($cell,$country_code,$authy_id,$using_sms) {
 		global $CFG;
+		
+		$cell = preg_replace("/[^0-9]/", "",$cell);
+		$country_code = preg_replace("/[^0-9]/", "",$country_code);
+		$authy_id = preg_replace("/[^0-9]/", "",$authy_id);
 		
 		if (!$CFG->session_active)
 			return false;
@@ -315,8 +334,8 @@ class User {
 			return false;
 		
 		$update['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$info['pass']);
-		$update['first_name'] = ereg_replace("/[^\da-z]/i", "",$info['first_name']);
-		$update['last_name'] = ereg_replace("/[^\da-z]/i", "",$info['last_name']);
+		$update['first_name'] = ereg_replace("/[^\da-z ]/i", "",$info['first_name']);
+		$update['last_name'] = ereg_replace("/[^\da-z ]/i", "",$info['last_name']);
 		$update['country'] = ereg_replace("[^0-9]", "",$info['country']);
 		$update['email'] = ereg_replace("[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]", "",$info['email']);
 		
@@ -430,7 +449,7 @@ class User {
 		if (!$CFG->session_active || User::$info['notify_login'] != 'Y')
 			return false;
 		
-		$ipaddress1 = ereg_replace("[^0-9\.]", "",$ipaddress);
+		$ipaddress1 = preg_replace("/[^0-9\.]/", "",$ipaddress);
 		
 		$email = SiteEmail::getRecord('login-notify');
 		$info = User::$info;

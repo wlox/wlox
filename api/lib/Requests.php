@@ -6,6 +6,9 @@ class Requests{
 		if (!$CFG->session_active)
 			return false;
 		
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$per_page = preg_replace("/[^0-9]/", "",$per_page);
+		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		$type = ($withdrawals) ? $CFG->request_withdrawal_id : $CFG->request_deposit_id;
@@ -32,6 +35,11 @@ class Requests{
 	
 	function insert($is_btc=false,$bank_account_currency=false,$amount=false,$btc_address=false,$account_number=false) {
 		global $CFG;
+		
+		$bank_account_currency = preg_replace("/[^0-9]/", "",$bank_account_currency);
+		$amount = preg_replace("/[^0-9\.]/", "",$amount);
+		$account_number = preg_replace("/[^0-9]/", "",$account_number);
+		$btc_address = preg_replace("/[^0-9a-zA-Z]/",'',$btc_address);
 		
 		if (!$CFG->session_active)
 			return false;

@@ -173,7 +173,7 @@ class BitcoinAddresses{
 	function validateAddress($btc_address) {
 		global $CFG;
 		
-		$btc_address = preg_replace("/[^0-9a-zA-Z]/",$btc_address);
+		$btc_address = preg_replace("/[^0-9a-zA-Z]/",'',$btc_address);
 		
 		if (!$btc_address)
 			return false;

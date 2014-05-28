@@ -3,6 +3,12 @@ class Orders {
 	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false) {
 		global $CFG;
 		
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$per_page = preg_replace("/[^0-9]/", "",$per_page);
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$start_date = preg_replace ("/[^0-9: \-]/","",$start_date);
+		
 		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
@@ -47,6 +53,8 @@ class Orders {
 	}
 	
 	function getRecord($order_id) {
+		$order_id = preg_replace("/[^0-9]/", "",$order_id);
+		
 		return DB::getRecord('orders',$order_id,0,1);
 	}
 	
@@ -115,6 +123,10 @@ class Orders {
 		if (!$CFG->session_active)
 			return false;
 		
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$price = preg_replace("/[^0-9\.]/", "",$price);
+		$type = preg_replace("/[^0-9]/", "",$type);
+		
 		if (!$type || !$price || !$currency)
 			return false;
 		
@@ -141,6 +153,13 @@ class Orders {
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$amount = preg_replace("/[^0-9\.]/", "",$amount);
+		$price = preg_replace("/[^0-9\.]/", "",$price);
+		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency1);
+		$fee = preg_replace("/[^0-9\.]/", "",$fee);
+		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
+		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
 		
 		if (!$external_transaction)
 			db_start_transaction();
@@ -319,6 +338,8 @@ class Orders {
 	function delete($id) {
 		global $CFG;
 		
+		$id = preg_replace("/[^0-9]/", "",$id);
+		
 		if (!($id > 0))
 			return false;
 		
@@ -331,7 +352,7 @@ class Orders {
 	function getBidList($currency=false,$notrades=false,$limit_7=false,$user=false) {
 		global $CFG;
 		
-		$currency1 = ereg_replace("/[^\da-z]/i", "",$currency);
+		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$user = ($user) ? ' AND site_user = '.User::$info['id'].' ' : '';
 		
 		if ($currency1 != 'All')
@@ -358,7 +379,7 @@ class Orders {
 	function getAskList($currency=false,$notrades=false,$limit_7=false,$user=false) {
 		global $CFG;
 	
-		$currency1 = ereg_replace("/[^\da-z]/i", "",$currency);
+		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$user = ($user) ? ' AND site_user = '.User::$info['id'].' ' : '';
 		$currency_info = $CFG->currencies[strtoupper($currency1)];
 		

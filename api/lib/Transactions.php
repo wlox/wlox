@@ -3,6 +3,12 @@ class Transactions {
 	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false,$dont_paginate=false) {
 		global $CFG;
 		
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$per_page = preg_replace("/[^0-9]/", "",$per_page);
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$start_date = preg_replace ("/[^0-9: \-]/","",$start_date);
+		
 		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
@@ -15,6 +21,8 @@ class Transactions {
 			$type = $CFG->transactions_buy_id;
 		elseif ($type == 'sell')
 			$type = $CFG->transactions_sell_id;
+		else
+			$type = preg_replace("/[^0-9]/", "",$type);
 		
 		//$currency = (!$currency) ? 'usd' : $currency;
 		
@@ -60,6 +68,14 @@ class Transactions {
 	function pagination($link_url,$page,$total_rows,$rows_per_page=0,$max_pages=0,$pagination_label=false,$target_elem=false) {
 		global $CFG;
 	
+		$link_url = preg_replace("/[^a-zA-Z\.]/", "",$link_url);
+		$page = preg_replace("/[^0-9]/", "",$page);
+		$total_rows = preg_replace("/[^0-9]/", "",$total_rows);
+		$rows_per_page = preg_replace("/[^0-9]/", "",$rows_per_page);
+		$max_pages = preg_replace("/[^0-9]/", "",$max_pages);
+		$pagination_label = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$pagination_label);
+		$target_elem = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$target_elem);
+		
 		$page = ($page > 0) ? $page : 1;
 		if (!($rows_per_page > 0))
 			return false;
@@ -108,7 +124,7 @@ class Transactions {
 	function getList($currency=false,$notrades=false,$limit_7=false) {
 		global $CFG;
 		
-		$currency1 = ereg_replace("/[^\da-z]/i", "",$currency);
+		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_info = $CFG->currencies[strtoupper($currency1)];
 		
 		if ($limit_7)

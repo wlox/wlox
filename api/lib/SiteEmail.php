@@ -3,6 +3,8 @@ class SiteEmail{
 	function getRecord($key){
 		global $CFG;
 		
+		$key = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$key);
+		
 		if (empty($key))
 			return false;		
 		$sql="SELECT * FROM emails WHERE emails.key='$key' ";	

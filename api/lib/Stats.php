@@ -3,6 +3,8 @@ class Stats {
 	function getHistorical($timeframe='1year',$currency='usd') {
 		global $CFG;
 		
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		
 		if ($timeframe == '1mon')
 			$start = date('Y-m-d',strtotime('-1 month'));
 		elseif ($timeframe == '3mon')
@@ -27,8 +29,11 @@ class Stats {
 	function getCurrent($currency_id,$currency_abbr=false) {
 		global $CFG;
 		
+		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
+		$currency_abbr = preg_replace("/[^a-zA-Z]/", "",$currency_abbr);
+		
 		if ($currency_abbr) {
-			$c_info = DB::getRecord('currencies',false,$currency1,0,'currency');
+			$c_info = DB::getRecord('currencies',false,$currency_abbr,0,'currency');
 			$currency_id = $c_info['id'];
 		}
 		
