@@ -17,14 +17,16 @@ $page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
 $trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
 $bypass = $_REQUEST['bypass'];
 
-API::add('Transactions','get',array(1,$page1,30,$currency1,false,$start_date1,$type1,$order_by1,$order_desc1));
-API::add('Transactions','get',array(false,$page1,30,$currency1,false,$start_date1,$type1,$order_by1,$order_desc1));
+API::add('Transactions','get',array(1,$page1,30,$currency1,1,$start_date1,$type1,$order_by1,$order_desc1));
+$query = API::send();
+$total = $query['Transactions']['get']['results'][0];
+
+API::add('Transactions','get',array(false,$page1,30,$currency1,1,$start_date1,$type1,$order_by1,$order_desc1));
 API::add('Transactions','pagination',array('transactions.php',$page1,$total,30,5,$CFG->pagination_label));
 API::add('Transactions','getTypes');
 $query = API::send();
 
-$total = $query['Transactions']['get']['results'][0];
-$transactions = $query['Transactions']['get']['results'][1];
+$transactions = $query['Transactions']['get']['results'][0];
 $pagination = $query['Transactions']['pagination']['results'][0];
 $transaction_types = $query['Transactions']['getTypes']['results'][0];
 
@@ -42,7 +44,7 @@ if (!$bypass) {
 <div class="page_title">
 	<div class="container">
 		<div class="title"><h1><?= $page_title ?></h1></div>
-        <div class="pagenation">&nbsp;<a href="index.html"><?= Lang::string('home') ?></a> <i>/</i> <a href="account.php"><?= Lang::string('account') ?></a> <i>/</i> <a href="transactions.php"><?= $page_title ?></a></div>
+        <div class="pagenation">&nbsp;<a href="index.php"><?= Lang::string('home') ?></a> <i>/</i> <a href="account.php"><?= Lang::string('account') ?></a> <i>/</i> <a href="transactions.php"><?= $page_title ?></a></div>
 	</div>
 </div>
 <div class="container">

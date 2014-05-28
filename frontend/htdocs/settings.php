@@ -53,7 +53,9 @@ if ($_REQUEST['ex_request'])
 
 
 API::add('User','getInfo',array($_SESSION['session_id']));
+API::add('User','getCountries');
 $query = API::send();
+$countries = $query['User']['getCountries']['results'][0];
 
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->get($query['User']['getInfo']['results'][0]);
@@ -275,7 +277,7 @@ include 'includes/head.php';
 <div class="page_title">
 	<div class="container">
 		<div class="title"><h1><?= $page_title ?></h1></div>
-        <div class="pagenation">&nbsp;<a href="index.html"><?= Lang::string('home') ?></a> <i>/</i> <a href="account.php"><?= Lang::string('account') ?></a> <i>/</i> <a href="settings.php"><?= $page_title ?></a></div>
+        <div class="pagenation">&nbsp;<a href="index.php"><?= Lang::string('home') ?></a> <i>/</i> <a href="account.php"><?= Lang::string('account') ?></a> <i>/</i> <a href="settings.php"><?= $page_title ?></a></div>
 	</div>
 </div>
 <div class="container">
@@ -300,7 +302,7 @@ include 'includes/head.php';
                 $personal->passwordInput('pass2',Lang::string('settings-pass-confirm'),true,false,false,false,false,false,'pass');
                 $personal->textInput('first_name',Lang::string('settings-first-name'));
                 $personal->textInput('last_name',Lang::string('settings-last-name'));
-                $personal->selectInput('country',Lang::string('settings-country'),1,false,false,'iso_countries',array('name'));
+                $personal->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $personal->textInput('email',Lang::string('settings-email'),'email');
                 $personal->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('settings-save-info').'" class="but_user" /></div><input type="hidden" name="submitted" value="1" />');
                 $personal->display();
