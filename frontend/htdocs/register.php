@@ -3,8 +3,8 @@ include '../cfg/cfg.php';
 
 $register = new Form('register',false,false,'form3');
 //$register->get(User::$info['id']);
-$register->info['first_name'] = ereg_replace("/[^\da-z]/i", "",$register->info['first_name']);
-$register->info['last_name'] = ereg_replace("/[^\da-z]/i", "",$register->info['last_name']);
+$register->info['first_name'] = ereg_replace("/[^\da-z ]/i", "",$register->info['first_name']);
+$register->info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$register->info['last_name']);
 $register->info['country'] = ereg_replace("[^0-9]", "",$register->info['country']);
 $register->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$register->info['email']);
 $register->verify();

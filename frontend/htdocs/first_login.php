@@ -19,7 +19,7 @@ $query = API::send();
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->verify();
 $personal->get($query['User']['getInfo']['results'][0]);
-$personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-_]", "",$personal->info['pass']);
+$personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$personal->info['pass']);
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
 	$errors = array();
