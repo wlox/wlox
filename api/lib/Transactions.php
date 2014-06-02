@@ -144,11 +144,14 @@ class Transactions {
 		return db_query_array($sql);
 	}
 
-	function getHistory() {
+	function getHistory($currency=false,$type=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$type = preg_replace("/[^0-9]/", "",$type);
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		
 		$user = User::$info['id'];
 		$sql = "
@@ -157,7 +160,14 @@ class Transactions {
 		LEFT JOIN transaction_types ON (transaction_types.id = transactions.transaction_type)
 		LEFT JOIN transaction_types transaction_types1 ON (transaction_types1.id = transactions.transaction_type1)
 		LEFT JOIN currencies ON (currencies.id = transactions.currency)
-		WHERE 1
+		WHERE 1";
+		
+		if ($type > 0)
+			$sql .= " AND IF(transactions.site_user = $user,transactions.transaction_type,transactions.transaction_type1) = $type ";
+		if ($currency)
+			$sql .= " AND currencies.currency = '$currency' ";
+		
+		$sql .= "
 		AND transactions.site_user = $user
 		ORDER BY transactions.date DESC LIMIT 0,1 ";
 		

@@ -47,6 +47,11 @@ class Stats {
 			$sql = "SELECT *, MAX(btc_price) AS max, MIN(btc_price) AS min FROM orders WHERE 1 AND currency = $currency_id AND order_type = {$CFG->order_type_ask} ORDER BY `date` DESC LIMIT 0,1";
 			$result2 = db_query_array($sql);
 		}
+		
+		if (!($result2[0]['btc_price'] > 0)) {
+			$sql = "SELECT btc_price FROM transactions WHERE currency = $currency_id ORDER BY `date` DESC LIMIT 0,1";
+			$result2 = db_query_array($sql);
+		}
 
 		$sql = "SELECT * FROM orders WHERE `date` < CURDATE() AND currency = $currency_id AND order_type = {$CFG->order_type_ask} ORDER BY `date` DESC LIMIT 0,1";
 		$result3 = db_query_array($sql);
@@ -59,9 +64,9 @@ class Stats {
 		
 		$sql = "SELECT btc_price AS min FROM transactions WHERE `date` >= CURDATE() AND currency = $currency_id ORDER BY btc_price ASC LIMIT 0,1";
 		$result6 = db_query_array($sql);
-		
+
 		$stats['last_price'] = $result2[0]['btc_price'];
-		$stats['daily_change'] = ($result3[0]['btc_price'] > 0) ? $result2[0]['btc_price'] - $result3[0]['btc_price'] : '0';
+		$stats['daily_change'] = ($result3[0]['btc_price'] > 0 && $result2[0]['btc_price'] > 0) ? $result2[0]['btc_price'] - $result3[0]['btc_price'] : '0';
 		$stats['daily_change_percent'] = ($stats['last_price'] > 0) ? ($stats['daily_change']/$stats['last_price']) * 100 : 0;
 		$stats['max'] = ($result5[0]['max'] > 0) ? $result5[0]['max'] : $result2[0]['btc_price'];
 		$stats['min'] = ($result6[0]['min'] > 0) ? $result6[0]['min'] : $result2[0]['btc_price'];
