@@ -194,8 +194,12 @@ class User {
 		*/
 	}
 	
-	function disableNeverLoggedIn() {
-		return db_update('site_users',User::$info['id'],array('no_logins'=>'N'));
+	function disableNeverLoggedIn($pass) {
+		$pass = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$pass);
+		if (strlen($pass) < 8)
+			return false;
+		
+		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
 	
 	function firstLoginPassChange($pass) {

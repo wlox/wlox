@@ -95,9 +95,7 @@ if (is_array($commands)) {
 						}
 						
 						$response = call_user_func_array(array($classname,$method),$args);
-						if ($response) {
-							$return[$classname][$method]['results'][] = $response;
-						}
+						$return[$classname][$method]['results'][] = $response;
 					}
 				}
 			}

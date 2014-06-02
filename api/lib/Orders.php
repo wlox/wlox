@@ -44,7 +44,6 @@ class Orders {
 		if (!$count && $dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc ";
 	
-		//return $sql;
 		$result = db_query_array($sql);
 		if (!$count)
 			return $result;
@@ -185,7 +184,7 @@ class Orders {
 			$compatible = Orders::getCompatible($CFG->order_type_ask,$price,$currency1,1);
 			$trans_total = 0;
 			$fiat_total = 0;
-			$btc_commision = 0;
+			//$btc_commision = 0;
 			$fiat_commision = 0;
 			
 			if ($compatible) {
@@ -211,16 +210,16 @@ class Orders {
 	
 					$this_fee = ($fee * 0.01) * $trans_amount;
 					$comp_order_fee = ($comp_order['fee'] * 0.01) * $trans_amount;
-					$this_trans_amount_net = $trans_amount - $this_fee;
+					$this_trans_amount_net = $trans_amount + $this_fee;
 					$comp_order_trans_amount_net = $trans_amount - $comp_order_fee;
 					$comp_btc_balance = $comp_order['btc_balance'] - $trans_amount;
 					$comp_fiat_balance = $comp_order['fiat_balance'] + ($comp_order['fiat_price'] * $comp_order_trans_amount_net);
-					$btc_commision += $this_fee;
-					$fiat_commision += $comp_order_fee * $comp_order['fiat_price'];
+					//$btc_commision += $this_fee;
+					$fiat_commision += ($comp_order_fee + $this_fee) * $comp_order['fiat_price'];
 					$this_prev_btc = $this_btc_balance;
 					$this_prev_fiat = $this_fiat_balance;
-					$this_btc_balance += $this_trans_amount_net;
-					$this_fiat_balance -= $trans_amount * $comp_order['fiat_price'];
+					$this_btc_balance += $trans_amount;
+					$this_fiat_balance -= $this_trans_amount_net * $comp_order['fiat_price'];
 					$trans_total += $trans_amount;
 					
 					$transaction_id = db_insert('transactions',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_info['id'],'transaction_type'=>$CFG->transactions_buy_id,'site_user1'=>$comp_order['site_user'],'transaction_type1'=>$CFG->transactions_sell_id,'btc'=>$trans_amount,'btc_price'=>$comp_order['fiat_price'],'fiat'=>($comp_order['fiat_price'] * $trans_amount),'currency'=>$currency_info['id'],'fee'=>$this_fee,'fee1'=>$comp_order_fee,'btc_net'=>$this_trans_amount_net,'btc_net1'=>$comp_order_trans_amount_net,'btc_before'=>$this_prev_btc,'btc_after'=>$this_btc_balance,'fiat_before'=>$this_prev_fiat,'fiat_after'=>$this_fiat_balance,'btc_before1'=>$comp_order['btc_balance'],'btc_after1'=>$comp_btc_balance,'fiat_before1'=>$comp_order['fiat_balance'],'fiat_after1'=>$comp_fiat_balance,'log_id'=>$order_log_id,'log_id1'=>$comp_order['log_id'],'fee_level'=>$fee,'fee_level1'=>$comp_order['fee']));
@@ -238,7 +237,8 @@ class Orders {
 	
 			if ($trans_total > 0) {
 				db_update('site_users',$user_info['id'],array('btc'=>$this_btc_balance,$currency1=>$this_fiat_balance));
-				db_update('status',1,array('btc_escrow'=>($status['btc_escrow']+$btc_commision),strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
+				db_update('status',1,array(strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
+				//db_update('status',1,array('btc_escrow'=>($status['btc_escrow']+$btc_commision),strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
 			}
 	
 			if ($amount > 0) {
@@ -259,7 +259,7 @@ class Orders {
 			$compatible = Orders::getCompatible($CFG->order_type_bid,$price,$currency1,1);
 			$trans_total = 0;
 			$fiat_total = 0;
-			$btc_commision = 0;
+			//$btc_commision = 0;
 			$fiat_commision = 0;
 			
 			if ($compatible) {
@@ -285,11 +285,11 @@ class Orders {
 					$this_fee = ($fee * 0.01) * $trans_amount;
 					$comp_order_fee = ($comp_order['fee'] * 0.01) * $trans_amount;
 					$this_trans_amount_net = $trans_amount - $this_fee;
-					$comp_order_trans_amount_net = $trans_amount - $comp_order_fee;
-					$comp_btc_balance = $comp_order['btc_balance'] + $comp_order_trans_amount_net;
-					$comp_fiat_balance = $comp_order['fiat_balance'] - ($comp_order['fiat_price'] * $trans_amount);
-					$btc_commision += $comp_order_fee;
-					$fiat_commision += $this_fee * $comp_order['fiat_price'];
+					$comp_order_trans_amount_net = $trans_amount + $comp_order_fee;
+					$comp_btc_balance = $comp_order['btc_balance'] + $trans_amount;
+					$comp_fiat_balance = $comp_order['fiat_balance'] - ($comp_order['fiat_price'] * $comp_order_trans_amount_net);
+					//$btc_commision += $comp_order_fee;
+					$fiat_commision += ($this_fee + $comp_order_fee) * $comp_order['fiat_price'];
 					$this_prev_btc = $this_btc_balance;
 					$this_prev_fiat = $this_fiat_balance;
 					$this_btc_balance -= $trans_amount;
@@ -311,7 +311,8 @@ class Orders {
 	
 			if ($trans_total > 0) {
 				db_update('site_users',$user_info['id'],array('btc'=>$this_btc_balance,$currency1=>$this_fiat_balance));
-				db_update('status',1,array('btc_escrow'=>($status['btc_escrow']+$btc_commision),strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
+				db_update('status',1,array(strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
+				//db_update('status',1,array('btc_escrow'=>($status['btc_escrow']+$btc_commision),strtolower($currency_info['currency']).'_escrow'=>($status[strtolower($currency_info['currency']).'_escrow']+$fiat_commision)));
 			}
 			
 			if ($amount > 0) {
