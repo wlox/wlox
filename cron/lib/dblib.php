@@ -42,6 +42,7 @@ function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
 			}
 		}
 	}
+	mysql_set_charset('utf8');
 	return $dbh;
 }
 

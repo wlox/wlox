@@ -18,6 +18,14 @@ if ($result) {
 	}
 }
 
+$sql = "SELECT address, site_user FROM bitcoin_addresses WHERE system_address != 'Y' ";
+$result = db_query_array($sql);
+if ($result) {
+	foreach ($result as $row) {
+		$addresses[$row['address']] = $row['site_user'];
+	}
+}
+
 $sql = "SELECT site_user,amount,send_address,id FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency = {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} FOR UPDATE";
 $result = db_query_array($sql);
 
@@ -25,14 +33,30 @@ if ($result) {
 	$pending = 0;
 	
 	foreach ($result as $row) {
+		// check if user has enough available
 		if (bcadd($row['amount'],$users[$row['site_user']],8) > $user_balances[$row['site_user']])
 			continue;
 		
-		$pending += $row['amount'];
+		// check if user sending to himself
+		if ($addresses[$row['send_address']] == $row['site_user']) {
+			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
+			continue;
+		}
 		
+		// check if sending to another wlox user
+		if ($addresses[$row['send_address']] > 0) {
+			db_update('site_users',$row['site_user'],array('btc'=>$user_balances[$row['site_user']] - $row['amount']));
+			db_update('site_users',$addresses[$row['send_address']],array('btc'=>$user_balances[$addresses[$row['send_address']]] + $row['amount']));
+			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
+			db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$addresses[$row['send_address']],'currency'=>$CFG->btc_currency_id,'amount'=>$row['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id));
+			continue;
+		}
+		
+		// check if hot wallet has enough to send
+		$pending += $row['amount'];
 		if ($row['amount'] > $available)
 			continue;
-
+		
 		if (bcsub($row['amount'],$CFG->bitcoin_sending_fee,8) > 0) {
 			$transactions[$row['send_address']] = bcadd($row['amount'],$transactions[$row['send_address']],8);
 		}

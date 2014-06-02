@@ -90,7 +90,9 @@ foreach ($transactions as $t_id) {
 					$updated = db_update('requests',$request_id,array('request_status'=>$CFG->request_completed_id));
 				
 				if ($updated > 0) {
-					db_update('site_users',$user_id,array('btc'=>($user_balances[$user_id] + $detail['amount']),'last_update'=>date('Y-m-d H:i:s')));
+					$user_balances[$user_id] = $user_balances[$user_id] + $detail['amount'];
+					
+					db_update('site_users',$user_id,array('btc'=>($user_balances[$user_id]),'last_update'=>date('Y-m-d H:i:s')));
 					$unlink = unlink($transactions_dir.$t_id);
 					$total_received += $detail['amount'];
 					
@@ -120,7 +122,7 @@ foreach ($transactions as $t_id) {
 		unlink($transactions_dir.$t_id);
 	elseif (!$send && ($hot_wallet_in > 0)) {
 		$deficit = (($status['deficit_btc'] - $hot_wallet_in) > 0) ? $status['deficit_btc'] - $hot_wallet_in : '0'; 
-		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'total_btc'=>($status['total_btc'] - $CFG->bitcoin_sending_fee),'warm_wallet_btc'=>($status['warm_wallet_btc'] - $CFG->bitcoin_sending_fee)));
+		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'total_btc'=>($status['total_btc'] + $hot_wallet_in)));
 		
 		echo 'Hot wallet received '.$hot_wallet_in.'<br>';
 		if ($updated) {
@@ -136,10 +138,11 @@ foreach ($transactions as $t_id) {
 $hot_wallet = $status['hot_wallet_btc'] + $total_received;
 $warm_wallet = $status['warm_wallet_btc'];
 $total_btc = $status['total_btc'] + $total_received;
-$received_pending = $status['received_btc_pending'] + $total_received;
+//$received_pending = $status['received_btc_pending'] + $total_received;
 $pending_withdrawals = $status['pending_withdrawals'];
 $reserve_balance = $total_btc * $CFG->bitcoin_reserve_ratio;
 $reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals;
+echo 'Reserve surplus: '.$reserve_surplus.'<br>';
 
 if ($total_received > 0) {
 	if (!$status) {
@@ -149,7 +152,8 @@ if ($total_received > 0) {
 	
 	echo 'Total received: '.$total_received.'<br>';
 	
-	$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc,'received_btc_pending'=>$received_pending));
+	//$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc,'received_btc_pending'=>$received_pending));
+	$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
 	
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
 	$warm_wallet_a['address'] = $CFG->bitcoin_warm_wallet_address;
@@ -219,6 +223,7 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min) {
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
 	$bitcoin->settxfee(0.00);
+	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 	$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
 	$transferred = 0;
 	echo $bitcoin->error;
