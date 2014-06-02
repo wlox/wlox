@@ -107,6 +107,8 @@
 <input type="hidden" id="javascript_mon_11" value="<?= Lang::string('dec') ?>" />
 <input type="hidden" id="gmt_offset" value="<?= $CFG->timezone_offset ?>" />
 <input type="hidden" id="is_logged_in" value="<?= User::isLoggedIn() ?>" />
+<input type="hidden" id="cfg_orders_edit" value="<?= Lang::string('orders-edit') ?>" />
+<input type="hidden" id="cfg_orders_delete" value="<?= Lang::string('orders-delete') ?>" />
 <div class="site_wrapper">
    
 <!-- HEADER -->

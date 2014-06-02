@@ -51,7 +51,7 @@ class User {
 
 		if (!$result || $result['error']) {
 			Errors::add($CFG->login_invalid);
-			//$_SESSION = array();
+			$_SESSION = array();
 			return false;
 		}
 		

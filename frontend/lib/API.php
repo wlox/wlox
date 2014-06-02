@@ -41,7 +41,7 @@ class API{
 		$result = json_decode($result1,true);
 		//print_ar($result['session_id']);
 		//print_ar($result['nonce']);
-		//print_ar($result['commands']);
+		//echo $result['error'].',';
 		curl_close($ch);
 		User::updateNonce();
 		

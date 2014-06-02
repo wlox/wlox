@@ -10,7 +10,7 @@ API::add('SiteUser','getAvailable');
 $query = API::send();
 
 $current_bid = $query['Orders']['getCurrentBid']['results'][0];
-$current_ask = $query['Orders']['getCurrentBid']['results'][1];
+$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
 $user_available = $query['SiteUser']['getAvailable']['results'][0];
 
 $return['currency_info'] = $CFG->currencies[strtoupper($currency1)];

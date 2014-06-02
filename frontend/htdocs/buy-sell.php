@@ -17,8 +17,8 @@ $currency1 = ereg_replace("[^a-z]", "",$_SESSION['currency']);
 $confirmed = $_REQUEST['confirmed'];
 $cancel = $_REQUEST['cancel'];
 $bypass = $_REQUEST['bypass'];
-$buy_market_price1 = 1;
-$sell_market_price1 = 1;
+$buy_market_price1 = 0;
+$sell_market_price1 = 0;
 
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 API::add('User','getAvailable');

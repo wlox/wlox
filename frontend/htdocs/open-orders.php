@@ -29,7 +29,7 @@ if ($delete_id1 > 0) {
 }
 
 
-$currency1 = $_REQUEST['currency'];
+$currency1 = ($_REQUEST['currency'] != 'All') ? $_REQUEST['currency'] : false;
 $order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
 $trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
 $bypass = $_REQUEST['bypass'];
