@@ -41,15 +41,13 @@ $buy_amount1 = ($_REQUEST['buy_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQU
 $buy_price1 = ($_REQUEST['buy_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_price']) : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
 $buy_fee_amount1 = ($user_fee['fee'] * 0.01) * $buy_subtotal1;
-$buy_total1 = ($buy_price1 > 0) ? ($buy_subtotal1 - $buy_fee_amount1) / $buy_price1 : 0;
-$buy_total_no_fee1 = ($buy_price1 > 0) ? $buy_subtotal1 / $buy_price1 : 0;
+$buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
 
 $sell_amount1 = ($_REQUEST['sell_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_amount']) : 0;
 $sell_price1 = ($_REQUEST['sell_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_price']) : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee['fee'] * 0.01) * $sell_subtotal1;
 $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
-$sell_total_no_fee1 = ($sell_price1 > 0) ? $sell_subtotal1 / $sell_price1 : 0;
 
 if ($_REQUEST['buy']) {
 	$buy_market_price1 = ereg_replace("[^0-9]", "",$_REQUEST['buy_market_price']);
@@ -60,7 +58,7 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-no-price'));
 	if (!$currency1)
 		Errors::add(Lang::string('buy-errors-no-currency'));
-	if ($buy_subtotal1 > $user_available[strtoupper($currency1)])
+	if ($buy_total1 > $user_available[strtoupper($currency1)])
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
@@ -200,10 +198,10 @@ if (!$bypass) {
 							</div>
 							<div class="calc bigger">
 								<div class="label">
-									<span id="buy_total_approx_label"><?= Lang::string('buy-total-approx') ?></span>
+									<span id="buy_total_approx_label"><?= str_replace('[currency]','<span class="buy_currency_label">'.$currency_info['currency'].'</span>',Lang::string('buy-total-approx')) ?></span>
 									<span id="buy_total_label" style="display:none;"><?= Lang::string('buy-total') ?></span>
 								</div>
-								<div class="value"><span id="buy_total"><?= number_format($buy_total1,8) ?></span> BTC</div>
+								<div class="value"><span class="buy_currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="buy_total"><?= number_format($buy_total1,2) ?></span></div>
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />
@@ -330,10 +328,11 @@ if (!$bypass) {
 							</div>
 							<div class="calc bigger">
 								<div class="label">
-									<span id="buy_total_approx_label"><?= Lang::string('buy-total-approx') ?></span>
+									<span id="buy_total_approx_label"><?= str_replace('[currency]','<span class="buy_currency_label">'.$currency_info['currency'].'</span>',Lang::string('buy-total-approx')) ?></span>
 									<span id="buy_total_label" style="display:none;"><?= Lang::string('buy-total') ?></span>
 								</div>
-								<div class="value"><span id="buy_total"><?= number_format($buy_total1,8) ?></span> BTC</div>
+								
+								<div class="value"><span class="buy_currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="buy_total"><?= number_format($buy_total1,2) ?></span></div>
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />

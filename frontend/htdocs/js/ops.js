@@ -569,9 +569,9 @@ function calculateBuyPrice() {
 	var buy_price = ($('#buy_price').val()) ? parseFloat($('#buy_price').val().replace(',','')) : 0;
 	var buy_subtotal = buy_amount * buy_price;
 	var buy_commision = (user_fee * 0.01) * buy_subtotal;
-	var buy_total = (buy_price > 0) ? (buy_subtotal - buy_commision) / buy_price : 0;
+	var buy_total = buy_subtotal + buy_commision;
 	$('#buy_subtotal').html((buy_subtotal).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-	$('#buy_total').html((buy_total).toPrecision(8));
+	$('#buy_total').html((buy_total).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 	
 	var sell_amount = ($('#sell_amount').val()) ? parseFloat($('#sell_amount').val().replace(',','')) : 0;
 	var sell_price = ($('#sell_price').val()) ? parseFloat($('#sell_price').val().replace(',','')) : 0;
