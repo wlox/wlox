@@ -195,7 +195,7 @@ class User {
 	}
 	
 	function disableNeverLoggedIn($pass) {
-		$pass = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$pass);
+		$pass = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$pass);
 		if (strlen($pass) < 8)
 			return false;
 		
@@ -255,10 +255,10 @@ class User {
 
 		$new_id = self::getNewId();
 		if ($new_id > 0) {
-			$info['first_name'] = ereg_replace("/[^\da-z ]/i", "",$info['first_name']);
-			$info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$info['last_name']);
-			$info['country'] = ereg_replace("[^0-9]", "",$info['country']);
-			$info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$info['email']);
+			$info['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
+			$info['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
+			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
+			$info['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
 			$info['user'] = $new_id;
 			$info['pass'] = self::randomPassword(12);
 			$info['date'] = date('Y-m-d H:i:s');
@@ -337,11 +337,11 @@ class User {
 		if (!is_array($info))
 			return false;
 		
-		$update['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$info['pass']);
-		$update['first_name'] = ereg_replace("/[^\da-z ]/i", "",$info['first_name']);
-		$update['last_name'] = ereg_replace("/[^\da-z ]/i", "",$info['last_name']);
-		$update['country'] = ereg_replace("[^0-9]", "",$info['country']);
-		$update['email'] = ereg_replace("[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]", "",$info['email']);
+		$update['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$info['pass']);
+		$update['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
+		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
+		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
+		$update['email'] = preg_replace("/[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]/", "",$info['email']);
 		
 		if (strlen($update['pass']) < 8 || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;

@@ -7,13 +7,13 @@ $system_classes[] = 'DB';
 
 include '../cfg/cfg.php';
 
-$session_id1 = ereg_replace("[^0-9]","",$_POST['session_id']);
+$session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
 $signature1 = $_POST['signature'];
-$nonce1 = ereg_replace("[^0-9]","",$_POST['nonce']);
-$token1 = ereg_replace("[^0-9]","",$_POST['token']);
+$nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
+$token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $settings_change_id1 = $_REQUEST['settings_change_id'];
 $request_id1 = $_REQUEST['request_id'];
-$CFG->language = ereg_replace("[^a-z]","",$_POST['lang']);
+$CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = json_decode($_POST['commands'],true);
@@ -81,8 +81,8 @@ if (is_array($commands)) {
 			foreach ($methods_arr as $methods) {
 				if (is_array($methods)) {
 					foreach ($methods as $method => $args) {
-						$classname = ereg_replace("[^0-9a-zA-Z_]","",$classname);
-						$method = ereg_replace("[^0-9a-zA-Z_]","",$method);
+						$classname = preg_replace("/[^0-9a-zA-Z_]/","",$classname);
+						$method = preg_replace("/[^0-9a-zA-Z_]/","",$method);
 
 						if (is_array($args)) {
 							foreach ($args as $i => $arg) {
