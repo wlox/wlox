@@ -25,7 +25,7 @@ $available = $query['User']['getAvailable']['results'][0];
 $volume = $query['User']['getVolume']['results'][0];
 $fee_bracket = $query['FeeSchedule']['getRecord']['results'][0];
 
-$referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
+$referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['REMOTE_ADDR'],'/')+1);
 if ($referer == 'login.php' || $referer == 'verify_token.php' || $referer == 'first_login.php') {
 	if (User::$info['notify_login'] == 'Y') {
 		API::add('User','notifyLogin',array($_SERVER['REMOTE_ADDR']));
