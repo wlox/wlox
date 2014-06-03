@@ -73,7 +73,7 @@ When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example 
 
 The purpose of the Auth server is to allow users to initiate sessions and obtain a session key so that they can access protected methods on the API. 
 
-The Auth server source is provided in the repository [wlox/wlox-auth](http://github.com/wlox/wlox-auth), which should be cloned onto your intended Auth server.
+The Auth server source is provided in the repository [wlox/wlox-auth](http://github.com/wlox/wlox-auth), which should be cloned onto your intended Auth server. Please make sure that **short PHP tags** are enabled in php.ini and that **CURL** module is installed for PHP.
 
 The /htdocs folder of wlox-api is intended to be the server's web directory.
 
