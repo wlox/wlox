@@ -61,10 +61,7 @@ When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example 
 - **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
 - **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
 - **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
-- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOX to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
-- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOX to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
-- **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
-- **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
+- **$CFG->bitcoin_authorize_min:** Bitcoin withdrawals over this amount will need to be authorized by you in the backend.
 - **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com (see more about this process below).
 
 
