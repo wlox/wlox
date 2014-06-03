@@ -51,7 +51,7 @@ $CFG->deposit_bitcoin_desc = 4;
 $CFG->withdraw_fiat_desc = 1;
 $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
-$CFG->req_img = '<em>*</em>';
+$CFG->mcrypt_key = '7QQvcT9Ga7R6QC3';
 
 /* Emails */
 $CFG->accounts_email = '';
