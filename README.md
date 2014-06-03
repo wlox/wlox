@@ -23,6 +23,8 @@ WLOX requires the following components to function. Each one will be discussed i
 8. **Warm Wallet**: A Bitcoin wallet running on a secure computer of your choice.
 9. **2 Factor Authentication**: WLOX uses Authy for this purpose by default. Please read more below.
 
+It is very important that all servers that run PHP have **PHP short tags** enabled in the php.ini file. It is also crucial to have **CURL** installed on these servers.
+
 It is recommended to keep that items 1. 2. 3. 4/5 and 7 seperate servers to ensure maximum security. The warm wallet should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
 
 Once you have set up these 7 components, we can start installing the required packages and setting up their respective cfg.php files.
@@ -165,6 +167,12 @@ The configuration options for *backstage2*, can be found in cfg.php. All paths s
 -------------------
 
 The frontend server is intended to be the only part of the app which should be accesible to the user. 
+
+Your frontend server will need to have the following:
+- Short PHP tags enabled.
+- CURL module installed.
+- MCrypt module installed.
+- php5-gd module installed.
 
 Its source is provided in the repository [wlox/wlox-frontend](http://github.com/wlox/wlox-frontend), which should be cloned onto your intended Frontend server.
 
