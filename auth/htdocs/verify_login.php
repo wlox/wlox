@@ -31,6 +31,16 @@ if ($result[0]['awaiting'] == 'Y') {
 
 db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1)),'session_id');
 
+if ($result[0]['country_code'] > 0) {
+	$s = strlen($result[0]['country_code']);
+	$result[0]['country_code'] = str_repeat('x',$s);
+}
+
+if ($result[0]['tel'] > 0) {
+	$s = strlen($result[0]['tel']) - 2;
+	$result[0]['tel'] = str_repeat('x',$s).substr($result[0]['tel'], -2);
+}
+
 unset($result[0]['session_key']);
 unset($result[0]['awaiting']);
 unset($result[0]['id']);
