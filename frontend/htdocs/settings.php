@@ -11,8 +11,22 @@ $account_deactivated = (User::$info['deactivated'] == 'Y');
 $account_locked = (User::$info['locked'] == 'Y');
 $token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
 $authcode1 = $_REQUEST['authcode'];
+
+API::add('User','getInfo',array($_SESSION['session_id']));
+API::add('User','getCountries');
+$query = API::send();
+$countries = $query['User']['getCountries']['results'][0];
+
+$personal = new Form('settings',false,false,'form1','site_users');
+$personal->get($query['User']['getInfo']['results'][0]);
+$personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$personal->info['pass']);
+$personal->info['first_name'] = ereg_replace("/[^\da-z  ]/i", "",$personal->info['first_name']);
+$personal->info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$personal->info['last_name']);
+$personal->info['country'] = ereg_replace("[^0-9]", "",$personal->info['country']);
+$personal->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$personal->info['email']);
+$personal->verify();
 	
-if ($_REQUEST['submitted'] && !$token1) {
+if ($_REQUEST['submitted'] && !$token1 && !is_array($personal->errors)) {
 	if ($_REQUEST['request_2fa']) {
 		if (!($token1 > 0)) {
 			$no_token = true;
@@ -46,25 +60,13 @@ if ($authcode1) {
 	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
 		$_REQUEST = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
 	}
+	else
+		Errors::add(Lang::string('settings-request-expired'));
 }
 
 if ($_REQUEST['ex_request'])
 	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
 
-
-API::add('User','getInfo',array($_SESSION['session_id']));
-API::add('User','getCountries');
-$query = API::send();
-$countries = $query['User']['getCountries']['results'][0];
-
-$personal = new Form('settings',false,false,'form1','site_users');
-$personal->get($query['User']['getInfo']['results'][0]);
-$personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$personal->info['pass']);
-$personal->info['first_name'] = ereg_replace("/[^\da-z  ]/i", "",$personal->info['first_name']);
-$personal->info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$personal->info['last_name']);
-$personal->info['country'] = ereg_replace("[^0-9]", "",$personal->info['country']);
-$personal->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$personal->info['email']);
-$personal->verify();
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
 	$errors = array();

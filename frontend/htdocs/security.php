@@ -8,6 +8,18 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
+$authcode1 = $_REQUEST['authcode'];
+if ($authcode1) {
+	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
+	$query = API::send();
+
+	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
+		$step1 = true;
+	}
+	else
+		Errors::add(Lang::string('settings-request-expired'));
+}
+
 $cell1 = ($_REQUEST['cell']) ? ereg_replace("[^0-9]", "",$_REQUEST['cell']) : User::$info['tel'];
 $country_code1 = ($_REQUEST['country_code']) ? ereg_replace("[^0-9]", "",$_REQUEST['country_code']) : User::$info['country_code'];
 $token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
@@ -40,8 +52,12 @@ if ($_REQUEST['step'] == 1) {
 			
 			if (!is_array(Errors::$errors)) {
 				API::add('User','enableAuthy',array($cell1,$country_code1,$authy_id,$using_sms));
-				API::send();
-				$step1 = true;
+				API::add('User','settingsEmail2fa',array(array(1=>1),1));
+				$query = API::send();
+				//$step1 = true;
+
+				if ($query['User']['settingsEmail2fa']['results'][0])
+					Link::redirect('security.php?notice=email');
 			}
 		}
 	}
@@ -51,6 +67,7 @@ elseif ($_REQUEST['step'] == 2) {
 		Errors::add(Lang::string('security-no-token'));
 	
 	if (!is_array(Errors::$errors)) {
+		API::settingsChangeId(urldecode($authcode1));
 		API::token($token1);
 		API::add('User','verifiedAuthy');
 		$query = API::send();
@@ -60,6 +77,9 @@ elseif ($_REQUEST['step'] == 2) {
 	
 		if ($query['error']['authy-errors'])
 			Errors::merge($query['authy_errors']);
+		
+		if ($query['error'] == 'request-expired')
+			Errors::add(Lang::string('settings-request-expired'));
 	
 		if (!is_array(Errors::$errors)) {
 			Messages::add(Lang::string('security-success-message'));
@@ -69,9 +89,12 @@ elseif ($_REQUEST['step'] == 2) {
 	}
 }
 
-if ((User::$info['verified_authy'] == 'Y' || $step2) && !$_REQUEST['change'])
+if ($_REQUEST['notice'] == 'email')
+	$notice = Lang::string('settings-change-notice');
+
+if (User::$info['verified_authy'] == 'Y' || $step2)
 	API::add('Content','getRecord',array('security-setup'));
-elseif ((User::$info['authy_requested'] == 'Y' || $step1) && !$_REQUEST['change'])
+elseif ($step1)
 	API::add('Content','getRecord',array('security-token'));
 else
 	API::add('Content','getRecord',array('security-explain'));
@@ -92,7 +115,7 @@ include 'includes/head.php';
 	<? include 'includes/sidebar_account.php'; ?>
 	<div class="content_right">
 		<div class="testimonials-4">
-		<? if ((User::$info['verified_authy'] == 'Y' || $step2) && !$_REQUEST['change'] && !$step1) { ?>
+		<? if ((User::$info['verified_authy'] == 'Y' || $step2) && !$step1) { ?>
 			<h2><?= $content['title'] ?></h2>
 			<div class="text"><?= $content['content'] ?></div>
 			<div class="mar_top2"></div>
@@ -102,8 +125,7 @@ include 'includes/head.php';
 				<li><div class="number">+<?= User::$info['country_code']?> <?= User::$info['tel']?></div></li>
 				<li><a class="item_label" href="javascript:return false;"><?= Lang::string('security-verified') ?></a></li>
 			</ul>
-			<a class="but_user" href="security.php?change=1"><?= Lang::string('security-change-number') ?></a>
-		<? } elseif ((User::$info['authy_requested'] == 'Y' || $step1) && !$_REQUEST['change']) { ?>
+		<? } elseif ($step1) { ?>
 			<h2><?= $content['title'] ?></h2>
 			<div class="text"><?= $content['content'] ?></div>
 			<div class="mar_top2"></div>
@@ -111,6 +133,7 @@ include 'includes/head.php';
 			<? Errors::display(); ?>
 			<form id="enable_tfa" action="security.php" method="POST">
 				<input type="hidden" name="step" value="2" />
+				<input type="hidden" name="authcode" value="<?= urlencode($authcode1) ?>" />
 				<div class="buyform">
 					<div class="content">
 		            	<h3 class="section_label">
@@ -136,6 +159,7 @@ include 'includes/head.php';
 	            </div>
             </form>
 		<? } else { ?>
+			<?= ($notice) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
 			<h2><?= $content['title'] ?></h2>
 			<div class="text"><?= $content['content'] ?></div>
 			<div class="mar_top2"></div>
