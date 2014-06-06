@@ -294,7 +294,7 @@ class User {
 		$cell = preg_replace("/[^0-9]/", "",$cell);
 		$country_code = preg_replace("/[^0-9]/", "",$country_code);
 		
-		if (!$CFG->session_active)
+		if (!$CFG->session_active || User::$info['verified_authy'])
 			return false;
 		
 		$response = shell_exec("
@@ -313,7 +313,7 @@ class User {
 		$country_code = preg_replace("/[^0-9]/", "",$country_code);
 		$authy_id = preg_replace("/[^0-9]/", "",$authy_id);
 		
-		if (!$CFG->session_active)
+		if (!$CFG->session_active || User::$info['verified_authy'])
 			return false;
 		
 		db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms));
@@ -322,7 +322,7 @@ class User {
 	function verifiedAuthy() {
 		global $CFG;
 	
-		if (!($CFG->session_active && $CFG->token_verified))
+		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified))
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('verified_authy'=>'Y'));
@@ -415,10 +415,10 @@ class User {
 		return db_update('site_users',User::$info['id'],array('locked'=>'N'));
 	}
 	
-	function settingsEmail2fa($request) {
+	function settingsEmail2fa($request=false,$security_page=false) {
 		global $CFG;
 		
-		if (!($CFG->session_active || $CFG->session_locked))
+		if (!$CFG->session_active || $CFG->session_locked)
 			return false;
 		
 		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request))));
@@ -426,7 +426,11 @@ class User {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
 		
-			$email = SiteEmail::getRecord('settings-auth');
+			if (!$security_page)
+				$email = SiteEmail::getRecord('settings-auth');
+			else
+				$email = SiteEmail::getRecord('security-auth');
+				
 			Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
 			return true;
 		}
@@ -435,7 +439,7 @@ class User {
 	function getSettingsChangeRequest($settings_change_id1) {
 		global $CFG;
 
-		if (!($CFG->session_active || $CFG->session_locked) || !$settings_change_id1)
+		if (!$CFG->session_active || $CFG->session_locked || !$settings_change_id1)
 			return false;
 		
 		$request_id = Encryption::decrypt(urldecode($settings_change_id1));

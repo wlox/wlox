@@ -65,8 +65,12 @@ if ($settings_change_id1 && $CFG->session_active) {
 	$request_id = Encryption::decrypt(urldecode($settings_change_id1));
 	if ($request_id > 0) {
 		$change_request = DB::getRecord('change_settings',$request_id,0,1);
-		db_delete('change_settings',$request_id);
-		$CFG->email_2fa_verified = true;
+		if ($change_request) {
+			db_delete('change_settings',$request_id);
+			$CFG->email_2fa_verified = true;
+		}
+		else
+			$return['error'] = 'request-expired';
 	}
 	else
 		$return['error'] = 'request-expired';
