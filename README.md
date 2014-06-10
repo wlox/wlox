@@ -23,6 +23,8 @@ WLOX requires the following components to function. Each one will be discussed i
 8. **Warm Wallet**: A Bitcoin wallet running on a secure computer of your choice.
 9. **2 Factor Authentication**: WLOX uses Authy for this purpose by default. Please read more below.
 
+It is very important that all servers that run PHP have **PHP short tags** enabled in the php.ini file. It is also crucial to have **CURL** installed on these servers.
+
 It is recommended to keep that items 1. 2. 3. 4/5 and 7 seperate servers to ensure maximum security. The warm wallet should be on a secure computer that should only be connected to the internet when sending Bitcoin back to the hot wallet.
 
 Once you have set up these 7 components, we can start installing the required packages and setting up their respective cfg.php files.
@@ -39,7 +41,7 @@ You will find a file called *wlox.sql.gz* in the main project directory. Import 
 
 The API server provides a layer of security and abstraction between the frontend server and the database in order to prevent direct communication between these two components. This ensures that a successful attack on the frontend will not compromise the database.
 
-The API server source is provided in the repository [wlox/wlox-api](http://github.com/wlox/wlox-api), which should be cloned onto your intended API server.
+The API server source is provided in the repository [wlox/wlox-api](http://github.com/wlox/wlox-api), which should be cloned onto your intended API server. It is necessary that this server have **short PHP tags** enabled in php.ini as well as having **CURL PHP module** installed. 
 
 The /htdocs folder of wlox-api is intended to be the server's web directory.
 
@@ -59,10 +61,7 @@ When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example 
 - **$CFG->bitcoin_host:** The hostname or ip address of the bitcoind server. Use "localhost" if it's on the same server as the web server.
 - **$CFG->bitcoin_port:** The port at which the bitcoind server can be accessed (8332 by default).
 - **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
-- **$CFG->bitcoin_reserve_ratio:** The percentage, from zero to one, of Bitcoin that will be kept in the hot wallet (for example, 0.3 will cause WLOX to keep 30% of the Bitcoin in the system in the hot wallet and send the rest to the warm/cold wallet).
-- **$CFG->bitcoin_reserve_min:** The minimum amount of Bitcoin that must be received for WLOX to send the reserve residual to the warm/cold wallet. A value of 1 = 1BTC received. The purpose of this variable is to reduce the amount of network fees incurred for moving Bitcoin between the hot and cold wallets.
-- **$CFG->bitcoin_sending_fee:** The default fee to be used when sending Bitcoin (0.0001 by default). Specifying this value makes it easier to calculate how much Bitcoin will be sent when making transactions.
-- **$CFG->bitcoin_warm_wallet_address**: This is the address that WLOX will use to send the reserve residual to your warm/cold wallet. **Please be very, very careful** to make sure that this address is in your warm/cold wallet. Making a mistake could cause very large sums of money to be lost.
+- **$CFG->bitcoin_authorize_min:** Bitcoin withdrawals over this amount will need to be authorized by you in the backend.
 - **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com (see more about this process below).
 
 
@@ -71,7 +70,7 @@ When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example 
 
 The purpose of the Auth server is to allow users to initiate sessions and obtain a session key so that they can access protected methods on the API. 
 
-The Auth server source is provided in the repository [wlox/wlox-auth](http://github.com/wlox/wlox-auth), which should be cloned onto your intended Auth server.
+The Auth server source is provided in the repository [wlox/wlox-auth](http://github.com/wlox/wlox-auth), which should be cloned onto your intended Auth server. Please make sure that **short PHP tags** are enabled in php.ini and that **CURL** module is installed for PHP.
 
 The /htdocs folder of wlox-api is intended to be the server's web directory.
 
@@ -116,8 +115,6 @@ When that is ready, we need to set up each file to be run by the server's cron t
 - monthly_stats.php - 0 min, 0 hrs (the very start) of the first day of every month.
 - receive_bitcoin.php - Every minute.
 - send_bitcoin.php - Every minute.
-
-Last of all, we need to open the file called lib/cheapsweap and modify the following line to point to your bitcoind executable: ```BITCOIND="/path/to/bitcoind"```
 
 
 5. Setting up the Bitcoind Server
@@ -167,6 +164,12 @@ The configuration options for *backstage2*, can be found in cfg.php. All paths s
 -------------------
 
 The frontend server is intended to be the only part of the app which should be accesible to the user. 
+
+Your frontend server will need to have the following:
+- Short PHP tags enabled.
+- CURL module installed.
+- MCrypt module installed.
+- php5-gd module installed.
 
 Its source is provided in the repository [wlox/wlox-frontend](http://github.com/wlox/wlox-frontend), which should be cloned onto your intended Frontend server.
 
