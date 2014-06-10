@@ -184,6 +184,7 @@
                     <li><a href="how-to-register.php" <?= ($CFG->self == 'how-to-register.php') ? 'class="active"' : '' ?>><?= Lang::string('how-to-register') ?></a> <i class="fa fa-angle-down"></i>
                     	<ul>
                         	<li><a href="securing-account.php"><?= Lang::string('securing-account') ?></a></li>
+                        	<li><a href="reset_2fa.php"><?= Lang::string('reset-2fa') ?></a></li>
                         	<li><a href="funding-account.php"><?= Lang::string('funding-account') ?></a></li>
                         	<li><a href="withdrawing-account.php"><?= Lang::string('withdrawing-account') ?></a></li>
                         </ul>
