@@ -14,6 +14,7 @@ elseif (!$_SESSION['currency'])
 	$_SESSION['currency'] = 'usd';
 
 $currency1 = ereg_replace("[^a-z]", "",$_SESSION['currency']);
+$currency_info = $CFG->currencies[strtoupper($currency1)];
 $confirmed = $_REQUEST['confirmed'];
 $cancel = $_REQUEST['cancel'];
 $bypass = $_REQUEST['bypass'];
@@ -31,7 +32,6 @@ $query = API::send();
 
 $user_fee = $query['FeeSchedule']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
-$currency_info = $CFG->currencies[strtoupper($currency1)];
 $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask =  $query['Orders']['getCurrentAsk']['results'][0];
 $bids = $query['Orders']['get']['results'][0];

@@ -778,6 +778,11 @@ $(document).ready(function() {
 		return true;
 	});
 	
+	$('#enable_tfa [name="google"]').click(function(){
+		$('#google_2fa').val('1');
+		return true;
+	});
+	
 	$('#cancel_transaction').click(function(){
 		$('#cancel').val('1');
 		return true;

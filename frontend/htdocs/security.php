@@ -9,55 +9,111 @@ elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
 $authcode1 = $_REQUEST['authcode'];
-if ($authcode1) {
+if ($authcode1 && !$_REQUEST['step']) {
 	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
 	$query = API::send();
-
-	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
-		$step1 = true;
+	$response = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
+	if ($response) {
+		if ($response['authy'])
+			$step1 = true;
+		elseif ($response['google'])
+			$step3 = true;
 	}
 	else
 		Errors::add(Lang::string('settings-request-expired'));
 }
 
-$cell1 = ($_REQUEST['cell']) ? ereg_replace("[^0-9]", "",$_REQUEST['cell']) : User::$info['tel'];
-$country_code1 = ($_REQUEST['country_code']) ? ereg_replace("[^0-9]", "",$_REQUEST['country_code']) : User::$info['country_code'];
+$cell1 = ereg_replace("[^0-9]", "",$_REQUEST['cell']);
+$country_code1 = ereg_replace("[^0-9]", "",$_REQUEST['country_code']);
 $token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
+$remove = $_REQUEST['remove'];
+
+if ($remove) {
+	if (!$_REQUEST['submitted'] || $_REQUEST['send_sms']) {
+		if (User::$info['using_sms'] == 'Y') {
+			if (User::sendSMS()) {
+				$sent_sms = true;
+				Messages::add(Lang::string('withdraw-sms-sent'));
+			}
+		}
+	}
+	else {
+		if (!($token1 > 0))
+			Errors::add(Lang::string('security-no-token'));
+		
+		if (!is_array(Errors::$errors)) {
+			API::token($token1);
+			API::add('User','disable2fa');
+			$query = API::send();
+		
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+			
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+		
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+		
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
+		
+			if (!is_array(Errors::$errors)) {
+				Link::redirect('security.php?message=security-disabled-message');
+			}
+		}
+	}
+}
 
 if ($_REQUEST['step'] == 1) {
-	if (!($cell1 > 0))
+	if (!($cell1 > 0) && !$_REQUEST['google_2fa'])
 		Errors::add(Lang::string('security-no-cell'));
-	if (!($country_code1 > 0))
+	if (!($country_code1 > 0) && !$_REQUEST['google_2fa'])
 		Errors::add(Lang::string('security-no-cc'));
 	
 	if (!is_array(Errors::$errors)) {
-		API::add('User','registerAuthy',array($cell1,$country_code1));
-		$query = API::send();
-		$authy_id = $query['User']['registerAuthy']['results'][0]['user']['id'];
-		$response = $query['User']['registerAuthy']['results'][0];
-		
-		if (!$response || !is_array($response))
-			Errors::merge(Lang::string('security-com-error'));
-		
-		if ($response['success'] == 'false')
-			Errors::merge($response['errors']);
+		if (!$_REQUEST['google_2fa']) {
+			API::add('User','registerAuthy',array($cell1,$country_code1));
+			$query = API::send();
+			$authy_id = $query['User']['registerAuthy']['results'][0]['user']['id'];
+			$response = $query['User']['registerAuthy']['results'][0];
+			
+			if (!$response || !is_array($response))
+				Errors::merge(Lang::string('security-com-error'));
+			
+			if ($response['success'] == 'false')
+				Errors::merge($response['errors']);
+		}
 		
 		if (!is_array(Errors::$errors)) {
-			if ($_REQUEST['send_sms']) {
-				if (User::sendSMS($authy_id))
-					$using_sms = 'Y';
+			if (!$_REQUEST['google_2fa']) {
+				if ($_REQUEST['send_sms']) {
+					if (User::sendSMS($authy_id))
+						$using_sms = 'Y';
+				}
+				else
+					$using_sms = 'N';
+				
+				if (!is_array(Errors::$errors)) {
+					API::add('User','enableAuthy',array($cell1,$country_code1,$authy_id,$using_sms));
+					API::add('User','settingsEmail2fa',array(array('authy'=>1),1));
+					$query = API::send();
+					//$step1 = true;
+	
+					if ($query['User']['settingsEmail2fa']['results'][0])
+						Link::redirect('security.php?notice=email');
+				}
 			}
-			else
-				$using_sms = 'N';
-			
-			if (!is_array(Errors::$errors)) {
-				API::add('User','enableAuthy',array($cell1,$country_code1,$authy_id,$using_sms));
-				API::add('User','settingsEmail2fa',array(array(1=>1),1));
-				$query = API::send();
-				//$step1 = true;
-
-				if ($query['User']['settingsEmail2fa']['results'][0])
-					Link::redirect('security.php?notice=email');
+			else {
+				if (!is_array(Errors::$errors)) {
+					API::add('User','enableGoogle2fa',array($cell1,$country_code1));
+					API::add('User','settingsEmail2fa',array(array('google'=>1),1));
+					$query = API::send();
+					//$step1 = true;
+				
+					if ($query['User']['settingsEmail2fa']['results'][0])
+						Link::redirect('security.php?notice=email');
+				}
 			}
 		}
 	}
@@ -72,10 +128,10 @@ elseif ($_REQUEST['step'] == 2) {
 		API::add('User','verifiedAuthy');
 		$query = API::send();
 	
-		if ($query['error']['security-com-error'])
-			Errors::merge(Lang::string('security-com-error'));
+		if ($query['error'] == 'security-com-error')
+			Errors::add(Lang::string('security-com-error'));
 	
-		if ($query['error']['authy-errors'])
+		if ($query['error'] == 'authy-errors')
 			Errors::merge($query['authy_errors']);
 		
 		if ($query['error'] == 'request-expired')
@@ -86,21 +142,61 @@ elseif ($_REQUEST['step'] == 2) {
 			
 			$step2 = true;
 		}
+		else
+			$step1 = true;
 	}
+	else
+		$step1 = true;
+}
+elseif ($_REQUEST['step'] == 3) {
+	if (!($token1 > 0))
+		Errors::add(Lang::string('security-no-token'));
+
+	if (!is_array(Errors::$errors)) {
+		API::settingsChangeId(urldecode($authcode1));
+		API::token($token1);
+		API::add('User','verifiedGoogle');
+		$query = API::send();
+
+		if ($query['error'] == 'security-incorrect-token')
+			Errors::add(Lang::string('security-incorrect-token'));
+		
+		if ($query['error'] == 'request-expired')
+			Errors::add(Lang::string('settings-request-expired'));
+
+		if (!is_array(Errors::$errors)) {
+			Messages::add(Lang::string('security-success-message'));
+				
+			$step4 = true;
+		}
+		else
+			$step3 = true;
+	}
+	else
+		$step3 = true;
 }
 
 if ($_REQUEST['notice'] == 'email')
 	$notice = Lang::string('settings-change-notice');
+elseif ($_REQUEST['message'] == 'security-disabled-message')
+	Messages::add(Lang::string('security-disabled-message'));
 
 if (User::$info['verified_authy'] == 'Y' || $step2)
 	API::add('Content','getRecord',array('security-setup'));
+elseif (User::$info['verified_google'] == 'Y' || $step4)
+	API::add('Content','getRecord',array('security-setup-google'));
 elseif ($step1)
 	API::add('Content','getRecord',array('security-token'));
+elseif ($step3) {
+	API::add('Content','getRecord',array('security-google'));
+	API::add('User','getGoogleSecret');
+}
 else
 	API::add('Content','getRecord',array('security-explain'));
 
 $query = API::send();
 $content = $query['Content']['getRecord']['results'][0];
+$secret = $query['User']['getGoogleSecret']['results'][0];
 $page_title = Lang::string('security');
 
 include 'includes/head.php';
@@ -115,7 +211,41 @@ include 'includes/head.php';
 	<? include 'includes/sidebar_account.php'; ?>
 	<div class="content_right">
 		<div class="testimonials-4">
-		<? if ((User::$info['verified_authy'] == 'Y' || $step2) && !$step1) { ?>
+		<? if ($remove) { ?>
+			<? Errors::display(); ?>
+			<div class="buyform">
+					<div class="content">
+						<h3 class="section_label">
+							<span class="left"><i class="fa fa-mobile fa-2x"></i></span>
+							<span class="right"><?= Lang::string('security-enter-token') ?></span>
+						</h3>
+						<form id="enable_tfa" action="security.php" method="POST">
+							<input type="hidden" name="remove" value="1" />
+							<input type="hidden" name="submitted" value="1" />
+							<div class="buyform">
+								<div class="one_half">
+									<div class="spacer"></div>
+									<div class="spacer"></div>
+									<div class="spacer"></div>
+									<div class="param">
+										<label for="token"><?= Lang::string('security-token') ?></label>
+										<input name="token" id="token" type="text" value="<?= $token1 ?>" />
+										<div class="clear"></div>
+									</div>
+									 <div class="mar_top2"></div>
+									 <ul class="list_empty">
+										<li><input type="submit" name="submit" value="<?= Lang::string('security-validate') ?>" class="but_user" /></li>
+										<? if (User::$info['using_sms'] == 'Y') { ?>
+										<li><input type="submit" name="sms" value="<?= Lang::string('security-resend-sms') ?>" class="but_user" /></li>
+										<? } ?>
+									</ul>
+								</div>
+							</div>
+						</form>
+						<div class="clear"></div>
+					</div>
+				</div>
+		<? } elseif (User::$info['verified_authy'] == 'Y' || $step2) { ?>
 			<h2><?= $content['title'] ?></h2>
 			<div class="text"><?= $content['content'] ?></div>
 			<div class="mar_top2"></div>
@@ -124,6 +254,18 @@ include 'includes/head.php';
 			<ul class="list_empty">
 				<li><div class="number">+<?= User::$info['country_code']?> <?= User::$info['tel']?></div></li>
 				<li><a class="item_label" href="javascript:return false;"><?= Lang::string('security-verified') ?></a></li>
+			</ul>
+			<ul class="list_empty">
+				<li><a href="security.php?remove=1" class="but_user"><i class="fa fa-times fa-lg"></i> <?= Lang::string('security-disable') ?></a></li>
+			</ul>
+		<? } elseif (User::$info['verified_google'] == 'Y' || $step4) { ?>
+			<h2><?= $content['title'] ?></h2>
+			<div class="text"><?= $content['content'] ?></div>
+			<div class="mar_top2"></div>
+			<div class="clear"></div>
+			<? Messages::display(); ?>
+			<ul class="list_empty">
+				<li><a href="security.php?remove=1" class="but_user"><i class="fa fa-times fa-lg"></i> <?= Lang::string('security-disable') ?></a></li>
 			</ul>
 		<? } elseif ($step1) { ?>
 			<h2><?= $content['title'] ?></h2>
@@ -158,16 +300,62 @@ include 'includes/head.php';
 		            </div>
 	            </div>
             </form>
-		<? } else { ?>
-			<?= ($notice) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
+		<? } elseif ($step3) { ?>
 			<h2><?= $content['title'] ?></h2>
 			<div class="text"><?= $content['content'] ?></div>
 			<div class="mar_top2"></div>
 			<div class="clear"></div>
 			<? Errors::display(); ?>
+			<form id="enable_tfa" action="security.php" method="POST">
+				<input type="hidden" name="step" value="3" />
+				<input type="hidden" name="authcode" value="<?= urlencode($authcode1) ?>" />
+				<div class="buyform">
+					<div class="content">
+		            	<h3 class="section_label">
+		                    <span class="left"><i class="fa fa-mobile fa-2x"></i></span>
+		                    <span class="right"><?= Lang::string('security-scan-qr') ?></span>
+		                </h3>
+		                <div class="clear"></div>
+		                <div class="one_half">
+							<div class="spacer"></div>
+							<div class="spacer"></div>
+							<div class="spacer"></div>
+							<div class="param">
+								<label for="secret"><?= Lang::string('security-secret-code') ?></label>
+								<input type="text" id="secret" name="secret" value="<?= $secret['secret'] ?>" />
+								<div class="clear"></div>
+							</div>
+							<div class="spacer"></div>
+							<div class="calc">
+								<img class="qrcode" src="includes/qrcode.php?sec=1&code=otpauth://totp/<?= $secret['label'] ?>?secret=<?= $secret['secret'] ?>" />
+							</div>
+							<div class="spacer"></div>
+							<div class="param">
+								<label for="token"><?= Lang::string('security-token') ?></label>
+								<input name="token" id="token" type="text" value="<?= $token1 ?>" />
+								<div class="clear"></div>
+							</div>
+							 <div class="mar_top2"></div>
+							 <ul class="list_empty">
+								<li><input type="submit" name="submit" value="<?= Lang::string('security-validate') ?>" class="but_user" /></li>
+							</ul>
+		                </div>
+		                <div class="clear"></div>
+		            </div>
+	            </div>
+            </form>
+		<? } else { ?>
+			<?= ($notice) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
+			<? Errors::display(); ?>
+			<? Messages::display(); ?>
+			<h2><?= $content['title'] ?></h2>
+			<div class="text"><?= $content['content'] ?></div>
+			<div class="mar_top2"></div>
+			<div class="clear"></div>
 			<form name="start_auth" id="enable_tfa" action="security.php" method="POST">
 				<input type="hidden" name="step" value="1" />
 				<input type="hidden" id="send_sms" name="send_sms" value="" />
+				<input type="hidden" id="google_2fa" name="google_2fa" value="" />
 				<div class="buyform">
 					<div class="content">
 		            	<h3 class="section_label">
@@ -179,7 +367,7 @@ include 'includes/head.php';
 							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<div class="param">
-								<label for="authy-countries"><?= Lang::string('security-country') ?></label>
+								<label for="authy-countries"><?= Lang::string('security-country') ?> (<?= Lang::string('security-optional-google') ?>)</label>
 								<select name="country_code" id="authy-countries">
 								<? 
 								if ($country_code1 > 0) {
@@ -190,13 +378,14 @@ include 'includes/head.php';
 								<div class="clear"></div>
 							</div>
 							<div class="param">
-								<label for="authy-cellphone"><?= Lang::string('security-cell') ?></label>
+								<label for="authy-cellphone"><?= Lang::string('security-cell') ?> (<?= Lang::string('security-optional-google') ?>)</label>
 								<input name="cell" id="authy-cellphone" type="text" value="<?= $cell1 ?>" />
 								<div class="clear"></div>
 							</div>
 							 <div class="mar_top2"></div>
 							 <ul class="list_empty">
 								<li><input type="submit" name="submit" value="<?= Lang::string('security-enable') ?>" class="but_user" /></li>
+								<li><input type="submit" name="google" value="<?= Lang::string('security-enable-google') ?>" class="but_user" /></li>
 								<li><input type="submit" name="sms" value="<?= Lang::string('security-send-sms') ?>" class="but_user" /></li>
 							</ul>
 		                </div>

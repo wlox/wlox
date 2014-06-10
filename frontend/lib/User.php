@@ -94,8 +94,11 @@ class User {
 			Errors::merge($result['authy-errors']);
 			return false;
 		}
-		
-		if (!$result || $result['error']) {
+		elseif ($result['error'] == 'security-incorrect-token') {
+			Errors::add(Lang::string('security-incorrect-token'));
+			return false;
+		}
+		elseif (!$result || $result['error']) {
 			Errors::add(Lang::string('security-com-error'));
 			return false;
 		}

@@ -57,15 +57,15 @@ include 'includes/head.php';
 							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<div class="param">
-								<label for="authy-token"><?= Lang::string('security-token') ?></label>
-								<input name="token" id="authy-token" type="text" value="<?= $token1 ?>" />
+								<label for="token"><?= Lang::string('security-token') ?></label>
+								<input name="token" id="token" type="text" value="<?= $token1 ?>" />
 								<div class="clear"></div>
 							</div>
-							<div class="param lessbottom">
+							<!-- div class="param lessbottom">
 								<input class="checkbox" name="dont_ask" id="dont_ask" type="checkbox" value="1" <?= ($dont_ask1) ? 'checked="checked"' : '' ?> />
 								<label for="dont_ask"><?= Lang::string('security-dont-ask') ?></label>
 								<div class="clear"></div>
-							</div>
+							</div-->
 							 <div class="mar_top2"></div>
 							 <ul class="list_empty">
 								<li><input type="submit" name="submit" value="<?= Lang::string('security-validate') ?>" class="but_user" /></li>

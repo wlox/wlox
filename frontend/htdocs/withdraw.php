@@ -25,7 +25,7 @@ if (($_REQUEST['bitcoins'] || $_REQUEST['fiat']) && !$token1) {
 		}
 	}
 
-	if (User::$info['verified_authy'] == 'Y' && ((User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && $_REQUEST['bitcoins']) || (User::$info['confirm_withdrawal_2fa_bank'] == 'Y' && $_REQUEST['fiat']))) {
+	if ((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y') && ((User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && $_REQUEST['bitcoins']) || (User::$info['confirm_withdrawal_2fa_bank'] == 'Y' && $_REQUEST['fiat']))) {
 		if ($_REQUEST['send_sms'] || User::$info['using_sms'] == 'Y') {
 			if (User::sendSMS()) {
 				$sent_sms = true;
@@ -123,6 +123,9 @@ if ($_REQUEST['bitcoins']) {
 			if ($query['error'] == 'authy-errors')
 				Errors::merge($query['authy_errors']);
 			
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+			
 			if (!is_array(Errors::$errors)) {
 				if ($query['Requests']['insert']['results'][0]) {
 					if ($token1 > 0)
@@ -168,6 +171,9 @@ elseif ($_REQUEST['fiat']) {
 				
 			if ($query['error'] == 'authy-errors')
 				Errors::merge($query['authy_errors']);
+			
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
 				
 			if (!is_array(Errors::$errors)) {
 				if ($query['Requests']['insert']['results'][0]) {
@@ -324,8 +330,8 @@ if (!$_REQUEST['bypass']) {
 							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<div class="param">
-								<label for="authy-token"><?= Lang::string('security-token') ?></label>
-								<input name="token" id="authy-token" type="text" value="<?= $token1 ?>" />
+								<label for="token"><?= Lang::string('security-token') ?></label>
+								<input name="token" id="token" type="text" value="<?= $token1 ?>" />
 								<div class="clear"></div>
 							</div>
 							 <div class="mar_top2"></div>
