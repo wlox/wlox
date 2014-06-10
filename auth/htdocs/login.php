@@ -16,7 +16,7 @@ if ($invalid_login) {
 	exit;
 }
 
-if ($result[0]['verified_authy'] == 'Y' && $result[0]['dont_ask_30_days'] != 'Y') {
+if (($result[0]['verified_authy'] == 'Y' || $result[0]['verified_google'] == 'Y') && $result[0]['dont_ask_30_days'] != 'Y') {
 	if ($result[0]['using_sms'] == 'Y')
 		shell_exec('curl https://api.authy.com/protected/json/sms/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key);
 	
