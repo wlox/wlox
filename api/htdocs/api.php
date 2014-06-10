@@ -18,7 +18,6 @@ $CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = json_decode($_POST['commands'],true);
 
-
 // authenticate session
 if ($session_id1) {
 	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1);
@@ -58,6 +57,13 @@ if ($token1 > 0 && $result[0]['authy_id'] > 0) {
 	else {
 		$CFG->token_verified = true;
 	}
+}
+elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
+	$result = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
+	if ($result)
+		$CFG->token_verified = true;
+	else
+		$return['error'] = 'security-incorrect-token';
 }
 
 // email 2fa for settings changes

@@ -294,7 +294,7 @@ class User {
 		$cell = preg_replace("/[^0-9]/", "",$cell);
 		$country_code = preg_replace("/[^0-9]/", "",$country_code);
 		
-		if (!$CFG->session_active || User::$info['verified_authy'])
+		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y')
 			return false;
 		
 		$response = shell_exec("
@@ -313,19 +313,64 @@ class User {
 		$country_code = preg_replace("/[^0-9]/", "",$country_code);
 		$authy_id = preg_replace("/[^0-9]/", "",$authy_id);
 		
-		if (!$CFG->session_active || User::$info['verified_authy'])
+		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')
 			return false;
 		
-		db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms));
+		db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>''));
+	}
+	
+	function enableGoogle2fa($cell,$country_code) {
+		global $CFG;
+	
+		$cell = preg_replace("/[^0-9]/", "",$cell);
+		$country_code = preg_replace("/[^0-9]/", "",$country_code);
+	
+		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')
+			return false;
+	
+		$key = Google2FA::generate_secret_key();
+		if (!$key)
+			return false;
+		
+		$result = db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'google_2fa_code'=>$key,'verified_google'=>'N','using_sms'=>'N','authy_id'=>''));
+		if ($result)
+			return $key;
+	}
+	
+	function getGoogleSecret() {
+		global $CFG;
+		
+		if (!($CFG->session_active) || User::$info['verified_google'] == 'Y')
+			return false;
+		
+		return array('secret'=>User::$info['google_2fa_code'],'label'=>$CFG->exchange_name);
 	}
 	
 	function verifiedAuthy() {
 		global $CFG;
 	
-		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified))
+		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified) || User::$info['verified_google'] == 'Y')
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('verified_authy'=>'Y'));
+	}
+	
+	function verifiedGoogle() {
+		global $CFG;
+	
+		if (!($CFG->session_active && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
+			return false;
+			
+		return db_update('site_users',User::$info['id'],array('verified_google'=>'Y'));
+	}
+	
+	function disable2fa() {
+		global $CFG;
+		
+		if (!($CFG->session_active && $CFG->token_verified))
+			return false;
+
+		return db_update('site_users',User::$info['id'],array('google_2fa_code'=>'','verified_google'=>'N','using_sms'=>'N','authy_id'=>'','verified_authy'=>'N'));
 	}
 	
 	function updatePersonalInfo($info) {
