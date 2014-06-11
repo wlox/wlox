@@ -41,7 +41,7 @@ You will find a file called *wlox.sql.gz* in the main project directory. Import 
 
 The API server provides a layer of security and abstraction between the frontend server and the database in order to prevent direct communication between these two components. This ensures that a successful attack on the frontend will not compromise the database.
 
-The API server source is provided in the repository [wlox/wlox-api](http://github.com/wlox/wlox-api), which should be cloned onto your intended API server. It is necessary that this server have **short PHP tags** enabled in php.ini as well as having **CURL PHP module** installed. 
+The API server source is provided in the repository [wlox/wlox-api](http://github.com/wlox/wlox-api), which should be cloned onto your intended API server. It is necessary that this server have **short PHP tags** enabled in php.ini as well as having **CURL PHP module** and **MCrypt module** installed. 
 
 The /htdocs folder of wlox-api is intended to be the server's web directory.
 
