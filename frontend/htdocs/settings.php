@@ -1,7 +1,6 @@
 <?php
 include '../cfg/cfg.php';
 
-
 if (User::$awaiting_token)
 	Link::redirect('verify-token.php');
 elseif (!User::isLoggedIn())
@@ -16,6 +15,9 @@ API::add('User','getInfo',array($_SESSION['session_id']));
 API::add('User','getCountries');
 $query = API::send();
 $countries = $query['User']['getCountries']['results'][0];
+
+if ($_REQUEST['ex_request'])
+	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
 
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->get($query['User']['getInfo']['results'][0]);
@@ -63,10 +65,6 @@ if ($authcode1) {
 	else
 		Errors::add(Lang::string('settings-request-expired'));
 }
-
-if ($_REQUEST['ex_request'])
-	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
-
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
 	$errors = array();

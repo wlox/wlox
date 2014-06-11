@@ -3,11 +3,13 @@ include '../cfg/cfg.php';
 
 API::add('Content','getRecord',array('contact'));
 API::add('Content','getRecord',array('contact-small'));
+API::add('User','getCountries');
 $query = API::send();
 
 $content = $query['Content']['getRecord']['results'][0];
 $content1 = $query['Content']['getRecord']['results'][1];
 $page_title = $content['title'];
+$countries = $query['User']['getCountries']['results'][0];
 
 $contact = new Form('contact',false,false,'form2');
 $contact->verify();
@@ -58,7 +60,7 @@ include 'includes/head.php';
 			    $contact->textInput('last_name',Lang::string('settings-last-name'),1,User::$info['last_name']);
 			    $contact->textInput('company',Lang::string('settings-company'));
 			    $contact->textInput('email',Lang::string('settings-email'),'email',User::$info['email']);
-			    $contact->selectInput('country',Lang::string('settings-country'),0,User::$info['country'],false,'iso_countries',array('name'));
+			    $contact->selectInput('country',Lang::string('settings-country'),0,User::$info['country'],$countries,false,array('name'));
 			    $contact->textInput('subject',Lang::string('settings-subject'),1);
 			    $contact->textEditor('message',Lang::string('settings-message'),1,false,false,false,false,true,false,200);
 			    $contact->captcha(Lang::string('settings-capcha'));
