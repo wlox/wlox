@@ -386,11 +386,11 @@ class User {
 		$update['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
-		$update['email'] = preg_replace("/[^0-9a-zA-Z@.!#$%&'*+-/=?^_`{|}~]/", "",$info['email']);
-		
+		$update['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
+
 		if (strlen($update['pass']) < 8 || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
-		
+
 		return db_update('site_users',User::$info['id'],$update);
 	}
 	
@@ -476,8 +476,7 @@ class User {
 			else
 				$email = SiteEmail::getRecord('security-auth');
 				
-			Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
-			return true;
+			return Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
 		}
 	}
 	
