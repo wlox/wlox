@@ -29,6 +29,10 @@ $result = db_query($sql);
 $sql = 'UPDATE site_users SET dont_ask_30_days = "N" WHERE dont_ask_date <= (NOW() - INTERVAL 1 MONTH) AND dont_ask_30_days = "Y" ';
 $result = db_query($sql);
 
+// delete old sessions
+$sql = "DELETE FROM sessions WHERE session_time < (NOW() - INTERVAL 15 MINUTE) ";
+db_query($sql);
+
 // set market price orders at market price
 db_start_transaction();
 $sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,LOWER(currencies.currency) AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
