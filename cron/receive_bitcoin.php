@@ -69,7 +69,9 @@ foreach ($transactions as $t_id) {
 			$request_id = $requests[$transaction['txid']];
 			
 			if ($system[$detail['address']] == 'Y') {
-				$hot_wallet_in = $detail['amount'];
+				if ($transaction['confirmations'] > 0) {
+					$hot_wallet_in = $detail['amount'];
+				}
 				continue;
 			}
 			elseif ($system[$detail['address']] == 'N') {

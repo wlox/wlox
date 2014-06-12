@@ -64,7 +64,7 @@ if ($result) {
 		
 		$users[$row['site_user']] = bcadd($row['amount'],$users[$row['site_user']],8);
 		$requests[] = $row['id'];
-		$available = bcsub($row['amount'],$available,8);
+		$available = bcsub($available,$row['amount'],8);
 	}
 
 	if ($pending > $available) {
@@ -79,17 +79,17 @@ if (count($transactions) > 1) {
 		$json_arr[$address] = ($amount - $CFG->bitcoin_sending_fee);
 	}
 	$response = $bitcoin->sendmany($CFG->bitcoin_accountname,json_decode(json_encode($json_arr)));
-	echo $bitcoin->error;
+	echo $bitcoin->error.PHP_EOL;
 }
 elseif (count($transactions) == 1) {
 	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 	foreach ($transactions as $address => $amount) {
 		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,(float)bcsub($amount,$CFG->bitcoin_sending_fee,8));
-		echo $bitcoin->error;
+		echo $bitcoin->error.PHP_EOL;
 	}
 }
 
-if ($response || $users) {
+if ($response && $users && !$bitcoin->error) {
 	echo 'Transactions sent: '.$response.PHP_EOL;
 	$total = 0;
 	foreach ($users as $site_user => $amount) {
