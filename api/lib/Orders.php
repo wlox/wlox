@@ -54,7 +54,12 @@ class Orders {
 	function getRecord($order_id) {
 		$order_id = preg_replace("/[^0-9]/", "",$order_id);
 		
-		return DB::getRecord('orders',$order_id,0,1);
+		if (!($order_id > 0))
+			return false;
+		
+		$sql = "SELECT orders.*, site_users.id AS user_id FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) WHERE orders.id = $order_id ";
+		$result = db_query_array($sql);
+		return $result[0];
 	}
 	
 	function getCurrentBid($currency,$currency_id=false) {
