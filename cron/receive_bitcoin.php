@@ -143,7 +143,7 @@ $total_btc = $status['total_btc'] + $total_received;
 $pending_withdrawals = $status['pending_withdrawals'];
 $reserve_balance = $total_btc * $CFG->bitcoin_reserve_ratio;
 $reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals;
-echo 'Reserve surplus: '.$reserve_surplus.PHP_EOL;
+echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
 if ($total_received > 0) {
 	if (!$status) {

@@ -84,7 +84,7 @@ if (count($transactions) > 1) {
 elseif (count($transactions) == 1) {
 	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 	foreach ($transactions as $address => $amount) {
-		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,bcsub($amount,$CFG->bitcoin_sending_fee,8));
+		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,(float)bcsub($amount,$CFG->bitcoin_sending_fee,8));
 		echo $bitcoin->error;
 	}
 }
