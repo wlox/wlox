@@ -60,7 +60,7 @@ class BitcoinAddresses{
 		if (!$hot_wallet)
 			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
 		else
-			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s'),'hot_wallet'=>'Y','system_address'=>'Y'));
+			$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'date'=>date('Y-m-d H:i:s'),'hot_wallet'=>'Y','system_address'=>'Y'));
 		
 		return $new_id;
 	}
