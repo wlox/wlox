@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+echo "Beginning Daily Stats Processing...".PHP_EOL;
 
 include 'cfg.php';
 

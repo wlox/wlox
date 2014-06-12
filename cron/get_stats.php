@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+echo "Beginning Get Status processing...".PHP_EOL;
 
 include 'cfg.php';
 

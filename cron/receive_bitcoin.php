@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+echo "Beginning Receive Bitcoin processing...".PHP_EOL;
 
 include 'cfg.php';
 
