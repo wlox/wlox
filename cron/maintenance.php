@@ -67,4 +67,4 @@ if ($result) {
 	db_query($sql);
 }
 db_commit();
-echo 'done';
+echo 'done'.PHP_EOL;

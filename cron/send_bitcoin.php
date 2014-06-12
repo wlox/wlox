@@ -68,7 +68,7 @@ if ($result) {
 
 	if ($pending > $available) {
 		db_update('status',1,array('deficit_btc'=>($pending - $available)));
-		echo 'Deficit: '.($pending - $available).'<br>';
+		echo 'Deficit: '.($pending - $available).PHP_EOL;
 	}
 }
 
@@ -89,13 +89,13 @@ elseif (count($transactions) == 1) {
 }
 
 if ($response || $users) {
-	echo 'Transactions sent: '.$response.'<br>';
+	echo 'Transactions sent: '.$response.PHP_EOL;
 	$total = 0;
 	foreach ($users as $site_user => $amount) {
 		$total += $amount;
 		$balance = $user_balances[$site_user] - $amount;
 		db_update('site_users',$site_user,array('btc'=>$balance));
-		echo 'User '.$site_user.' from '.$user_balances[$site_user].' to '.$balance.'<br>';
+		echo 'User '.$site_user.' from '.$user_balances[$site_user].' to '.$balance.PHP_EOL;
 	}
 	
 	foreach ($requests as $request_id) {
@@ -112,4 +112,4 @@ if ($response || $users) {
 if (!$pending) db_update('status',1,array('deficit_btc'=>'0'));
 
 db_commit();
-echo 'done';
+echo 'done'.PHP_EOL;

@@ -80,7 +80,7 @@ foreach ($transactions as $t_id) {
 				if (!($request_id > 0))
 					db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid']));
 					
-				echo 'Transaction pending.';
+				echo 'Transaction pending.'.PHP_EOL;
 				$pending = true;
 			}
 			else {
@@ -101,9 +101,9 @@ foreach ($transactions as $t_id) {
 					}
 					
 					if (!$unlink)
-						echo 'Error: Could not delete transaction file.';
+						echo 'Error: Could not delete transaction file.'.PHP_EOL;
 					else
-						echo 'Transaction credited successfully.';
+						echo 'Transaction credited successfully.'.PHP_EOL;
 				}
 			}
 		}
@@ -124,7 +124,7 @@ foreach ($transactions as $t_id) {
 		$deficit = (($status['deficit_btc'] - $hot_wallet_in) > 0) ? $status['deficit_btc'] - $hot_wallet_in : '0'; 
 		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'total_btc'=>($status['total_btc'] + $hot_wallet_in)));
 		
-		echo 'Hot wallet received '.$hot_wallet_in.'<br>';
+		echo 'Hot wallet received '.$hot_wallet_in.PHP_EOL;
 		if ($updated) {
 			unlink($transactions_dir.$t_id);
 			if (!$unlink && file_exists($unlink)) {
@@ -142,15 +142,15 @@ $total_btc = $status['total_btc'] + $total_received;
 $pending_withdrawals = $status['pending_withdrawals'];
 $reserve_balance = $total_btc * $CFG->bitcoin_reserve_ratio;
 $reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals;
-echo 'Reserve surplus: '.$reserve_surplus.'<br>';
+echo 'Reserve surplus: '.$reserve_surplus.PHP_EOL;
 
 if ($total_received > 0) {
 	if (!$status) {
-		echo 'Error: Could not get status.<br>';
+		echo 'Error: Could not get status.'.PHP_EOL;
 		exit;
 	}
 	
-	echo 'Total received: '.$total_received.'<br>';
+	echo 'Total received: '.$total_received.PHP_EOL;
 	
 	//$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc,'received_btc_pending'=>$received_pending));
 	$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
@@ -161,7 +161,7 @@ if ($total_received > 0) {
 	
 	/*
 	$response = BitcoinAddresses::cheapsweep($hot_wallet_a['address']);
-	echo 'Cheapsweep: '.$response.'<br>';
+	echo 'Cheapsweep: '.$response.'\n';
 	if ($response) {
 		$transaction = $bitcoin->gettransaction($response);
 		foreach ($transaction['details'] as $detail) {
@@ -175,12 +175,12 @@ if ($total_received > 0) {
 				}
 			}
 		}
-		echo 'Cheapsweep successful: '.$response.'.<br>';
+		echo 'Cheapsweep successful: '.$response.'.\n';
 		db_update('status',1,array('last_sweep'=>date('Y-m-d H:i:s')));
 		db_update('bitcoin_addresses',$hot_wallet_a['id'],array('date'=>date('Y-m-d H:i:s')));
 	}
 	else
-		echo 'Error: Cheapsweep unsuccessful.<br>';
+		echo 'Error: Cheapsweep unsuccessful.\n';
 	
 	db_update('status',1,array('received_btc_pending'=>'0','hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
 	*/
@@ -207,11 +207,11 @@ if ($total_received > 0) {
 		}
 		
 		db_update('status',1,array('deficit_btc'=>'0','hot_wallet_btc'=>($hot_wallet - $transferred),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>$total_btc));
-		echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.'<br>';
+		echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 	}
 	elseif ($reserve_surplus < 0) {
 		db_update('status',1,array('deficit_btc'=>$reserve_surplus));
-		echo 'Deficit '.$reserve_surplus.'.<br>';
+		echo 'Deficit '.$reserve_surplus.'.'.PHP_EOL;
 	}
 	elseif ($reserve_surplus >= 0) {
 		db_update('status',1,array('deficit_btc'=>'0'));
@@ -243,7 +243,7 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min) {
 	}
 	
 	db_update('status',1,array('deficit_btc'=>'0','hot_wallet_btc'=>($hot_wallet - $transferred),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>$total_btc));
-	echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.'<br>';
+	echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 }
 
 db_commit();

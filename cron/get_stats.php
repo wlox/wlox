@@ -56,7 +56,7 @@ if ($CFG->currencies) {
 	}
 }
 
-echo 'done';
+echo 'done'.PHP_EOL;
 
 /*
 // QUANDL HISTORICAL DATA
