@@ -17,7 +17,7 @@ if ($delete_id1 > 0) {
 	if (!$del_order) {
 		Link::redirect('open-orders.php?message=order-doesnt-exist');
 	}
-	elseif ($del_order['site_user'] != User::$info['id'] || !($del_order['id'] > 0)) {
+	elseif ($del_order['site_user'] != $del_order['site_user'] || !($del_order['id'] > 0)) {
 		Link::redirect('open-orders.php?message=not-your-order');
 	}
 	else {
