@@ -49,7 +49,7 @@ class BitcoinAddresses{
 			return false;
 		
 		if (!self::$bitcoin) {
-			require_once('lib/easybitcoin.php');
+			require_once('easybitcoin.php');
 			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 		}
 		else
@@ -96,7 +96,7 @@ class BitcoinAddresses{
 			return false;
 		
 		if (!self::$bitcoin) {
-			require_once('lib/easybitcoin.php');
+			require_once('easybitcoin.php');
 			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 		}
 		else
@@ -123,7 +123,7 @@ class BitcoinAddresses{
 			return false;
 		
 		if (!self::$bitcoin) {
-			require_once('lib/easybitcoin.php');
+			require_once('easybitcoin.php');
 			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 		}
 		else
@@ -188,7 +188,7 @@ class BitcoinAddresses{
 			return false;
 	
 		if (!self::$bitcoin) {
-			require_once('lib/easybitcoin.php');
+			require_once('easybitcoin.php');
 			$bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 		}
 		else
