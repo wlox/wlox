@@ -125,7 +125,7 @@ foreach ($transactions as $t_id) {
 		unlink($transactions_dir.$t_id);
 	elseif (!$send && ($hot_wallet_in > 0)) {
 		$deficit = (($status['deficit_btc'] - $hot_wallet_in) > 0) ? $status['deficit_btc'] - $hot_wallet_in : '0'; 
-		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'total_btc'=>($status['total_btc'] + $hot_wallet_in)));
+		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'warm_wallet_btc'=>($status['warm_wallet_btc'] - $hot_wallet_in)));
 		
 		echo 'Hot wallet received '.$hot_wallet_in.PHP_EOL;
 		if ($updated) {
