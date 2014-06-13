@@ -160,7 +160,7 @@ class Orders {
 		$amount = preg_replace("/[^0-9\.]/", "",$amount);
 		$price = preg_replace("/[^0-9\.]/", "",$price);
 		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency1);
-		$fee = preg_replace("/[^0-9\.]/", "",$fee);
+		//$fee = preg_replace("/[^0-9\.]/", "",$fee);
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
 		
@@ -176,6 +176,9 @@ class Orders {
 		$user_info = DB::getRecord('site_users',$this_user_id,0,1,false,false,false,1);
 		$this_btc_balance = $user_info['btc'];
 		$this_fiat_balance = $user_info[$currency1];
+		
+		$user_fee = DB::getRecord('fee_schedule',User::$info['fee_schedule'],0,1);
+		$fee = $user_fee['fee'];
 		
 		if (!($edit_id > 0))
 			$order_log_id = db_insert('order_log',array('date'=>date('Y-m-d H:i:s'),'order_type'=>(($buy) ? $CFG->order_type_bid : $CFG->order_type_ask),'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N')));
