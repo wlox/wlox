@@ -9,7 +9,6 @@ class Orders {
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$start_date = preg_replace ("/[^0-9: \-]/","",$start_date);
 		
-		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		$order_arr = array('date'=>'orders.date','btc'=>'orders.btc','btcprice'=>'orders.btc_price','fiat'=>'usd_amount');
