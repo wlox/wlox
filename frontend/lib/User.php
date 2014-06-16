@@ -132,6 +132,7 @@ class User {
 			return false;
 		
 		$_SESSION['nonce']++;
+		echo 'Session nonce: '.$_SESSION['nonce'].'<br>';
 		return true;
 	}
 	

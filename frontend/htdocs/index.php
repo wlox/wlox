@@ -175,6 +175,7 @@ else
 	$arrow = '<i id="up_or_down" class="fa fa-minus"></i> ';
 ?>
 <div class="fresh_projects global_stats">
+	<a name="global_stats"></a>
 	<div class="clearfix mar_top6"></div>
 	<div class="container">
 		<? if (!User::isLoggedIn()) { ?>

@@ -468,14 +468,17 @@ function updateTransactions() {
 					$("#sell_price").trigger("change");
 				}
 			
-				var open_price = parseFloat($('#stats_open').html());
-				var change_abs = Math.abs((current_price - open_price).toFixed(2));
-				$('#stats_last_price').html((current_price).toFixed(2));
-				$('#stats_daily_change_abs').html(change_abs.toFixed(2));
-				$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2));
+				current_price = (current_price > 0) ? current_price : current_bid;
+				if (current_price > 0) {
+					var open_price = parseFloat($('#stats_open').html());
+					var change_abs = Math.abs((current_price - open_price).toFixed(2));
+					$('#stats_last_price').html((current_price).toFixed(2));
+					$('#stats_daily_change_abs').html(change_abs);
+					$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2));
+				}
 			});
 		}
-	},((notrades) ? 5000 : 1000));
+	},5000);
 }
 
 function updateTransactionsList() {
@@ -772,7 +775,7 @@ $(document).ready(function() {
 	});
 	
 	$('#currency_selector').bind("keyup change", function(){
-		window.location.href = 'index.php?currency='+$(this).val();
+		window.location.href = 'index.php?currency='+$(this).val()+'#global_stats';
 	});
 	
 	$('#language_selector').bind("keyup change", function(){

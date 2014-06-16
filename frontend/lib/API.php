@@ -43,7 +43,9 @@ class API{
 		//print_ar($result['nonce']);
 		//echo $result['error'].',';
 		curl_close($ch);
-		User::updateNonce();
+		
+		if ($result['nonce_updated'])
+			User::updateNonce();
 		
 		API::$commands = array();
 		return $result;
