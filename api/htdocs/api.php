@@ -20,12 +20,12 @@ $commands = json_decode($_POST['commands'],true);
 
 // authenticate session
 if ($session_id1) {
-	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1);
+	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1.' FOR UPDATE');
 	//$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' ');
 	if ($result) {
 		if (openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 			User::setInfo($result[0]);
-			db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1)),'session_id');
+			$update_nonce = true;
 			
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
 				$return['error'] = 'account-locked-or-deactivated';
@@ -113,6 +113,11 @@ if (is_array($commands)) {
 	}
 }
 
+if ($update_nonce)
+	$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1)),'session_id');
+
+
 if (is_array($return))
 	echo json_encode($return);
 
+db_commit();
