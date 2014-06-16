@@ -418,7 +418,7 @@ class User {
 		
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
-		
+
 		$found = false;
 		if (!(User::$info['btc'] > 0)) {
 			foreach ($CFG->currencies as $currency => $info) {
@@ -430,15 +430,15 @@ class User {
 		}
 		else
 			$found = true;
-		
+
 		if (!$found)
-			return db_update('site_users',User::$info['id'],array('deactivated'=>'Y','deactivated_date'=>date('Y-m-d')));
+			return db_update('site_users',User::$info['id'],array('deactivated'=>'Y'));
 	}
 	
 	function reactivateAccount() {
 		global $CFG;
-	
-		if (!(($CFG->session_active || $CFG->session_locked) && ($CFG->token_verified || $CFG->email_2fa_verified)))
+
+		if (!($CFG->session_locked && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('deactivated'=>'N'));
@@ -456,7 +456,7 @@ class User {
 	function unlockAccount() {
 		global $CFG;
 	
-		if (!(($CFG->session_active || $CFG->session_locked) && ($CFG->token_verified || $CFG->email_2fa_verified)))
+		if (!($CFG->session_locked && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('locked'=>'N'));
@@ -464,8 +464,8 @@ class User {
 	
 	function settingsEmail2fa($request=false,$security_page=false) {
 		global $CFG;
-		
-		if (!$CFG->session_active || $CFG->session_locked)
+
+		if (!$CFG->session_locked)
 			return false;
 		
 		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request))));
@@ -485,7 +485,7 @@ class User {
 	function getSettingsChangeRequest($settings_change_id1) {
 		global $CFG;
 
-		if (!$CFG->session_active || $CFG->session_locked || !$settings_change_id1)
+		if (!$settings_change_id1)
 			return false;
 		
 		$request_id = Encryption::decrypt(urldecode($settings_change_id1));
