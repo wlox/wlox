@@ -12,42 +12,44 @@ $order_id1 = ereg_replace("[^0-9]", "",$_REQUEST['order_id']);
 $bypass = $_REQUEST['bypass'];
 
 API::add('Orders','getRecord',array($order_id1));
-API::add('Currencies','getRecord',array(false,$order_info['currency']));
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
-API::add('SiteUser','getAvailable');
+API::add('User','getAvailable');
 $query = API::send();
 
 $order_info = $query['Orders']['getRecord']['results'][0];
+$user_fee = $query['FeeSchedule']['getRecord']['results'][0];
+$user_available = $query['User']['getAvailable']['results'][0];
+
+API::add('Currencies','getRecord',array(false,$order_info['currency']));
+$query = API::send();
 $currency_info = $query['Currencies']['getRecord']['results'][0];
 $currency1 = strtolower($currency_info['currency']);
-$user_fee = $query['FeeSchedule']['getRecord']['results'][0];
-$user_available = $query['SiteUser']['getAvailable']['results'][0];
 
 API::add('Orders','getCurrentBid',array($currency1));
 API::add('Orders','getCurrentAsk',array($currency1));
-API::add('Orders','get',array(false,false,10,$currency1,false,false,$CFG->order_type_bid));
-API::add('Orders','get',array(false,false,10,$currency1,false,false,$CFG->order_type_ask,false,1));
+API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
+API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 $query = API::send();
 
 $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask = $query['Orders']['getCurrentAsk']['results'][0];
 $bids = $query['Orders']['get']['results'][0];
-$asks = $query['Orders']['get']['results'][0];
+$asks = $query['Orders']['get']['results'][1];
 
-
-if ($order_info['site_user'] != User::$info['id'] || !($order_info['id'] > 0)) {
+if ($order_info['site_user'] != $order_info['user_id'] || !($order_info['id'] > 0)) {
 	Link::redirect('open-orders.php');
 	exit;
 }
 
-if ($order_info['order_type'] == $CFG->order_type_bid) {
+if ($order_info['is_bid']) {
 	$buy_amount1 = ($_REQUEST['buy_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_amount']) : $order_info['btc'];
 	$buy_price1 = ($_REQUEST['buy_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_price']) : $order_info['btc_price'];
 	$buy_subtotal1 = $buy_amount1 * $buy_price1;
 	$buy_fee_amount1 = ($user_fee['fee'] * 0.01) * $buy_subtotal1;
-	$buy_total1 = ($buy_price1 > 0) ? ($buy_subtotal1 - $buy_fee_amount1) / $buy_price1 : 0;
-	$buy_total_no_fee1 = ($buy_price1 > 0) ? $buy_subtotal1 / $buy_price1 : 0;
+	$buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
 	$buy_market_price1 = ($_REQUEST['buy_market_price']) ? $_REQUEST['buy_market_price'] : ($order_info['market_price'] == 'Y');
+	$pre_fiat_available = $user_available[strtoupper($currency1)];
+	$user_available[strtoupper($currency1)] += ($order_info['btc'] * $order_info['btc_price']) + (($user_fee['fee'] * 0.01) * ($order_info['btc'] * $order_info['btc_price']));
 }
 else {
 	$sell_amount1 = ($_REQUEST['sell_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_amount']) : $order_info['btc'];
@@ -55,8 +57,9 @@ else {
 	$sell_subtotal1 = $sell_amount1 * $sell_price1;
 	$sell_fee_amount1 = ($user_fee['fee'] * 0.01) * $sell_subtotal1;
 	$sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
-	$sell_total_no_fee1 = ($sell_price1 > 0) ? $sell_subtotal1 / $sell_price1 : 0;
 	$sell_market_price1 = ($_REQUEST['sell_market_price']) ? $_REQUEST['sell_market_price'] : ($order_info['market_price'] == 'Y');
+	$pre_btc_available = $user_available['BTC'];
+	$user_available['BTC'] += $order_info['btc'];
 }
 
 if ($_REQUEST['buy']) {
@@ -66,15 +69,13 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-no-amount'));
 	if (!($_REQUEST['buy_price'] > 0))
 		Errors::add(Lang::string('buy-errors-no-price'));
-	if (!$currency1)
-		Errors::add(Lang::string('buy-errors-no-currency'));
 	if ($buy_subtotal1 > $user_available[strtoupper($currency1)])
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	
 	if (!is_array(Errors::$errors)) {
 		API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee['fee'],$buy_market_price1,$order_info['id']));
 		$query = API::send();
-		$operations = $query['executeOrder']['get']['results'][0];
+		$operations = $query['Orders']['executeOrder']['results'][0];
 		
 		if ($operations['edit_order'] > 0) {
 			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'edit_order'=>1));
@@ -94,15 +95,13 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('sell-errors-no-amount'));
 	if (!($_REQUEST['sell_price'] > 0))
 		Errors::add(Lang::string('sell-errors-no-price'));
-	if (!$currency1)
-		Errors::add(Lang::string('buy-errors-no-currency'));
 	if ($sell_amount1 > $user_available['BTC'])
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
 
 	if (!is_array(Errors::$errors)) {
 		API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee['fee'],$sell_market_price1,$order_info['id']));
 		$query = API::send();
-		$operations = $query['executeOrder']['get']['results'][0];
+		$operations = $query['Orders']['executeOrder']['results'][0];
 		
 		if ($operations['edit_order'] > 0) {
 			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'edit_order'=>1));
@@ -131,7 +130,11 @@ if (!$bypass) {
 		<? Errors::display(); ?>
 		<div class="testimonials-4">
 			<input type="hidden" id="user_fee" value="<?= $user_fee['fee'] ?>" />
-			<div class="one_half last" <?= ($order_info['order_type'] == $CFG->order_type_bid) ? '' : 'style="display:none;"' ?>>
+			<input type="hidden" id="is_bid" value="<?= $order_info['is_bid'] ?>" />
+			<input type="hidden" id="edit_order" value="1" />
+			<input type="hidden" id="pre_btc_available" value="<?= $pre_btc_available ?>" />
+			<input type="hidden" id="pre_fiat_available" value="<?= $pre_fiat_available ?>" />
+			<div class="one_half last" <?= ($order_info['is_bid']) ? '' : 'style="display:none;"' ?>>
 				<div class="content">
 					<h3 class="section_label">
 						<span class="left"><i class="fa fa-btc fa-2x"></i></span>
@@ -160,7 +163,7 @@ if (!$bypass) {
 								<?
 								if ($CFG->currencies) {
 									foreach ($CFG->currencies as $currency) {
-										echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
+										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.$currency['id'].'">'.$currency['currency'].'</option>';
 									}
 								}	
 								?>
@@ -191,10 +194,10 @@ if (!$bypass) {
 							</div>
 							<div class="calc bigger">
 								<div class="label">
-									<span id="buy_total_approx_label"><?= Lang::string('buy-total-approx') ?></span>
+									<span id="buy_total_approx_label"><?= str_replace('[currency]','<span class="buy_currency_label">'.$currency_info['currency'].'</span>',Lang::string('buy-total-approx')) ?></span>
 									<span id="buy_total_label" style="display:none;"><?= Lang::string('buy-total') ?></span>
 								</div>
-								<div class="value"><span id="buy_total"><?= number_format($buy_total1,8) ?></span> BTC</div>
+								<div class="value"><span class="buy_currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="buy_total"><?= number_format($buy_total1,2) ?></span></div>
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />
@@ -203,7 +206,7 @@ if (!$bypass) {
 					</form>
 				</div>
 			</div>
-			<div class="one_half last" <?= ($order_info['order_type'] == $CFG->order_type_ask) ? '' : 'style="display:none;"' ?>>
+			<div class="one_half last" <?= (!$order_info['is_bid']) ? '' : 'style="display:none;"' ?>>
 				<div class="content">
 					<h3 class="section_label">
 						<span class="left"><i class="fa fa-usd fa-2x"></i></span>
@@ -232,7 +235,7 @@ if (!$bypass) {
 								<?
 								if ($CFG->currencies) {
 									foreach ($CFG->currencies as $currency) {
-										echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
+										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.$currency['id'].'">'.$currency['currency'].'</option>';
 									}
 								}	
 								?>
@@ -301,9 +304,7 @@ if (!$bypass) {
 						</tr>';
 							}
 						}
-						else {
-							echo '<tr><td colspan="4">'.Lang::string('orders-no-bid').'</td></tr>';
-						}
+						echo '<tr id="no_bids" style="'.(is_array($bids) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-bid').'</td></tr>';
 	        			?>
 	        		</table>
 				</div>
@@ -329,9 +330,7 @@ if (!$bypass) {
 						</tr>';
 							}
 						}
-						else {
-							echo '<tr><td colspan="4">'.Lang::string('orders-no-ask').'</td></tr>';
-						}
+						echo '<tr id="no_asks" style="'.(is_array($asks) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-ask').'</td></tr>';
 	        			?>
 					</table>
 				</div>

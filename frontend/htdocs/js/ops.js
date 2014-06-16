@@ -450,29 +450,29 @@ function updateTransactions() {
 						}
 					});
 					
-					var current_price = ($('#asks_list .order_price').length > 0) ? parseFloat($('#asks_list .order_price:first').html().replace(',','')) : 0;
-					var current_bid = ($('#bids_list .order_price').length > 0) ? parseFloat($('#bids_list .order_price:first').html().replace(',','')) : 0;
-					
-					if ($('#buy_price').length > 0 && $('#buy_price').is('[readonly]') && current_price > 0) {
-						$('#buy_price').val((current_price).toFixed(2));
-						$("#buy_price").trigger("change");
-					}
-					if ($('#sell_price').length > 0 && $('#sell_price').is('[readonly]') && current_bid > 0) {
-						$('#sell_price').val((current_bid).toFixed(2));
-						$("#sell_price").trigger("change");
-					}
-				
-					var open_price = parseFloat($('#stats_open').html());
-					var change_abs = Math.abs((current_price - open_price).toFixed(2));
-					$('#stats_last_price').html((current_price).toFixed(2));
-					$('#stats_daily_change_abs').html(change_abs);
-					$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2));
-					
 					sortTable('#asks_list',((notrades) ? 0 : 1),0);
 				}
 				else {
 					$('#no_asks').css('display','');
 				}
+				
+				var current_price = ($('#asks_list .order_price').length > 0) ? parseFloat($('#asks_list .order_price:first').html().replace(',','')) : 0;
+				var current_bid = ($('#bids_list .order_price').length > 0) ? parseFloat($('#bids_list .order_price:first').html().replace(',','')) : 0;
+				
+				if ($('#buy_price').length > 0 && $('#buy_price').is('[readonly]') && current_price > 0) {
+					$('#buy_price').val((current_price).toFixed(2));
+					$("#buy_price").trigger("change");
+				}
+				if ($('#sell_price').length > 0 && $('#sell_price').is('[readonly]') && current_bid > 0) {
+					$('#sell_price').val((current_bid).toFixed(2));
+					$("#sell_price").trigger("change");
+				}
+			
+				var open_price = parseFloat($('#stats_open').html());
+				var change_abs = Math.abs((current_price - open_price).toFixed(2));
+				$('#stats_last_price').html((current_price).toFixed(2));
+				$('#stats_daily_change_abs').html(change_abs.toFixed(2));
+				$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2));
 			});
 		}
 	},((notrades) ? 5000 : 1000));
@@ -530,10 +530,13 @@ function filtersUpdate() {
 		$('#filters_area').append('<div class="tp-loader"></div>');
 		var url = $('#filters').attr('action');
 		var query = $('#filters').serialize();
-		$('#filters_area').load(url+'?page=1&bypass=1&'+query,function() {
-			paginationUpdate();
-			localDates();
-		});
+		
+		while (!ajax_active) {
+			$('#filters_area').load(url+'?page=1&bypass=1&'+query,function() {
+				paginationUpdate();
+				localDates();
+			});
+		}
 	});
 }
 
@@ -542,12 +545,15 @@ function paginationUpdate() {
 		$('#filters_area').append('<div class="tp-loader"></div>');
 		var url = $(this).attr('href');
 		var query = $('#filters').serialize();
-		$('#filters_area').load(url+'&bypass=1&'+query,function() {
-			paginationUpdate();
-			localDates();
-		});
-		e.preventDefault();
-		return false;
+		
+		while (!ajax_active) {
+			$('#filters_area').load(url+'&bypass=1&'+query,function() {
+				paginationUpdate();
+				localDates();
+			});
+			e.preventDefault();
+			return false;
+		}
 	});
 }
 
@@ -556,7 +562,9 @@ function switchBuyCurrency() {
 		var currency = $(this).val();
 		while (!ajax_active) {
 			$.getJSON("includes/ajax.get_currency.php?currency="+currency,function(json_data) {
-				$('#filters_area').load('buy-sell.php?bypass=1&currency='+currency);
+				while (!ajax_active) {
+					$('#filters_area').load('buy-sell.php?bypass=1&currency='+currency);
+				}
 				$('#buy_currency,#sell_currency').val(currency);
 				$('.sell_currency_label,.buy_currency_label').html(currency.toUpperCase());
 				$('.sell_currency_char,.buy_currency_char').html(json_data.currency_info.fa_symbol);
@@ -577,8 +585,7 @@ function calculateBuy() {
 	
 	$('#buy_amount,#buy_price,#sell_amount,#sell_price').bind("keypress", function(e){
 		var charCode = (e.which) ? e.which : e.keyCode;
-        if (charCode != 46 && charCode > 31 
-          && (charCode < 48 || charCode > 57))
+        if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57))
            return false;
 
         return true;
@@ -768,6 +775,14 @@ $(document).ready(function() {
 		window.location.href = 'index.php?currency='+$(this).val();
 	});
 	
+	$('#language_selector').bind("keyup change", function(){
+		window.location.href = 'index.php?lang='+$(this).val();
+	});
+	
+	$('#ob_currency').bind("keyup change", function(){
+		window.location.href = 'order-book.php?currency='+$(this).val();
+	});
+	
 	if ($("#transactions_timestamp").length > 0) {
 		updateTransactions();
 		updateStats();
@@ -797,6 +812,6 @@ $(document).ready(function() {
 	localDates();
 	switchAccount();
 	switchAccount1();
-	expireSession();
+	//expireSession();
 	updateTransactionsList();
 });

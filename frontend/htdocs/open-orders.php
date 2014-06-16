@@ -13,11 +13,11 @@ if ($delete_id1 > 0) {
 	API::add('Orders','getRecord',array($delete_id1));
 	$query = API::send();
 	$del_order = $query['Orders']['getRecord']['results'][0];
-	
+
 	if (!$del_order) {
 		Link::redirect('open-orders.php?message=order-doesnt-exist');
 	}
-	elseif ($del_order['site_user'] != $del_order['site_user'] || !($del_order['id'] > 0)) {
+	elseif ($del_order['site_user'] != $del_order['user_id'] || !($del_order['id'] > 0)) {
 		Link::redirect('open-orders.php?message=not-your-order');
 	}
 	else {

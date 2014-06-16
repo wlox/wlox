@@ -39,7 +39,25 @@ include 'includes/head.php';
 				<div class="ask"><?= Lang::string('orders-ask') ?> <span></span> BTC</div>
 			</div>
 		</div>
-		<div class="mar_top4"></div>
+		<div class="mar_top3"></div>
+		<div class="filters">
+			<form method="GET" action="order-book.php">
+				<ul class="list_empty">
+					<li>
+						<label for="ob_currency"><?= Lang::string('currency') ?></label>
+						<select id="ob_currency" name="currency">
+							<? 
+							if ($CFG->currencies) {
+								foreach ($CFG->currencies as $currency) {
+									echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
+								}
+							}
+							?>
+						</select>
+					</li>
+				</ul>
+			</form>
+		</div>
 		<div class="one_half">
 			<h3><?= Lang::string('orders-bid') ?></h3>
         	<div class="table-style">
