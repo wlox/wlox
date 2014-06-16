@@ -51,13 +51,21 @@ class Orders {
 	}
 	
 	function getRecord($order_id) {
+		global $CFG;
+		
 		$order_id = preg_replace("/[^0-9]/", "",$order_id);
 		
 		if (!($order_id > 0))
 			return false;
 		
-		$sql = "SELECT orders.*, site_users.id AS user_id FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) WHERE orders.id = $order_id ";
+		$sql = "SELECT * FROM orders WHERE id = $order_id ";
 		$result = db_query_array($sql);
+		
+		if ($result[0]) {
+			$result[0]['user_id'] = User::$info['id'];
+			$result[0]['is_bid'] = ($result[0]['order_type'] ==$CFG->order_type_bid);
+		}
+		
 		return $result[0];
 	}
 	
@@ -157,11 +165,20 @@ class Orders {
 		if (!$CFG->session_active)
 			return false;
 		
+		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
+		if ($edit_id > 0) {
+			$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
+			if ($orig_order['site_user'] != User::$info['id'] || !$orig_order)
+				return false;
+			
+			$edit_currency = DB::getRecord('currencies',$orig_order['currency'],0,1);
+			$currency1 = $edit_currency['currency'];
+		}
+		
 		$amount = preg_replace("/[^0-9\.]/", "",$amount);
 		$price = preg_replace("/[^0-9\.]/", "",$price);
 		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency1);
 		//$fee = preg_replace("/[^0-9\.]/", "",$fee);
-		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
 		
 		if (!$external_transaction)
@@ -183,7 +200,6 @@ class Orders {
 		if (!($edit_id > 0))
 			$order_log_id = db_insert('order_log',array('date'=>date('Y-m-d H:i:s'),'order_type'=>(($buy) ? $CFG->order_type_bid : $CFG->order_type_ask),'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N')));
 		else {
-			$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
 			$order_log_id = db_insert('order_log',array('date'=>date('Y-m-d H:i:s'),'order_type'=>(($buy) ? $CFG->order_type_bid : $CFG->order_type_ask),'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'p_id'=>$orig_order['log_id']));
 		}
 		
@@ -352,6 +368,10 @@ class Orders {
 			return false;
 		
 		if (!$CFG->session_active)
+			return false;
+		
+		$del_order = DB::getRecord('orders',$id,0,1);
+		if ($del_order['site_user'] != User::$info['id'])
 			return false;
 		
 		db_delete('orders',$id);

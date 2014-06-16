@@ -32,6 +32,8 @@ class User {
 		
 		if (!$CFG->session_active)
 			return false;
+		
+		$user_fee = FeeSchedule::getRecord(User::$info['fee_schedule']);
 	
 		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".User::$info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})";
 		$result = db_query_array($sql);
@@ -47,8 +49,8 @@ class User {
 		if ($result) {
 			foreach ($result as $row) {
 				if ($row['type'] == $CFG->order_type_bid) {
-					$on_hold[$row['currency']]['order'] += floatval($row['amount']);
-					$on_hold[$row['currency']]['total'] += floatval($row['amount']);
+					$on_hold[$row['currency']]['order'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
+					$on_hold[$row['currency']]['total'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
 				}
 				else {
 					$on_hold['BTC']['order'] += floatval($row['btc_amount']);
