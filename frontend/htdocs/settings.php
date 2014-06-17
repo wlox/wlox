@@ -19,6 +19,18 @@ $countries = $query['User']['getCountries']['results'][0];
 if ($_REQUEST['ex_request'])
 	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
 
+if ($authcode1) {
+	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
+	$query = API::send();
+
+	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
+		$_REQUEST = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
+		unset($_REQUEST['submitted']);
+	}
+	else
+		Errors::add(Lang::string('settings-request-expired'));
+}
+
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->get($query['User']['getInfo']['results'][0]);
 $personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$personal->info['pass']);
@@ -53,17 +65,6 @@ if ($_REQUEST['submitted'] && !$token1 && !is_array($personal->errors)) {
 		if ($query['User']['settingsEmail2fa']['results'][0])
 			Link::redirect('settings.php?notice=email');
 	}
-}
-
-if ($authcode1) {
-	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
-	$query = API::send();
-	
-	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
-		$_REQUEST = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
-	}
-	else
-		Errors::add(Lang::string('settings-request-expired'));
 }
 
 if ($_REQUEST['settings'] && is_array($personal->errors)) {
