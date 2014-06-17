@@ -231,6 +231,8 @@ class User {
 	}
 	
 	function resetUser($id) {
+		global $CFG;
+		
 		$id = preg_replace("/[^0-9]/", "",$id);
 		
 		if (!($id > 0))
@@ -377,13 +379,13 @@ class User {
 	
 	function updatePersonalInfo($info) {
 		global $CFG;
-	
+
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
-		
+
 		if (!is_array($info))
 			return false;
-		
+
 		$update['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$info['pass']);
 		$update['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
@@ -438,7 +440,7 @@ class User {
 	function reactivateAccount() {
 		global $CFG;
 
-		if (!($CFG->session_locked && ($CFG->token_verified || $CFG->email_2fa_verified)))
+		if (!(($CFG->session_locked || $CFG->session_active) && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('deactivated'=>'N'));
@@ -456,7 +458,7 @@ class User {
 	function unlockAccount() {
 		global $CFG;
 	
-		if (!($CFG->session_locked && ($CFG->token_verified || $CFG->email_2fa_verified)))
+		if (!(($CFG->session_locked || $CFG->session_active) && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
 		return db_update('site_users',User::$info['id'],array('locked'=>'N'));
@@ -465,7 +467,7 @@ class User {
 	function settingsEmail2fa($request=false,$security_page=false) {
 		global $CFG;
 
-		if (!$CFG->session_locked)
+		if (!($CFG->session_locked || $CFG->session_active))
 			return false;
 		
 		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request))));

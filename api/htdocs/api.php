@@ -67,7 +67,7 @@ elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
 }
 
 // email 2fa for settings changes
-if ($settings_change_id1 && $CFG->session_active || $CFG->session_locked) {
+if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 	$request_id = Encryption::decrypt(urldecode($settings_change_id1));
 	if ($request_id > 0) {
 		$change_request = DB::getRecord('change_settings',$request_id,0,1);
