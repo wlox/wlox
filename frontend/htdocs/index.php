@@ -185,23 +185,23 @@ else
         <h2><?= Lang::string('home-overview') ?></h2>
         <? } ?>
         <div class="mar_top3"></div>
-        <div class="one_fifth less-space">
+        <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-last-price') ?></h6>
         	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?></p>
         </div>
-        <div class="one_fifth less-space">
+        <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-daily-change') ?></h6>
         	<p class="stat1"><?= $arrow.'<span id="stats_daily_change_abs">'.number_format(abs($stats['daily_change']),2).'</span>' ?> <small><?= '<span id="stats_daily_change_perc">'.number_format(abs($stats['daily_change_percent']),2).'</span>%'?></small></p>
         </div>
-        <div class="one_fifth less-space">
+        <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-days-range') ?></h6>
         	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_min">'.number_format($stats['min'],2).'</span> - <span id="stats_max">'.number_format($stats['max'],2).'</span>' ?></p>
         </div>
-        <div class="one_fifth less-space">
+        <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-todays-open') ?></h6>
         	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_open">'.number_format($stats['open'],2).'</span>'?></p>
         </div>
-        <div class="one_fifth less-space last">
+        <div class="one_fifth last">
         	<h6><?= Lang::string('home-stats-24h-volume') ?></h6>
         	<p class="stat1"><?= '<span id="stats_traded">'.number_format($stats['total_btc_traded'],2).'</span>' ?> BTC</p>
         </div>

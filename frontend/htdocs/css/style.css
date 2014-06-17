@@ -625,7 +625,7 @@ a.button_slider:hover {
 /* fresh projects */
 .graph_contain{width:100%;position:relative;float:left;margin-top: -8px;}
 .global_stats{}
-.global_stats .stat1{font-size: 28px;font-weight: bold;color: #383634;white-space: nowrap;}
+.global_stats .stat1{font-size: 24px;font-weight: bold;color: #383634;white-space: nowrap;}
 .global_stats .stat1 small{font-size: 16px;}
 .global_stats .stat2{font-size: 24px;font-weight: bold;font-style: normal;margin-left: 10px;color:#727272;}
 .global_stats h6{margin-bottom: 5px;}
