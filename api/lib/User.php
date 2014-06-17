@@ -231,6 +231,8 @@ class User {
 	}
 	
 	function resetUser($id) {
+		global $CFG;
+		
 		$id = preg_replace("/[^0-9]/", "",$id);
 		
 		if (!($id > 0))
