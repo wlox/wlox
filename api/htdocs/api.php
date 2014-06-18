@@ -20,7 +20,7 @@ $commands = json_decode($_POST['commands'],true);
 
 // authenticate session
 if ($session_id1) {
-	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1.' FOR UPDATE');
+	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1.'');
 	//$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' ');
 	if ($result) {
 		if (openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
@@ -120,4 +120,4 @@ if ($update_nonce)
 if (is_array($return))
 	echo json_encode($return);
 
-db_commit();
+//db_commit();

@@ -27,15 +27,16 @@ class User {
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
-	function getOnHold() {
+	function getOnHold($for_update=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
 		
 		$user_fee = FeeSchedule::getRecord(User::$info['fee_schedule']);
+		$lock = ($for_update) ? 'FOR UPDATE' : '';
 	
-		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".User::$info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})";
+		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".User::$info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
@@ -44,7 +45,7 @@ class User {
 			}
 		}
 	
-		$sql = " SELECT currencies.currency AS currency, orders.fiat AS amount, orders.btc AS btc_amount, orders.order_type AS type FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE orders.site_user = ".User::$info['id']."";
+		$sql = " SELECT currencies.currency AS currency, orders.fiat AS amount, orders.btc AS btc_amount, orders.order_type AS type FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE orders.site_user = ".User::$info['id']." ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
