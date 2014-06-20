@@ -775,7 +775,7 @@ $(document).ready(function() {
 	});
 	
 	$('#currency_selector').bind("keyup change", function(){
-		window.location.href = 'index.php?currency='+$(this).val()+'#global_stats';
+		window.location.href = 'index.php?currency='+$(this).val();
 	});
 	
 	$('#language_selector').bind("keyup change", function(){

@@ -163,7 +163,7 @@ if (!$bypass) {
 								<?
 								if ($CFG->currencies) {
 									foreach ($CFG->currencies as $currency) {
-										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.$currency['id'].'">'.$currency['currency'].'</option>';
+										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	
 								?>
@@ -235,7 +235,7 @@ if (!$bypass) {
 								<?
 								if ($CFG->currencies) {
 									foreach ($CFG->currencies as $currency) {
-										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.$currency['id'].'">'.$currency['currency'].'</option>';
+										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	
 								?>
@@ -293,9 +293,9 @@ if (!$bypass) {
 	        				<th><?= Lang::string('orders-value') ?></th>
 	        			</tr>
 	        			<? 
-	        			if ($bids) {
+						if ($bids) {
 							foreach ($bids as $bid) {
-								$mine = (User::$info['id'] == $bid['site_user']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
+								$mine = ($bid['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr">
 							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['fiat_price'],2).'</span></td>
@@ -319,9 +319,9 @@ if (!$bypass) {
 	        				<th><?= Lang::string('orders-value') ?></th>
 						</tr>
 	        			<? 
-	        			if ($asks) {
+						if ($asks) {
 							foreach ($asks as $ask) {
-								$mine = (User::$info['id'] == $ask['site_user']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
+								$mine = ($ask['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr">
 							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['fiat_price'],2).'</span></td>

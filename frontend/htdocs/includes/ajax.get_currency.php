@@ -6,12 +6,12 @@ $currency1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['currency']);
 
 API::add('Orders','getCurrentBid',array($currency1));
 API::add('Orders','getCurrentAsk',array($currency1));
-API::add('SiteUser','getAvailable');
+API::add('User','getAvailable');
 $query = API::send();
 
 $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask = $query['Orders']['getCurrentAsk']['results'][0];
-$user_available = $query['SiteUser']['getAvailable']['results'][0];
+$user_available = $query['User']['getAvailable']['results'][0];
 
 $return['currency_info'] = $CFG->currencies[strtoupper($currency1)];
 $return['current_bid'] = $current_bid;
