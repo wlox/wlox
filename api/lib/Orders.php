@@ -179,26 +179,25 @@ class Orders {
 		if (!$CFG->session_active)
 			return false;
 		
+		$this_user_id = ($this_user_id > 0) ? $this_user_id : User::$info['id'];
+		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
+		$amount = preg_replace("/[^0-9\.]/", "",$amount);
+		$price = preg_replace("/[^0-9\.]/", "",$price);
+		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency1);
+		//$fee = preg_replace("/[^0-9\.]/", "",$fee);
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		if ($edit_id > 0) {
 			$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
-			if ($orig_order['site_user'] != User::$info['id'] || !$orig_order)
+			if ($orig_order['site_user'] != $this_user_id || !$orig_order)
 				return false;
 			
 			$edit_currency = DB::getRecord('currencies',$orig_order['currency'],0,1);
 			$currency1 = $edit_currency['currency'];
 		}
 		
-		$amount = preg_replace("/[^0-9\.]/", "",$amount);
-		$price = preg_replace("/[^0-9\.]/", "",$price);
-		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency1);
-		//$fee = preg_replace("/[^0-9\.]/", "",$fee);
-		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
-		
 		if (!$external_transaction)
 			db_start_transaction();
 		
-		$this_user_id = ($this_user_id > 0) ? $this_user_id : User::$info['id'];
 		$currency_info = $CFG->currencies[strtoupper($currency1)];
 		$transactions = 0;
 		$new_order = 0;
@@ -207,11 +206,11 @@ class Orders {
 		$user_info = DB::getRecord('site_users',$this_user_id,0,1,false,false,false,1);
 		$this_btc_balance = $user_info['btc'];
 		$this_fiat_balance = $user_info[$currency1];
-		$on_hold = User::getOnHold(1);
+		$on_hold = User::getOnHold(1,$user_info['id']);
 		$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
 		$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - ($amount + ($amount * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
 		
-		$user_fee = DB::getRecord('fee_schedule',User::$info['fee_schedule'],0,1);
+		$user_fee = DB::getRecord('fee_schedule',$user_info['fee_schedule'],0,1);
 		$fee = $user_fee['fee'];
 		
 		// fees temporarily zero!
