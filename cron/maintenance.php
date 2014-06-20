@@ -3,6 +3,7 @@
 echo "Beginning Maintenance processing...".PHP_EOL;
 
 include 'cfg.php';
+$CFG->session_active = 1;
 
 // compile historical data
 $sql = 'SELECT id FROM historical_data WHERE `date` = (CURDATE() - INTERVAL 1 DAY) LIMIT 0,1';
@@ -19,7 +20,7 @@ $sql = 'UPDATE site_users SET fee_schedule = 1 WHERE fee_schedule = 0';
 $result = db_query($sql);
 
 // expire settings change request
-$sql = 'DELETE FROM change_settings WHERE `date` <= (NOW() - INTERVAL 1 DAY)';
+$sql = 'DELETE FROM change_settings WHERE `date` <= ("'.date('Y-m-d H:i:s').'" - INTERVAL 1 DAY)';
 $result = db_query($sql);
 
 // expire unautharized requests
@@ -31,21 +32,21 @@ $sql = 'UPDATE site_users SET dont_ask_30_days = "N" WHERE dont_ask_date <= (NOW
 $result = db_query($sql);
 
 // delete old sessions
-$sql = "DELETE FROM sessions WHERE session_time < (NOW() - INTERVAL 15 MINUTE) ";
+$sql = "DELETE FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
 db_query($sql);
 
 // set market price orders at market price
 db_start_transaction();
-$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,LOWER(currencies.currency) AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
+$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,orders.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		if ($row['order_type'] == $CFG->order_type_bid) {
-			$price = Orders::getCurrentAsk($row['currency']);
+			$price = Orders::getCurrentAsk(false,$row['currency']);
 			$buy = true;
 		}
 		else {
-			$price = Orders::getCurrentBid($row['currency']);
+			$price = Orders::getCurrentBid(false,$row['currency']);
 			$buy = false;
 		}
 		
