@@ -51,6 +51,7 @@ class User {
 
 		if (!$result || $result['error']) {
 			Errors::add($CFG->login_invalid);
+			session_destroy();
 			$_SESSION = array();
 			return false;
 		}
@@ -121,6 +122,7 @@ class User {
 			API::send();
 			
 			unset($_SESSION);
+			session_destroy();
 			
 			self::$logged_in = false;
 			self::$info = false;
