@@ -50,5 +50,5 @@ unset($result[0]['pass']);
 unset($result[0]['awaiting']);
 echo json_encode(array('message'=>'logged-in','info'=>$result[0]));
 
-db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1)),'session_id');
+db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
 db_commit();
