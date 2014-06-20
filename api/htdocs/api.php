@@ -114,7 +114,7 @@ if (is_array($commands)) {
 }
 
 if ($update_nonce)
-	$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1)),'session_id');
+	$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
 
 
 if (is_array($return))
