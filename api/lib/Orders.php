@@ -75,7 +75,7 @@ class Orders {
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		
-		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $CFG->currencies[strtoupper($currency)];
+		$currency_info = ($currency_id > 0) ? DB::getRecord('currencies',$currency_id,0,1) : $CFG->currencies[strtoupper($currency)];
 		$sql = "SELECT orders.btc_price AS fiat_price FROM orders WHERE currency = {$currency_info['id']} AND order_type = {$CFG->order_type_bid} ORDER BY btc_price DESC LIMIT 0,1";
 		$result = db_query_array($sql);
 		
@@ -104,7 +104,7 @@ class Orders {
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		
-		$currency_info = ($currency_id > 0) ? array('id'=>$currency_id) : $CFG->currencies[strtoupper($currency)];
+		$currency_info = ($currency_id > 0) ? DB::getRecord('currencies',$currency_id,0,1) : $CFG->currencies[strtoupper($currency)];
 		$sql = "SELECT orders.btc_price AS fiat_price FROM orders WHERE currency = {$currency_info['id']} AND order_type = {$CFG->order_type_ask} ORDER BY btc_price ASC LIMIT 0,1";
 		$result = db_query_array($sql);
 		
