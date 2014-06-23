@@ -32,10 +32,8 @@ $sql = 'UPDATE site_users SET dont_ask_30_days = "N" WHERE dont_ask_date <= (NOW
 $result = db_query($sql);
 
 // delete old sessions
-//$sql = "DELETE FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
-echo date('Y-m-d H:i:s');
-echo "SELECT * FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
-//db_query($sql);
+$sql = "DELETE FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
+db_query($sql);
 
 // set market price orders at market price
 db_start_transaction();
