@@ -9,6 +9,7 @@ class User {
 		$ch = curl_init($CFG->auth_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass));
+		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
@@ -42,6 +43,7 @@ class User {
 		$ch = curl_init($CFG->auth_verify_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$commands);
+		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
@@ -86,6 +88,7 @@ class User {
 		$ch = curl_init($CFG->auth_verify_token_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$commands);
+		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 	
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);

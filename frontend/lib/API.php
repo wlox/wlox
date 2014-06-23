@@ -35,6 +35,7 @@ class API{
 		$ch = curl_init($CFG->api_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$commands);
+		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
 		//print_ar($result1);
