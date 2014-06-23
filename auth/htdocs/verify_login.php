@@ -14,7 +14,7 @@ if (!$session_id1) {
 }
 
 db_start_transaction();
-$result = db_query_array('SELECT sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.first_name, site_users.last_name, site_users.fee_schedule,site_users.tel, site_users.country_code,site_users.verified_google, site_users.verified_authy,site_users.using_sms,site_users.confirm_withdrawal_email_btc,site_users.confirm_withdrawal_2fa_btc,site_users.confirm_withdrawal_2fa_bank,site_users.confirm_withdrawal_email_bank,site_users.notify_deposit_btc,site_users.notify_deposit_bank,site_users.no_logins,site_users.notify_login,site_users.deactivated, site_users.locked FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce <= '.($nonce1 + 5).' AND sessions.nonce >= '.$nonce1.' FOR UPDATE');
+$result = db_query_array('SELECT sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.first_name, site_users.last_name, site_users.fee_schedule,site_users.tel, site_users.country_code,site_users.verified_google, site_users.verified_authy,site_users.using_sms,site_users.confirm_withdrawal_email_btc,site_users.confirm_withdrawal_2fa_btc,site_users.confirm_withdrawal_2fa_bank,site_users.confirm_withdrawal_email_bank,site_users.notify_deposit_btc,site_users.notify_deposit_bank,site_users.no_logins,site_users.notify_login,site_users.deactivated, site_users.locked FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce <= '.($nonce1 + 5).' AND sessions.nonce >= '.($nonce1 - 5).' FOR UPDATE');
 if (!$result) {
 	echo json_encode(array('error'=>'session-not-found'));
 	db_commit();
