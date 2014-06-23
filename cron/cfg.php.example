@@ -54,6 +54,8 @@ require_once ("lib/Orders.php");
 require_once ("lib/Status.php");
 require_once ("lib/Currencies.php");
 require_once ("lib/User.php");
+require_once ("lib/Settings.php");
+require_once ("lib/String.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
@@ -61,3 +63,7 @@ mysql_set_charset('utf8');
 
 /* Currencies */
 $CFG->currencies = Currencies::get();
+
+/* Load settings and timezone */
+Settings::assign ($CFG);
+date_default_timezone_set($CFG->default_timezone);
