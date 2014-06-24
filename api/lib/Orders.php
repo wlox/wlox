@@ -208,7 +208,7 @@ class Orders {
 		$this_fiat_balance = $user_info[strtolower($currency1)];
 		$on_hold = User::getOnHold(1,$user_info['id']);
 		$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
-		$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - ($amount + ($amount * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
+		$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - (($amount * $orig_order['btc_price']) + (($amount * $orig_order['btc_price']) * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
 		
 		$user_fee = DB::getRecord('fee_schedule',$user_info['fee_schedule'],0,1);
 		$fee = $user_fee['fee'];
@@ -244,9 +244,9 @@ class Orders {
 					$comp_btc_on_hold_prev[$comp_order['site_user']] = $comp_btc_on_hold[$comp_order['site_user']];
 					$comp_btc_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_btc_on_hold)) ? $comp_btc_on_hold[$comp_order['site_user']] - $comp_order['btc_outstanding'] : $comp_order['btc_on_hold'] - $comp_order['btc_outstanding'];
 					
-					$max_amount = ((($this_fiat_balance - $this_fiat_on_hold) * $comp_order['fiat_price']) > ($amount + (($fee * 0.01) * $amount))) ? $amount : (($this_fiat_balance - $this_fiat_on_hold) * $comp_order['fiat_price']) - (($fee * 0.01) * (($this_fiat_balance - $this_fiat_on_hold) * $comp_order['fiat_price']));
+					$max_amount = ((($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) > ($amount + (($fee * 0.01) * $amount))) ? $amount : (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) - (($fee * 0.01) * (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']));
 					$max_comp_amount = (($comp_order['btc_balance'] - $comp_btc_on_hold[$comp_order['site_user']]) > $comp_order['btc_outstanding']) ? $comp_order['btc_outstanding'] : $comp_order['btc_balance'] - $comp_btc_on_hold[$comp_order['site_user']];
-
+					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						$comp_btc_on_hold[$comp_order['site_user']] = $comp_btc_on_hold_prev[$comp_order['site_user']];
 						continue;
@@ -334,7 +334,7 @@ class Orders {
 					
 					$max_amount = (($this_btc_balance - $this_btc_on_hold) > $amount) ? $amount : $this_btc_balance - $this_btc_on_hold;
 					$max_comp_amount = (($comp_order['btc_balance'] - $comp_btc_on_hold[$comp_order['site_user']]) > ($comp_order['btc_outstanding'] + (($comp_order['fee'] * 0.01) * $comp_order['btc_outstanding']))) ? $comp_order['btc_outstanding'] : ($comp_order['btc_balance'] - $comp_btc_on_hold[$comp_order['site_user']]) - (($comp_order['fee'] * 0.01) * ($comp_order['btc_balance'] - $comp_btc_on_hold[$comp_order['site_user']]));
-					
+
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						$comp_btc_on_hold[$comp_order['site_user']] = $comp_btc_on_hold_prev[$comp_order['site_user']];
 						continue;
