@@ -205,7 +205,7 @@ class Orders {
 		$status = Status::get(1);
 		$user_info = DB::getRecord('site_users',$this_user_id,0,1,false,false,false,1);
 		$this_btc_balance = $user_info['btc'];
-		$this_fiat_balance = $user_info[$currency1];
+		$this_fiat_balance = $user_info[strtolower($currency1)];
 		$on_hold = User::getOnHold(1,$user_info['id']);
 		$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
 		$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - ($amount + ($amount * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
