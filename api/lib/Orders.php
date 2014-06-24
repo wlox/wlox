@@ -192,7 +192,7 @@ class Orders {
 				return false;
 			
 			$edit_currency = DB::getRecord('currencies',$orig_order['currency'],0,1);
-			$currency1 = $edit_currency['currency'];
+			$currency1 = strtolower($edit_currency['currency']);
 		}
 		
 		if (!$external_transaction)
