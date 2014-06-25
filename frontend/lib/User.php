@@ -30,7 +30,7 @@ class User {
 	function verifyLogin($recursion=0) {
 		global $CFG;
 
-		if (!($_SESSION['session_id']) > 0 || $recursion > 2)
+		if (!($_SESSION['session_id']) > 0)
 			return false;
 		
 		$commands['session_id'] = $_SESSION['session_id'];
@@ -38,22 +38,25 @@ class User {
 		$commands['commands'] = json_encode($commands);
 		
 		openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = $signature;
+		$commands['signature'] = urlencode($signature);
 		
 		$ch = curl_init($CFG->auth_verify_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch,CURLOPT_POSTFIELDS,$commands);
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
-		
+		curl_setopt($ch, CURLOPT_VERBOSE, true);
+
 		$result1 = curl_exec($ch);
+		$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$error = curl_error($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
 
-		if (!$result) {
+		if ((!($http_status > 0) || !$result1) && $recursion < 3) {
 			$recursion++;
 			return self::verifyLogin($recursion);
 		}
-		elseif ($result['error']) {
+		elseif ((!($http_status > 0) || !$result1) || $result['error']) {
 			Errors::add($CFG->login_invalid);
 			session_destroy();
 			$_SESSION = array();

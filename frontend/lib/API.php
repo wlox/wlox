@@ -30,7 +30,7 @@ class API{
 		$commands['request_id'] = API::$request_id;
 
 		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = $signature;
+		$commands['signature'] = urlencode($signature);
 		
 		$ch = curl_init($CFG->api_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
