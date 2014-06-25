@@ -38,11 +38,7 @@ class API{
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
-		//print_ar($result1);
 		$result = json_decode($result1,true);
-		//print_ar($result['session_id']);
-		//print_ar($result['nonce']);
-		//echo $result['error'].',';
 		curl_close($ch);
 		
 		if ($result['nonce_updated'])

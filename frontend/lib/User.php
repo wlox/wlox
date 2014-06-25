@@ -27,10 +27,10 @@ class User {
 		}
 	}
 	
-	function verifyLogin() {
+	function verifyLogin($recursion=0) {
 		global $CFG;
-		
-		if (!($_SESSION['session_id']) > 0)
+
+		if (!($_SESSION['session_id']) > 0 || $recursion > 2)
 			return false;
 		
 		$commands['session_id'] = $_SESSION['session_id'];
@@ -48,10 +48,12 @@ class User {
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
-		//echo $commands['nonce'].',';
-		//print_r($result);
 
-		if (!$result || $result['error']) {
+		if (!$result) {
+			$recursion++;
+			return self::verifyLogin($recursion);
+		}
+		elseif ($result['error']) {
 			Errors::add($CFG->login_invalid);
 			session_destroy();
 			$_SESSION = array();
