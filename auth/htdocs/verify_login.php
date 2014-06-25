@@ -13,23 +13,23 @@ if (!$session_id1) {
 	exit;
 }
 
-db_start_transaction();
-$result = db_query_array('SELECT sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.first_name, site_users.last_name, site_users.fee_schedule,site_users.tel, site_users.country_code,site_users.verified_google, site_users.verified_authy,site_users.using_sms,site_users.confirm_withdrawal_email_btc,site_users.confirm_withdrawal_2fa_btc,site_users.confirm_withdrawal_2fa_bank,site_users.confirm_withdrawal_email_bank,site_users.notify_deposit_btc,site_users.notify_deposit_bank,site_users.no_logins,site_users.notify_login,site_users.deactivated, site_users.locked FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce <= '.($nonce1 + 5).' AND sessions.nonce >= '.$nonce1.' FOR UPDATE');
+//db_start_transaction();
+$result = db_query_array('SELECT sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.first_name, site_users.last_name, site_users.fee_schedule,site_users.tel, site_users.country_code,site_users.verified_google, site_users.verified_authy,site_users.using_sms,site_users.confirm_withdrawal_email_btc,site_users.confirm_withdrawal_2fa_btc,site_users.confirm_withdrawal_2fa_bank,site_users.confirm_withdrawal_email_bank,site_users.notify_deposit_btc,site_users.notify_deposit_bank,site_users.no_logins,site_users.notify_login,site_users.deactivated, site_users.locked FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce <= '.($nonce1 + 5).' AND sessions.nonce >= '.$nonce1);
 if (!$result) {
 	echo json_encode(array('error'=>'session-not-found'));
-	db_commit();
+	//db_commit();
 	exit;
 }
 
 if (!openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 	echo json_encode(array('error'=>'invalid-signature'));
-	db_commit();
+	//db_commit();
 	exit;
 }
 
 if ($result[0]['awaiting'] == 'Y') {
 	echo json_encode(array('message'=>'awaiting-token'));
-	db_commit();
+	//db_commit();
 	exit;
 }
 
@@ -51,4 +51,4 @@ unset($result[0]['awaiting']);
 echo json_encode(array('message'=>'logged-in','info'=>$result[0]));
 
 db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
-db_commit();
+//db_commit();
