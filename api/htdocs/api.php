@@ -8,7 +8,7 @@ $system_classes[] = 'DB';
 include '../cfg/cfg.php';
 
 $session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
-$signature1 = $_POST['signature'];
+$signature1 = urldecode($_POST['signature']);
 $nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
 $token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $settings_change_id1 = $_REQUEST['settings_change_id'];
