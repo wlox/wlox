@@ -29,6 +29,9 @@ if ($session_id1) {
 			User::setInfo($result[0]);
 			$update_nonce = true;
 			
+			if (User::$info['last_lang'] != $CFG->language)
+				db_update('site_users',User::$info['id'],array('last_lang'=>$CFG->language));
+			
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
 				$return['error'] = 'account-locked-or-deactivated';
 				$CFG->session_locked = true;

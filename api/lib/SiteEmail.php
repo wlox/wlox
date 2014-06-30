@@ -12,6 +12,8 @@ class SiteEmail{
 		
 		$result[0]['title'] = ($CFG->language == 'en' && !empty($result[0]['title_en'])) ? $result[0]['title_en']: $result[0]['title_es'];
 		$result[0]['content'] = ($CFG->language == 'en' && !empty($result[0]['content_en'])) ? $result[0]['content_en']: $result[0]['content_es'];
+		$result[0]['title'] = str_replace('[exchange_name]',$CFG->exchange_name,$result[0]['title']);
+		$result[0]['content'] = str_replace('[exchange_name]',$CFG->exchange_name,$result[0]['content']);
 		return $result[0];
 	}
 	
