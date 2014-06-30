@@ -4,6 +4,7 @@ echo "Beginning Maintenance processing...".PHP_EOL;
 
 include 'cfg.php';
 $CFG->session_active = 1;
+$CFG->in_cron = 1;
 
 // compile historical data
 $sql = 'SELECT id FROM historical_data WHERE `date` = (CURDATE() - INTERVAL 1 DAY) LIMIT 0,1';

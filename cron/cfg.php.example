@@ -23,6 +23,7 @@ $CFG->bitcoin_sending_fee = 0.0001;
 $CFG->bitcoin_warm_wallet_address = '';
 
 /* Constants */
+$CFG->exchange_name = 'Exchange';
 $CFG->btc_currency_id = 28;
 $CFG->order_type_bid = 1;
 $CFG->order_type_ask = 2;
@@ -41,6 +42,14 @@ $CFG->withdraw_fiat_desc = 1;
 $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
 
+/* Emails */
+$CFG->email_smtp_host = 'smtp.yourhost.com';
+$CFG->email_smtp_port = 465;
+$CFG->email_smtp_security = 'ssl';
+$CFG->email_smtp_username = "notifications@1yourhost.com";
+$CFG->email_smtp_password = "";
+$CFG->email_smtp_send_from = "notifications@1yourhost.com";
+
 /* debugging */
 $DB_DEBUG = true;
 $DB_DIE_ON_FAIL = true;
@@ -56,6 +65,8 @@ require_once ("lib/Currencies.php");
 require_once ("lib/User.php");
 require_once ("lib/Settings.php");
 require_once ("lib/String.php");
+require_once ("lib/SiteEmail.php");
+require_once ("lib/Email.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
