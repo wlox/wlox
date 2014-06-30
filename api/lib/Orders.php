@@ -285,6 +285,9 @@ class Orders {
 					db_update('site_users',$comp_order['site_user'],array('btc'=>$comp_btc_balance[$comp_order['site_user']],$currency1=>$comp_fiat_balance[$comp_order['site_user']]));
 				}
 			}
+			else {
+				$no_compatible = true;
+			}
 	
 			if ($trans_total > 0) {
 				db_update('site_users',$user_info['id'],array('btc'=>$this_btc_balance,$currency1=>$this_fiat_balance));
@@ -295,11 +298,13 @@ class Orders {
 			if ($amount > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
-						$edit_order = 1;
+						if (!($no_compatible && $CFG->in_cron)) {
+							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+							$edit_order = 1;
+						}
 					}
 					else {
-						self::cancelOrder($edit_id,$amount);
+						self::cancelOrder($edit_id,$amount,$this_user_id);
 					}
 				}
 				else {
@@ -308,7 +313,7 @@ class Orders {
 						$new_order = 1;
 					}
 					else {
-						self::cancelOrder(false,$amount);
+						self::cancelOrder(false,$amount,$this_user_id);
 					}
 				}
 			}
@@ -332,17 +337,17 @@ class Orders {
 						continue;
 	
 					++$transactions;
-	
+
 					$comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					$comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_fiat_on_hold_prev[$comp_order['site_user']] = $comp_fiat_on_hold[$comp_order['site_user']];
-					$comp_fiat_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_fiat_on_hold)) ? $comp_fiat_on_hold[$comp_order['site_user']] - (($comp_order['btc_outstanding'] * $comp_order['fiat_price']) + (($comp_order['fee'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['fiat_price']))) : $comp_order['btc_on_hold'] - (($comp_order['btc_outstanding'] * $comp_order['fiat_price']) + (($comp_order['fee'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['fiat_price'])));
+					$comp_fiat_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_fiat_on_hold)) ? $comp_fiat_on_hold[$comp_order['site_user']] - (($comp_order['btc_outstanding'] * $comp_order['fiat_price']) + (($comp_order['fee'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['fiat_price']))) : $comp_order['fiat_on_hold'] - (($comp_order['btc_outstanding'] * $comp_order['fiat_price']) + (($comp_order['fee'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['fiat_price'])));
 					
 					$max_amount = (($this_btc_balance - $this_btc_on_hold) > $amount) ? $amount : $this_btc_balance - $this_btc_on_hold;
 					$max_comp_amount = ((($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['fiat_price']) > ($comp_order['btc_outstanding'] + (($comp_order['fee'] * 0.01) * $comp_order['btc_outstanding']))) ? $comp_order['btc_outstanding'] : (($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['fiat_price']) - (($comp_order['fee'] * 0.01) * (($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['fiat_price']));
 					$this_funds_finished = ($max_amount < $amount);
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
-					
+
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						$comp_fiat_on_hold[$comp_order['site_user']] = $comp_fiat_on_hold_prev[$comp_order['site_user']];
 						continue;
@@ -388,6 +393,9 @@ class Orders {
 					db_update('site_users',$comp_order['site_user'],array('btc'=>$comp_btc_balance[$comp_order['site_user']],$currency1=>$comp_fiat_balance[$comp_order['site_user']]));
 				}
 			}
+			else {
+				$no_compatible = true;
+			}
 	
 			if ($trans_total > 0) {
 				db_update('site_users',$user_info['id'],array('btc'=>$this_btc_balance,$currency1=>$this_fiat_balance));
@@ -398,11 +406,13 @@ class Orders {
 			if ($amount > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>($amount*$price),'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
-						$edit_order = 1;
+						if (!($no_compatible && $CFG->in_cron)) {
+							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>($amount*$price),'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+							$edit_order = 1;
+						}
 					}
 					else {
-						self::cancelOrder($edit_id,$amount);
+						self::cancelOrder($edit_id,$amount,$this_user_id);
 					}
 				}
 				else {
@@ -411,7 +421,7 @@ class Orders {
 						$new_order = 1;
 					}
 					else {
-						self::cancelOrder(false,$amount);
+						self::cancelOrder(false,$amount,$this_user_id);
 					}
 				}
 			}
@@ -434,6 +444,7 @@ class Orders {
 		
 		$user_info = ($site_user > 0) ? DB::getRecord('site_users',$site_user,0,1) : User::$info;
 		$user_info['amount'] = $outstanding_btc;
+		$CFG->language = $user_info['last_lang'];
 		db_delete('orders',$order_id);
 		
 		$email = SiteEmail::getRecord('order-cancelled');
