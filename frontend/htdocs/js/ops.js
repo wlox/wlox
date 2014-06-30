@@ -588,7 +588,7 @@ function calculateBuy() {
 	
 	$('#buy_amount,#buy_price,#sell_amount,#sell_price').bind("keypress", function(e){
 		var charCode = (e.which) ? e.which : e.keyCode;
-        if (charCode != 46 && charCode > 31 && (charCode < 48 || charCode > 57))
+        if (charCode != 46 && charCode != 39 && charCode != 37 && charCode > 31 && (charCode < 48 || charCode > 57))
            return false;
 
         return true;
