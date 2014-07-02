@@ -85,11 +85,11 @@ class Orders {
 			$result = db_query_array($sql);
 			
 			if (!$result) {
-				$sql = "SELECT btc_price AS fiat_price FROM transactions WHERE currency = {$currency_info['id']} ORDER BY `date` DESC LIMIT 0,1";
+				$sql = "SELECT btc_price AS fiat_price, '1' AS no_orders FROM transactions WHERE currency = {$currency_info['id']} ORDER BY `date` DESC LIMIT 0,1";
 				$result = db_query_array($sql);
 				
 				if (!$result) {
-					$sql = "SELECT ROUND((btc_price/{$currency_info['usd']}),2) AS fiat_price FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
+					$sql = "SELECT ROUND((btc_price/{$currency_info['usd']}),2) AS fiat_price, '1' AS no_orders FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
 					$result = db_query_array($sql);
 				}
 			}
