@@ -467,7 +467,16 @@ function updateTransactions() {
 					$('#sell_price').val((current_bid).toFixed(2));
 					$("#sell_price").trigger("change");
 				}
-			
+				
+				if (current_price > 0)
+					$('#buy_market_price').prop('readonly','');
+				else
+					$('#buy_market_price').prop('readonly','readonly');
+				if (current_bid > 0)
+					$('#sell_market_price').prop('readonly','');
+				else
+					$('#sell_market_price').prop('readonly','readonly');
+				
 				current_price = (current_price > 0) ? current_price : current_bid;
 				if (current_price > 0) {
 					var open_price = parseFloat($('#stats_open').html());
@@ -565,9 +574,7 @@ function switchBuyCurrency() {
 		var currency = $(this).val();
 		while (!ajax_active) {
 			$.getJSON("includes/ajax.get_currency.php?currency="+currency,function(json_data) {
-				while (!ajax_active) {
-					$('#filters_area').load('buy-sell.php?bypass=1&currency='+currency);
-				}
+				$('#filters_area').load('buy-sell.php?bypass=1&currency='+currency);
 				$('#buy_currency,#sell_currency').val(currency);
 				$('.sell_currency_label,.buy_currency_label').html(currency.toUpperCase());
 				$('.sell_currency_char,.buy_currency_char').html(json_data.currency_info.fa_symbol);
@@ -602,6 +609,13 @@ function calculateBuy() {
 	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount').blur(function(){
 		if (!(parseFloat($(this).val()) > 0))
 			$(this).val('0');
+	});
+	
+	$('#buy_market_price,#sell_market_price').click(function(){
+		if ($(this).is('[readonly]')) {
+			alert($('#buy_errors_no_compatible').val());
+			return false;
+		}
 	});
 }
 

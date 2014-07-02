@@ -109,6 +109,7 @@
 <input type="hidden" id="is_logged_in" value="<?= User::isLoggedIn() ?>" />
 <input type="hidden" id="cfg_orders_edit" value="<?= Lang::string('orders-edit') ?>" />
 <input type="hidden" id="cfg_orders_delete" value="<?= Lang::string('orders-delete') ?>" />
+<input type="hidden" id="buy_errors_no_compatible" value="<?= Lang::string('buy-errors-no-compatible') ?>" />
 <div class="site_wrapper">
    
 <!-- HEADER -->

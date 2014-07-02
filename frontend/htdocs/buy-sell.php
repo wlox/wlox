@@ -60,6 +60,10 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-no-currency'));
 	if ($buy_total1 > $user_available[strtoupper($currency1)])
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
+	if (!$asks && $buy_market_price1)
+		Errors::add(Lang::string('buy-errors-no-compatible'));
+	if (($buy_subtotal1 * $currency_info['usd']) < 5 && $buy_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
@@ -93,6 +97,10 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('buy-errors-no-currency'));
 	if ($sell_amount1 > $user_available['BTC'])
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
+	if (!$bids && $buy_market_price1)
+		Errors::add(Lang::string('buy-errors-no-compatible'));
+	if (($sell_subtotal1 * $currency_info['usd']) < 5 && $sell_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
@@ -175,7 +183,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<div class="param lessbottom">
-								<input class="checkbox" name="buy_market_price" id="buy_market_price" type="checkbox" value="1" <?= ($buy_market_price1) ? 'checked="checked"' : '' ?> />
+								<input class="checkbox" name="buy_market_price" id="buy_market_price" type="checkbox" value="1" <?= ($buy_market_price1) ? 'checked="checked"' : '' ?> <?= (!$asks) ? 'readonly="readonly"' : '' ?> />
 								<label for="buy_market_price"><?= Lang::string('buy-market-price') ?> <a title="<?= Lang::string('buy-market-rates-info') ?>" href=""><i class="fa fa-question-circle"></i></a></label>
 								<div class="clear"></div>
 							</div>
@@ -246,7 +254,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<div class="param lessbottom">
-								<input class="checkbox" name="sell_market_price" id="sell_market_price" type="checkbox" value="1" <?= ($sell_market_price1) ? 'checked="checked"' : '' ?> />
+								<input class="checkbox" name="sell_market_price" id="sell_market_price" type="checkbox" value="1" <?= ($sell_market_price1) ? 'checked="checked"' : '' ?> <?= (!$bids) ? 'readonly="readonly"' : '' ?> />
 								<label for="sell_market_price"><?= Lang::string('sell-market-price') ?> <a title="<?= Lang::string('buy-market-rates-info') ?>" href=""><i class="fa fa-question-circle"></i></a></label>
 								<div class="clear"></div>
 							</div>
