@@ -89,11 +89,11 @@ if (!$_REQUEST['bypass']) {
 						<label for="deposit_bank_account"><?= Lang::string('deposit-fiat-account') ?></label>
 							<select id="deposit_bank_account" name="deposit_bank_account">
 							<?
-							$i = 0;
+							$i = 1;
 							if ($bank_accounts) {
-								++$i;
 								foreach ($bank_accounts as $account) {
 									echo '<option '.(($i == 1) ? 'selected="selected"' : '').' value="'.$account['id'].'">'.$account['account_number'].' - ('.$account['description'].')</option>';
+									++$i;
 								}
 							}	
 							?>
