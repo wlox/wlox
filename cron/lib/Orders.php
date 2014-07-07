@@ -85,11 +85,11 @@ class Orders {
 			$result = db_query_array($sql);
 			
 			if (!$result) {
-				$sql = "SELECT btc_price AS fiat_price FROM transactions WHERE currency = {$currency_info['id']} ORDER BY `date` DESC LIMIT 0,1";
+				$sql = "SELECT btc_price AS fiat_price, '1' AS no_orders FROM transactions WHERE currency = {$currency_info['id']} ORDER BY `date` DESC LIMIT 0,1";
 				$result = db_query_array($sql);
 				
 				if (!$result) {
-					$sql = "SELECT ROUND((btc_price/{$currency_info['usd']}),2) AS fiat_price FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
+					$sql = "SELECT ROUND((btc_price/{$currency_info['usd']}),2) AS fiat_price, '1' AS no_orders FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
 					$result = db_query_array($sql);
 				}
 			}
@@ -307,6 +307,7 @@ class Orders {
 				else {
 					if (!$this_funds_finished) {
 						db_insert('orders',array('date'=>date('Y-m-d H:i:s'),'order_type'=>$CFG->order_type_bid,'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+						db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_buy_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
 						$new_order = 1;
 					}
 					else {
@@ -415,6 +416,7 @@ class Orders {
 				else {
 					if (!$this_funds_finished) {
 						$insert_id = db_insert('orders',array('date'=>date('Y-m-d H:i:s'),'order_type'=>$CFG->order_type_ask,'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>($amount*$price),'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+						db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_sell_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
 						$new_order = 1;
 					}
 					else {
