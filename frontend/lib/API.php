@@ -28,6 +28,7 @@ class API{
 		$commands['token'] = API::$token;
 		$commands['settings_change_id'] = urlencode(API::$settings_change_id);
 		$commands['request_id'] = API::$request_id;
+		$commands['ip'] = ($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
 
 		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
 		$commands['signature'] = urlencode($signature);

@@ -9,6 +9,7 @@
 			<li><a href="settings.php" <?= ($CFG->self == 'settings.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('settings') ?></a></li>
 			<li><a href="bank-accounts.php" <?= ($CFG->self == 'bank-accounts.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('bank-accounts') ?></a></li>
 			<li><a href="bitcoin-addresses.php" <?= ($CFG->self == 'bitcoin-addresses.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('bitcoin-addresses') ?></a></li>
+			<li><a href="history.php" <?= ($CFG->self == 'history.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('history') ?></a></li>
 			<li><a href="logout.php?log_out=1"><i class="fa fa-angle-right"></i> <?= Lang::string('log-out') ?></a></li>
 		</ul>
 	</div>
