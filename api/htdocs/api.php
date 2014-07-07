@@ -14,6 +14,7 @@ $token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $settings_change_id1 = $_REQUEST['settings_change_id'];
 $request_id1 = $_REQUEST['request_id'];
 $CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
+$CFG->client_ip = preg_replace("/[^0-9\.]/","",$_POST['ip']);
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = json_decode($_POST['commands'],true);

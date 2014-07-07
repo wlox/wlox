@@ -52,6 +52,11 @@ $CFG->withdraw_fiat_desc = 1;
 $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
 $CFG->mcrypt_key = '7QQvcT9Ga7R6QC3';
+$CFG->history_login_id = 1;
+$CFG->history_buy_id = 2;
+$CFG->history_sell_id = 3;
+$CFG->history_deposit_id = 4;
+$CFG->history_withdraw_id = 5;
 
 /* Emails */
 $CFG->accounts_email = '';

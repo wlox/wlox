@@ -509,6 +509,8 @@ class User {
 		
 		$ipaddress1 = preg_replace("/[^0-9\.]/", "",$ipaddress);
 		
+		db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$ipaddress1,'history_action'=>$CFG->history_login_id,'site_user'=>User::$info['id']));
+		
 		$email = SiteEmail::getRecord('login-notify');
 		$info = User::$info;
 		$info['ipaddress'] = $ipaddress1;
