@@ -57,7 +57,7 @@ class BankAccounts{
 		
 		$account = preg_replace("/[^0-9]/", "",$account);
 		$currency = preg_replace("/[^0-9]/", "",$currency);
-		$description = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/",$description);
+		$description = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_ ]/",'',$description);
 		
 		db_insert('bank_accounts',array('account_number'=>$account,'currency'=>$currency,'description'=>$description,'site_user'=>User::$info['id']));
 	}
