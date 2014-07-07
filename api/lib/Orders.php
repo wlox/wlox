@@ -310,6 +310,7 @@ class Orders {
 				else {
 					if (!$this_funds_finished) {
 						db_insert('orders',array('date'=>date('Y-m-d H:i:s'),'order_type'=>$CFG->order_type_bid,'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+						db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_buy_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
 						$new_order = 1;
 					}
 					else {
@@ -418,6 +419,7 @@ class Orders {
 				else {
 					if (!$this_funds_finished) {
 						$insert_id = db_insert('orders',array('date'=>date('Y-m-d H:i:s'),'order_type'=>$CFG->order_type_ask,'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>($amount*$price),'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id));
+						db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_sell_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
 						$new_order = 1;
 					}
 					else {
