@@ -88,3 +88,7 @@ INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (332, 'history', 'Historial', 'History', '', 0),
 (333, 'history-ip', 'Dirección IP', 'IP Address', '', 332);
 
+INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
+(334, 'buy-errors-outbid-self', 'No se le permite comprar a mayor precio de lo que está vendiendo, o vender a menor precio de lo que está comprando.', 'You cannot buy higher than you are selling, or sell lower than you are buying.', '', 17);
+
+
