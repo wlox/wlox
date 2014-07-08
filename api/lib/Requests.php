@@ -45,7 +45,7 @@ class Requests{
 			return false;
 
 		if ($is_btc) {
-			if (User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && !$CFG->token_verified)
+			if (((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y')) && User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && !$CFG->token_verified)
 				return false;
 			
 			$status = (User::$info['confirm_withdrawal_email_btc'] == 'Y' && !$CFG->token_verified) ? $CFG->request_awaiting_id : $CFG->request_pending_id;
@@ -67,7 +67,7 @@ class Requests{
 			return $request_id;
 		}
 		else {
-			if (User::$info['confirm_withdrawal_2fa_bank'] == 'Y' && !$CFG->token_verified)
+			if (((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y') && User::$info['confirm_withdrawal_2fa_bank'] == 'Y') && !$CFG->token_verified)
 				return false;
 				
 			$status = (User::$info['confirm_withdrawal_email_bank'] == 'Y' && !$CFG->token_verified) ? $CFG->request_awaiting_id : $CFG->request_pending_id;
