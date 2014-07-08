@@ -44,6 +44,18 @@ class Requests{
 		if (!$CFG->session_active)
 			return false;
 
+		$available = User::getAvailable();
+		if ($is_btc) {
+			if ($amount > $available['BTC'])
+				return false;
+		}
+		else {
+			$currency_info = DB::getRecord('currencies',$bank_account_currency,0,1);
+			if ($amount > $available[$currency_info['currency']])
+				return false;
+		}
+		
+		
 		if ($is_btc) {
 			if (((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y')) && User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && !$CFG->token_verified)
 				return false;
