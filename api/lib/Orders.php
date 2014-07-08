@@ -128,9 +128,28 @@ class Orders {
 		return $result[0]['fiat_price'];
 	}
 	
-	function getCompatible($type,$price,$currency,$for_update=false,$market_price=false) {
+	function checkOutbidSelf($price,$currency,$find_bids=false) {
 		global $CFG;
 		
+		if (!$CFG->session_active)
+			return false;
+		
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$price = preg_replace("/[^0-9\.]/", "",$price);
+		$type = ($find_bids) ? $CFG->order_type_bid : $CFG->order_type_ask;
+		
+		if (!$price || !$currency)
+			return false;
+		
+		$comparison = (!$find_bids) ? '<=' : '>=';
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+		
+		$sql = "SELECT id FROM orders WHERE order_type = $type AND currency = {$currency_info['id']} AND btc_price $comparison $price AND site_user = ".User::$info['id'];
+		return db_query_array($sql);
+	}
+	
+	function getCompatible($type,$price,$currency,$for_update=false,$market_price=false) {
+		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
