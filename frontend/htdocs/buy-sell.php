@@ -28,6 +28,12 @@ API::add('Orders','getCurrentAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array(User::$info['id'],$currency_info['id']));
+
+if ($_REQUEST['buy'])
+	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
+elseif ($_REQUEST['sell'])
+	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
+
 $query = API::send();
 
 $user_fee = $query['FeeSchedule']['getRecord']['results'][0];
@@ -36,6 +42,7 @@ $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask =  $query['Orders']['getCurrentAsk']['results'][0];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
+$self_orders = $query['Orders']['checkOutbidSelf']['results'][0];
 
 $buy_amount1 = ($_REQUEST['buy_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_amount']) : 0;
 $buy_price1 = ($_REQUEST['buy_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_price']) : $current_ask;
@@ -64,6 +71,8 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-no-compatible'));
 	if (($buy_subtotal1 * $currency_info['usd']) < 5 && $buy_amount1 > 0)
 		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if ($self_orders)
+		Errors::add(Lang::string('buy-errors-outbid-self'));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
@@ -101,6 +110,8 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('buy-errors-no-compatible'));
 	if (($sell_subtotal1 * $currency_info['usd']) < 5 && $sell_amount1 > 0)
 		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if ($self_orders)
+		Errors::add(Lang::string('buy-errors-outbid-self'));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
