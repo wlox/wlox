@@ -73,6 +73,7 @@ class User {
 		self::$on_hold = (is_array(self::$on_hold)) ? self::$on_hold : self::getOnHold();
 		if ($CFG->currencies) {
 			$available['BTC'] = User::$info['btc'] - self::$on_hold['BTC']['total'];
+			$available['BTC'] = ($available['BTC'] < 0.00000001) ? 0 : $available['BTC'];
 			foreach ($CFG->currencies as $currency) {
 				if (User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'] == 0)
 					continue;
