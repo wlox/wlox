@@ -46,7 +46,7 @@ class Requests{
 
 		$available = User::getAvailable();
 		if ($is_btc) {
-			if ($amount > $available['BTC'])
+			if (round($amount,8) > round($available['BTC'],8))
 				return false;
 		}
 		else {
@@ -59,7 +59,7 @@ class Requests{
 		if ($is_btc) {
 			if (((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y')) && User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && !$CFG->token_verified)
 				return false;
-
+			
 			$status = (User::$info['confirm_withdrawal_email_btc'] == 'Y' && !$CFG->token_verified) ? $CFG->request_awaiting_id : $CFG->request_pending_id;
 			$request_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>User::$info['id'],'currency'=>$CFG->btc_currency_id,'amount'=>$amount,'description'=>$CFG->withdraw_btc_desc,'request_status'=>$status,'request_type'=>$CFG->request_withdrawal_id,'send_address'=>$btc_address));
 			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_withdraw_id,'site_user'=>User::$info['id'],'request_id'=>$request_id,'bitcoin_address'=>$btc_address));
