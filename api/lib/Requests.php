@@ -104,6 +104,11 @@ class Requests{
 			return false;
 		
 		$request_id = Encryption::decrypt(urldecode($authcode));
+		$request = DB::getRecord('requests',$request_id,0,1);
+		
+		if ($request['request_status'] != $CFG->request_awaiting_id)
+			return false;
+		
 		if ($request_id > 0) {
 			return db_update('requests',$request_id,array('request_status'=>$CFG->request_pending_id));
 		}
