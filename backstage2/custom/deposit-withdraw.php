@@ -15,7 +15,7 @@ if (is_array($CFG->temp_files)) {
 			$sql = 'SELECT id FROM requests WHERE crypto_id = '.$data[0];
 			$result = db_query_array($sql);
 			
-			if ($result)
+			if ($result || !($data[8] > 0))
 				continue;
 			
 			$sql = 'SELECT bank_accounts.site_user, bank_accounts.currency AS currency_id, currencies.currency AS currency, site_users.'.strtolower($data[6]).' AS cur_balance FROM bank_accounts LEFT JOIN currencies ON (currencies.id = bank_accounts.currency) LEFT JOIN site_users ON (bank_accounts.site_user = site_users.id) WHERE bank_accounts.account_number = '.$data[2];
