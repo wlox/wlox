@@ -83,13 +83,13 @@ if ($_REQUEST['buy']) {
 			API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee['fee'],$buy_market_price1,false,false,false,$buy_stop_price1));
 			$query = API::send();
 			$operations = $query['Orders']['executeOrder']['results'][0];
-			print_ar($query);
+
 			if ($operations['new_order'] > 0) {
-				//Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
+				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
 				exit;
 			}
 			else {
-				//Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
+				Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
 				exit;
 			}
 		}
