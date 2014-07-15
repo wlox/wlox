@@ -593,7 +593,7 @@ function calculateBuy() {
 		calculateBuyPrice();
 	});
 	
-	$('#buy_amount,#buy_price,#sell_amount,#sell_price').bind("keypress", function(e){
+	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount,#buy_stop_price,#sell_stop_price').bind("keypress", function(e){
 		var charCode = (e.which) ? e.which : e.keyCode;
         if (charCode != 46 && charCode != 39 && charCode != 37 && charCode > 31 && (charCode < 48 || charCode > 57))
            return false;
@@ -601,12 +601,12 @@ function calculateBuy() {
         return true;
 	});
 	
-	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount').focus(function(){
+	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount,#buy_stop_price,#sell_stop_price').focus(function(){
 		if (!(parseFloat($(this).val()) > 0))
 			$(this).val('');
 	});
 	
-	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount').blur(function(){
+	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount,#buy_stop_price,#sell_stop_price').blur(function(){
 		if (!(parseFloat($(this).val()) > 0))
 			$(this).val('0');
 	});
@@ -614,7 +614,47 @@ function calculateBuy() {
 	$('#buy_market_price,#sell_market_price').click(function(){
 		if ($(this).is('[readonly]')) {
 			alert($('#buy_errors_no_compatible').val());
-			return false;
+			$(this).prop('checked','');
+		}
+	});
+	
+	$('#buy_market_price').click(function(){
+		if ($(this).is(':checked')) {
+			$('#buy_stop').prop('checked','').prop('disabled','disabled');
+		}
+		else {
+			$('#buy_stop').prop('disabled','');
+		}
+	});
+	
+	$('#sell_market_price').click(function(){
+		if ($(this).is(':checked')) {
+			$('#sell_stop').prop('checked','').prop('disabled','disabled');
+		}
+		else {
+			$('#sell_stop').prop('disabled','');
+		}
+	});
+	
+	$('#buy_stop').click(function(){
+		if ($(this).is(':checked')) {
+			$('#buy_market_price').prop('checked','').prop('disabled','disabled');
+			$('#buy_stop_container').show(400);
+		}
+		else {
+			$('#buy_market_price').prop('disabled','');
+			$('#buy_stop_container').hide(400);
+		}
+	});
+	
+	$('#sell_stop').click(function(){
+		if ($(this).is(':checked')) {
+			$('#sell_market_price').prop('checked','').prop('disabled','disabled');
+			$('#sell_stop_container').show(400);
+		}
+		else {
+			$('#sell_market_price').prop('disabled','');
+			$('#sell_stop_container').hide(400);
 		}
 	});
 }

@@ -34,8 +34,8 @@ $order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
 $trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
 $bypass = $_REQUEST['bypass'];
 
-API::add('Orders','get',array(false,false,false,$currency1,1,false,1,$order_by1,1,1));
-API::add('Orders','get',array(false,false,false,$currency1,1,false,false,$order_by1,false,1));
+API::add('Orders','get',array(false,false,false,$currency1,1,false,1,$order_by1,false,1));
+API::add('Orders','get',array(false,false,false,$currency1,1,false,false,$order_by1,1,1));
 $query = API::send();
 
 $bids = $query['Orders']['get']['results'][0];
