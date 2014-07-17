@@ -11,7 +11,7 @@ class Transactions {
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$order_arr = array('date'=>'transactions.date','btc'=>'transactions.btc','btcprice'=>'transactions.btc_price','fiat'=>'usd_amount','fee'=>'usd_fee');
+		$order_arr = array('date'=>'transactions.date','btc'=>'transactions.btc','btcprice'=>'usd_price','fiat'=>'usd_amount','fee'=>'usd_fee');
 		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.date';
 		$order_desc = ($order_desc) ? 'ASC' : 'DESC';
 		$user = ($user) ? User::$info['id'] : false;
@@ -26,7 +26,7 @@ class Transactions {
 		//$currency = (!$currency) ? 'usd' : $currency;
 		
 		if (!$count)
-			$sql = "SELECT transactions.*, currencies.currency AS currency, (currencies.usd * transactions.fiat) AS usd_amount, transactions.btc_price AS fiat_price, currencies.fa_symbol AS fa_symbol, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net" : "")." FROM transactions ";
+			$sql = "SELECT transactions.*, currencies.currency AS currency, (currencies.usd * transactions.fiat) AS usd_amount, (currencies.usd * transactions.btc_price) AS usd_price, transactions.btc_price AS fiat_price, currencies.fa_symbol AS fa_symbol, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net" : "").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
 		else
 			$sql = "SELECT COUNT(transactions.id) AS total FROM transactions ";
 			
