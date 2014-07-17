@@ -71,8 +71,8 @@ if (!$bypass) {
 					<li>
 						<label for="order_by"><?= Lang::string('orders-order-by') ?></label>
 						<select id="order_by" name="order_by">
-							<option value="btcprice" <?= ($order_by1 == 'btcprice') ? 'selected="selected"' : ''?>><?= Lang::string('orders-order-by-btc-price') ?></option>
 							<option value="date" <?= (!$order_by1 || $order_by1 == 'date') ? 'selected="selected"' : ''?>><?= Lang::string('transactions-time') ?></option>
+							<option value="btcprice" <?= ($order_by1 == 'btcprice') ? 'selected="selected"' : ''?>><?= Lang::string('orders-order-by-btc-price') ?></option>
 							<option value="fiat" <?= ($order_by1 == 'fiat') ? 'selected="selected"' : ''?>><?= Lang::string('transactions-fiat') ?></option>
 						</select>
 					</li>
@@ -100,6 +100,7 @@ if (!$bypass) {
 <? } ?>
         	<div class="table-style">
         		<input type="hidden" id="refresh_transactions" value="1" />
+        		<input type="hidden" id="page" value="<?= $page1 ?>" />
         		<table class="table-list trades" id="transactions_list">
         			<tr id="table_first">
         				<th><?= Lang::string('transactions-type') ?></th>

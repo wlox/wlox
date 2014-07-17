@@ -110,6 +110,7 @@ if (!$bypass) {
 	        	<div class="table-style">
 	        		<table class="table-list trades" id="bids_list">
 	        			<tr>
+	        				<th></th>
 	        				<th><?= Lang::string('orders-price') ?></th>
 	        				<th><?= Lang::string('orders-amount') ?></th>
 	        				<th><?= Lang::string('orders-value') ?></th>
@@ -118,16 +119,39 @@ if (!$bypass) {
 	        			<? 
 	        			if ($bids) {
 							foreach ($bids as $bid) {
+								$double = 0;
+								if ($bid['market_price'] == 'Y')
+									$type = '<div class="identify market_order">M</div>';
+								elseif ($bid['fiat_price'] > 0 && !($bid['stop_price'] > 0))
+									$type = '<div class="identify limit_order">L</div>';
+								elseif ($bid['stop_price'] > 0 && !($bid['fiat_price'] > 0))
+									$type = '<div class="identify stop_order">S</div>';
+								elseif ($bid['stop_price'] > 0 && $bid['fiat_price'] > 0) {
+									$type = '<div class="identify limit_order">L</div>';
+									$double = 1;
+								}
+								
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr">
-							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['fiat_price'],2).'</span></td>
+							<td>'.$type.'</td>
+							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['fiat'],2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$bid['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$bid['id'].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
+								if ($double) {
+									echo '
+						<tr id="bid_'.$bid['id'].'" class="bid_tr double">
+							<td><div class="identify stop_order">S</div></td>
+							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['stop_price'],2).'</span></td>
+							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
+							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['btc']*$bid['stop_price'],2).'</span></td>
+							<td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td>
+						</tr>';
+								}
 							}
 						}
-						echo '<tr id="no_bids" style="'.(is_array($bids) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-bid').'</td></tr>';
+						echo '<tr id="no_bids" style="'.(is_array($bids) ? 'display:none;' : '').'"><td colspan="5">'.Lang::string('orders-no-bid').'</td></tr>';
 	        			?>
 	        		</table>
 				</div>
@@ -137,6 +161,7 @@ if (!$bypass) {
 				<div class="table-style">
 					<table class="table-list trades" id="asks_list">
 						<tr>
+							<th></th>
 							<th><?= Lang::string('orders-price') ?></th>
 	        				<th><?= Lang::string('orders-amount') ?></th>
 	        				<th><?= Lang::string('orders-value') ?></th>
@@ -145,16 +170,40 @@ if (!$bypass) {
 	        			<? 
 	        			if ($asks) {
 							foreach ($asks as $ask) {
+								$double = 0;
+								if ($ask['market_price'] == 'Y')
+									$type = '<div class="identify market_order">M</div>';
+								elseif ($ask['fiat_price'] > 0 && !($ask['stop_price'] > 0))
+									$type = '<div class="identify limit_order">L</div>';
+								elseif ($ask['stop_price'] > 0 && !($ask['fiat_price'] > 0))
+									$type = '<div class="identify stop_order">S</div>';
+								elseif ($ask['stop_price'] > 0 && $ask['fiat_price'] > 0) {
+									$type = '<div class="identify limit_order">L</div>';
+									$double = 1;
+								}
+								
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr">
-							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['fiat_price'],2).'</span></td>
+							<td>'.$type.'</td>
+							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
 							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['fiat'],2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$ask['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$ask['id'].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
+								
+								if ($double) {
+									echo '
+						<tr id="ask_'.$ask['id'].'" class="ask_tr double">
+							<td><div class="identify stop_order">S</div></td>
+							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['stop_price'],2).'</span></td>
+							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
+							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['stop_price']*$ask['btc'],2).'</span></td>
+							<td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td>
+						</tr>';
+								}
 							}
 						}
-						echo '<tr id="no_asks" style="'.(is_array($asks) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-ask').'</td></tr>';
+						echo '<tr id="no_asks" style="'.(is_array($asks) ? 'display:none;' : '').'"><td colspan="5">'.Lang::string('orders-no-ask').'</td></tr>';
 	        			?>
 					</table>
 				</div>

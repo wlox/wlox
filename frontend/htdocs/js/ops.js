@@ -326,9 +326,29 @@ function updateTransactions() {
 						var this_bid = $('#bid_'+this.id);
 						if (this_bid.length > 0) {
 							$(this_bid).find('.order_amount').html(this.btc);
-							$(this_bid).find('.order_price').html((parseFloat(this.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-							if (notrades)
-								$(this_bid).find('.order_value').html((parseFloat(this.btc) * parseFloat(this.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							$('#bid_'+this.id+'.double').find('.order_amount').html(this.btc);
+							$(this_bid).find('.order_price').html((parseFloat((this.btc_price > 0) ? this.btc_price : this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							$('#bid_'+this.id+'.double').find('.order_price').html((parseFloat(this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							if (notrades) {
+								$(this_bid).find('.order_value').html((parseFloat(this.btc) * parseFloat((this.btc_price > 0) ? this.btc_price : this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+								$('#bid_'+this.id+'.double').find('.order_value').html((parseFloat(this.btc) * parseFloat(this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+								if (open_orders_user) {
+									var double = 0;
+									if (this.market_price == 'Y')
+										var type = '<div class="identify market_order">M</div>';
+									else if (this.btc_price > 0 && !(this.stop_price > 0))
+										var type = '<div class="identify limit_order">L</div>';
+									else if (this.stop_price > 0 && !(this.btc_price > 0))
+										var type = '<div class="identify stop_order">S</div>';
+									else if (this.stop_price > 0 && this.btc_price > 0) {
+										var type = '<div class="identify limit_order">L</div>';
+										double = 1;
+									}
+									$(this_bid).find('.identify').replaceWith(type);
+									if (!double)
+										$('#bid_'+this.id+'.double').remove();
+								}
+							}
 						}
 						else {
 							var last_price = 999999999999999999999;
@@ -342,8 +362,25 @@ function updateTransactions() {
 									
 									if ((new_price <= last_price && new_price >= price) || (active_bids < trades_amount && i == (active_bids - 1)) || (notrades && i == (active_bids - 1) && !get_10)) {
 										if (notrades) {
+											if (open_orders_user) {
+												var double = 0;
+												if (json_elem.market_price == 'Y')
+													var type = '<td><div class="identify market_order">M</div></td>';
+												else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+													var type = '<td><div class="identify limit_order">L</div></td>';
+												else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+													var type = '<td><div class="identify stop_order">S</div></td>';
+												else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+													var type = '<td><div class="identify limit_order">L</div></td>';
+													double = 1;
+												}
+											}
+											
 											var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-											var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+											var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+										
+											if (double)
+												string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.stop_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 										}
 										else
 											var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td></tr>';
@@ -361,8 +398,25 @@ function updateTransactions() {
 							}
 							else {
 								if (notrades) {
+									if (open_orders_user) {
+										var double = 0;
+										if (json_elem.market_price == 'Y')
+											var type = '<td><div class="identify market_order">M</div></td>';
+										else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+											var type = '<td><div class="identify limit_order">L</div></td>';
+										else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+											var type = '<td><div class="identify stop_order">S</div></td>';
+										else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+											var type = '<td><div class="identify limit_order">L</div></td>';
+											double = 1;
+										}
+									}
+									
 									var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+									
+									if (double)
+										string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.stop_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
 									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td></tr>';
@@ -402,9 +456,29 @@ function updateTransactions() {
 						var this_ask = $('#ask_'+this.id);
 						if (this_ask.length > 0) {
 							$(this_ask).find('.order_amount').html(this.btc);
-							$(this_ask).find('.order_price').html((parseFloat(this.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
-							if (notrades)
-								$(this_ask).find('.order_value').html((parseFloat(this.btc) * parseFloat(this.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							$('#ask_'+this.id+'.double').find('.order_amount').html(this.btc);
+							$(this_ask).find('.order_price').html((parseFloat((this.btc_price > 0) ? this.btc_price : this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							$('#ask_'+this.id+'.double').find('.order_price').html((parseFloat(this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+							if (notrades) {
+								$(this_ask).find('.order_value').html((parseFloat(this.btc) * parseFloat((this.btc_price > 0) ? this.btc_price : this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+								$('#ask_'+this.id+'.double').find('.order_value').html((parseFloat(this.btc) * parseFloat(this.stop_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+								if (open_orders_user) {
+									var double = 0;
+									if (this.market_price == 'Y')
+										var type = '<div class="identify market_order">M</div>';
+									else if (this.btc_price > 0 && !(this.stop_price > 0))
+										var type = '<div class="identify limit_order">L</div>';
+									else if (this.stop_price > 0 && !(this.btc_price > 0))
+										var type = '<div class="identify stop_order">S</div>';
+									else if (this.stop_price > 0 && this.btc_price > 0) {
+										var type = '<div class="identify limit_order">L</div>';
+										double = 1;
+									}
+									$(this_ask).find('.identify').replaceWith(type);
+									if (!double)
+										$('#ask_'+this.id+'.double').remove();
+								}
+							}
 						}
 						else {
 							var last_price = 0;
@@ -418,8 +492,25 @@ function updateTransactions() {
 									
 									if ((new_price >= last_price && new_price <= price) || (active_asks < trades_amount && i == (active_asks - 1)) || (notrades && i == (active_asks - 1) && !get_10)) {
 										if (notrades) {
+											if (open_orders_user) {
+												var double = 0;
+												if (json_elem.market_price == 'Y')
+													var type = '<td><div class="identify market_order">M</div></td>';
+												else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+													var type = '<td><div class="identify limit_order">L</div></td>';
+												else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+													var type = '<td><div class="identify stop_order">S</div></td>';
+												else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+													var type = '<td><div class="identify limit_order">L</div></td>';
+													double = 1;
+												}
+											}
+											
 											var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-											var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+											var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+											
+											if (double)
+												string += '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.stop_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 										}
 										else
 											var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td></tr>';
@@ -437,11 +528,28 @@ function updateTransactions() {
 							}
 							else {
 								if (notrades) {
+									if (open_orders_user) {
+										var double = 0;
+										if (json_elem.market_price == 'Y')
+											var type = '<td><div class="identify market_order">M</div></td>';
+										else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+											var type = '<td><div class="identify limit_order">L</div></td>';
+										else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+											var type = '<td><div class="identify stop_order">S</div></td>';
+										else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+											var type = '<td><div class="identify limit_order">L</div></td>';
+											double = 1;
+										}
+									}
+									
 									var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-									var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+									var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td>'+edit_str+'</tr>';
+									
+									if (double)
+										string += '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.stop_price+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
-									var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td></tr>';
+									var string = '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+json_elem.btc_price+'</span></td></tr>';
 								
 								var elem = $(string).insertAfter($('#no_asks'));
 								$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
@@ -498,26 +606,38 @@ function updateTransactionsList() {
 		while (!ajax_active) {
 			var currency = $('#graph_orders_currency').val();
 			var type = $('#type').val();
+			var order_by = $('#order_by').val();
+			var page = $('#page').val();
 			
-			$.getJSON("includes/ajax.transactions.php?currency="+currency+'&type='+type,function(transaction) {
-				var this_transaction = $('#transaction_'+transaction.id);
-				if (this_transaction.length > 0) 
-					return false;
-				
-				var string = '<tr id="transaction_'+transaction.id+'">';
-				string += '<td>'+transaction.type+'</td>';
-				string += '<td><input type="hidden" class="localdate" value="'+(parseInt(transaction.datestamp))+'" /></td>';
-				string += '<td>'+((parseFloat(transaction.btc_net)).toPrecision(8))+'</td>';
-				string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.btc_net * transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
-				string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
-				string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.fee * transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
-				string += '</tr>';
-				
-				var elem = $(string).insertAfter($('#table_first'));
-				$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
-				$('#no_transactions').css('display','none');
-				
-				localDates();
+			$.getJSON("includes/ajax.transactions.php?currency="+currency+'&type='+type+'&order_by='+order_by+'&page='+page,function(transactions) {
+				if (transactions != null) {
+					var last = false;
+					$.each(transactions,function(i) {
+						var transaction = transactions[i];
+						var this_transaction = $('#transaction_'+transaction.id);
+
+						if (this_transaction.length > 0) {
+							last = this_transaction;
+							return;
+						}
+						
+						var string = '<tr id="transaction_'+transaction.id+'">';
+						string += '<td>'+transaction.type+'</td>';
+						string += '<td><input type="hidden" class="localdate" value="'+(parseInt(transaction.datestamp))+'" /></td>';
+						string += '<td>'+((parseFloat(transaction.btc_net)).toPrecision(8))+'</td>';
+						string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.btc_net * transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
+						string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
+						string += '<td>'+transaction.fa_symbol+((parseFloat(transaction.fee * transaction.fiat_price)).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))+'</td>';
+						string += '</tr>';
+						
+						var elem = $(string).insertAfter((last) ? $(last) : $('#table_first'));
+						$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
+						$('#no_transactions').css('display','none');
+						
+						localDates();
+						last = this_transaction;
+					});
+				}
 			});
 		}
 	},5000);
@@ -616,45 +736,134 @@ function calculateBuy() {
 			alert($('#buy_errors_no_compatible').val());
 			$(this).prop('checked','');
 		}
+		else {
+			$(this).prop('checked','checked');
+		}
 	});
 	
 	$('#buy_market_price').click(function(){
-		if ($(this).is(':checked')) {
-			$('#buy_stop').prop('checked','').prop('disabled','disabled');
-		}
-		else {
-			$('#buy_stop').prop('disabled','');
+		if ($(this).is(':checked') && !$(this).is('[readonly]')) {
+			$('#buy_stop').prop('checked','');
+			$('#buy_limit').prop('checked','');
+			$('#buy_price_market_label').css('display','');
+			$('#buy_price_limit_label').css('display','none');
+			$('#buy_price').attr('readonly','readonly');
+			$('#buy_price_container').css('display','');
+			
+			if ($('#buy_limit').is(':checked'))
+				$('#buy_stop_container').hide(400);
+			else
+				$('#buy_stop_container').css('display','none');
 		}
 	});
 	
 	$('#sell_market_price').click(function(){
-		if ($(this).is(':checked')) {
-			$('#sell_stop').prop('checked','').prop('disabled','disabled');
-		}
-		else {
-			$('#sell_stop').prop('disabled','');
+		if ($(this).is(':checked') && !$(this).is('[readonly]')) {
+			$('#sell_stop').prop('checked','');
+			$('#sell_limit').prop('checked','');
+			$('#sell_price_market_label').css('display','');
+			$('#sell_price_limit_label').css('display','none');
+			$('#sell_price').attr('readonly','readonly');
+			$('#sell_price_container').css('display','');
+			
+			if ($('#sell_limit').is(':checked'))
+				$('#sell_stop_container').hide(400);
+			else
+				$('#sell_stop_container').css('display','none');
 		}
 	});
 	
 	$('#buy_stop').click(function(){
 		if ($(this).is(':checked')) {
-			$('#buy_market_price').prop('checked','').prop('disabled','disabled');
-			$('#buy_stop_container').show(400);
+			$('#buy_market_price').prop('checked','');
+			$('#buy_price').removeAttr('readonly');
+			if ($('#buy_limit').is(':checked')) {
+				$('#buy_stop_container').show(400);
+			}
+			else {
+				$('#buy_stop_container').css('display','');
+				$('#buy_price_container').css('display','none');
+			}
 		}
 		else {
-			$('#buy_market_price').prop('disabled','');
-			$('#buy_stop_container').hide(400);
+			if ($('#buy_limit').is(':checked')) {
+				$('#buy_stop_container').hide(400);
+			}
+			else {
+				$(this).prop('checked','checked');
+			}
 		}
 	});
 	
 	$('#sell_stop').click(function(){
 		if ($(this).is(':checked')) {
-			$('#sell_market_price').prop('checked','').prop('disabled','disabled');
-			$('#sell_stop_container').show(400);
+			$('#sell_market_price').prop('checked','');
+			$('#sell_price').removeAttr('readonly');
+			if ($('#sell_limit').is(':checked')) {
+				$('#sell_stop_container').show(400);
+			}
+			else {
+				$('#sell_stop_container').css('display','');
+				$('#sell_price_container').css('display','none');
+			}
 		}
 		else {
-			$('#sell_market_price').prop('disabled','');
-			$('#sell_stop_container').hide(400);
+			if ($('#sell_limit').is(':checked')) {
+				$('#sell_stop_container').hide(400);
+			}
+			else {
+				$(this).prop('checked','checked');
+			}
+		}
+	});
+	
+	$('#buy_limit').click(function(){
+		if ($(this).is(':checked')) {
+			$('#buy_market_price').prop('checked','');
+			$('#buy_price').removeAttr('readonly');
+			$('#buy_price_market_label').css('display','none');
+			$('#buy_price_limit_label').css('display','');
+			
+			if ($('#buy_stop').is(':checked')) {
+				$('#buy_price_container').show(400);
+			}
+			else {
+				$('#buy_price_container').css('display','');
+				$('#buy_stop_container').css('display','none');
+			}
+		}
+		else {
+			if ($('#buy_stop').is(':checked')) {
+				$('#buy_price_container').hide(400);
+			}
+			else {
+				$(this).prop('checked','checked');
+			}
+		}
+	});
+	
+	$('#sell_limit').click(function(){
+		if ($(this).is(':checked')) {
+			$('#sell_market_price').prop('checked','');
+			$('#sell_price').removeAttr('readonly');
+			$('#sell_price_market_label').css('display','none');
+			$('#sell_price_limit_label').css('display','');
+			
+			if ($('#sell_stop').is(':checked')) {
+				$('#sell_price_container').show(400);
+			}
+			else {
+				$('#sell_price_container').css('display','');
+				$('#sell_stop_container').css('display','none');
+			}
+		}
+		else {
+			if ($('#sell_stop').is(':checked')) {
+				$('#sell_price_container').hide(400);
+			}
+			else {
+				$(this).prop('checked','checked');
+			}
 		}
 	});
 }
@@ -683,33 +892,6 @@ function buttonDisable() {
 	$('form').submit(function() {
 		$('.but_user').addClass('loading');
 		$('.but_user').attr('disabled','disabled');
-	});
-}
-
-function enableLimitOrder() {
-	$('#buy_market_price').click(function(e){
-		if ($(this).is(':checked')) {
-			$('#buy_price').attr('readonly','readonly');
-			//$('#buy_total_approx_label').css('display','block');
-			//$('#buy_total_label').css('display','none');
-		}
-		else {
-			$('#buy_price').removeAttr('readonly');
-			//$('#buy_total_approx_label').css('display','none');
-			//$('#buy_total_label').css('display','block');
-		}
-	});
-	$('#sell_market_price').click(function(e){
-		if ($(this).is(':checked')) {
-			$('#sell_price').attr('readonly','readonly');
-			//$('#sell_total_approx_label').css('display','block');
-			//$('#sell_total_label').css('display','none');
-		}
-		else {
-			$('#sell_price').removeAttr('readonly');
-			//$('#sell_total_approx_label').css('display','none');
-			//$('#sell_total_label').css('display','block');
-		}
 	});
 }
 
@@ -865,7 +1047,6 @@ $(document).ready(function() {
 	switchBuyCurrency();
 	calculateBuy();
 	buttonDisable();
-	enableLimitOrder();
 	localDates();
 	switchAccount();
 	switchAccount1();

@@ -3522,6 +3522,11 @@ h3 .highlight{
 .trades td{padding: 10px;color: #383634;}
 .trades td a{color:#727272;margin-right: 6px;}
 .trades td a:hover{color: #007F99;}
+.trades td .identify{color:#FFFFFF;font-weight:bold;margin: -9px;height: 31px;position: relative;padding-top: 8px;font-size:15px;}
+.trades td .identify.market_order{background-color:#EFE62F;}
+.trades td .identify.limit_order{background-color:#FF8282;}
+.trades td .identify.stop_order{background-color:#DB82FF;}
+.trades td .oco{color:#727272;font-size: 11px;}
 ul.list_empty {
 	float: left;
 	padding: 0px;
