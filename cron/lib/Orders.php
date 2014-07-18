@@ -165,6 +165,7 @@ class Orders {
 		
 		$sql = "UPDATE orders SET market_price = 'Y', stop_price = '', btc_price = $price 
 				WHERE ((stop_price >= $price AND order_type = {$CFG->order_type_ask}) OR (stop_price <= $price AND order_type = {$CFG->order_type_bid}))
+				AND stop_price > 0
 				AND currency = {$currency_info['id']}";
 
 		return db_query($sql);
@@ -347,7 +348,7 @@ class Orders {
 					
 					if ($comp_order_outstanding > 0) {
 						if (!$comp_funds_finished)
-							db_update('orders',$comp_order['id'],array('btc'=>$comp_order_outstanding,'fiat'=>($comp_order['fiat_price'] * $comp_order_outstanding)));
+							db_update('orders',$comp_order['id'],array('btc_price'=>$comp_order['fiat_price'],'btc'=>$comp_order_outstanding,'fiat'=>($comp_order['fiat_price'] * $comp_order_outstanding)));
 						else
 							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
 					}
@@ -482,7 +483,7 @@ class Orders {
 					
 					if ($comp_order_outstanding > 0) {
 						if (!$comp_funds_finished)
-							db_update('orders',$comp_order['id'],array('btc'=>$comp_order_outstanding,'fiat'=>($comp_order['fiat_price'] * $comp_order_outstanding)));
+							db_update('orders',$comp_order['id'],array('btc_price'=>$comp_order['fiat_price'],'btc'=>$comp_order_outstanding,'fiat'=>($comp_order['fiat_price'] * $comp_order_outstanding)));
 						else
 							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
 					}
