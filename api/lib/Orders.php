@@ -166,7 +166,7 @@ class Orders {
 		$sql = "UPDATE orders SET market_price = 'Y', stop_price = '', btc_price = $price 
 				WHERE ((stop_price >= $price AND order_type = {$CFG->order_type_ask}) OR (stop_price <= $price AND order_type = {$CFG->order_type_bid}))
 				AND currency = {$currency_info['id']}";
-		return $sql;
+
 		return db_query($sql);
 	}
 	
