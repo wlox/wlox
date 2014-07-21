@@ -151,6 +151,42 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
+	function checkOutbidStops($price,$currency) {
+		global $CFG;
+	
+		if (!$CFG->session_active)
+			return false;
+	
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$price = preg_replace("/[^0-9\.]/", "",$price);
+	
+		if (!$price || !$currency)
+			return false;
+	
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+	
+		$sql = "SELECT id FROM orders WHERE order_type = {$CFG->order_type_ask} AND currency = {$currency_info['id']} AND stop_price >= $price AND stop_price > 0 AND site_user = ".User::$info['id'];
+		return db_query_array($sql);
+	}
+	
+	function checkStopsOverBid($stop_price,$currency) {
+		global $CFG;
+	
+		if (!$CFG->session_active)
+			return false;
+	
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$stop_price = preg_replace("/[^0-9\.]/", "",$stop_price);
+	
+		if (!$stop_price || !$currency)
+			return false;
+	
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+	
+		$sql = "SELECT id FROM orders WHERE order_type = {$CFG->order_type_bid} AND currency = {$currency_info['id']} AND btc_price <= $stop_price AND btc_price > 0 AND site_user = ".User::$info['id'];
+		return db_query_array($sql);
+	}
+	
 	private function triggerStops($price,$currency) {
 		global $CFG;
 		
