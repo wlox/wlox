@@ -31,10 +31,14 @@ API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array(User::$info['id'],$currency_info['id']));
 
-if ($_REQUEST['buy'])
+if ($_REQUEST['buy']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
-elseif ($_REQUEST['sell'])
+	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
+}
+elseif ($_REQUEST['sell']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
+	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_price'],$currency1));
+}
 
 $query = API::send();
 
@@ -45,6 +49,8 @@ $current_ask =  $query['Orders']['getCurrentAsk']['results'][0];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $self_orders = $query['Orders']['checkOutbidSelf']['results'][0];
+$self_stops = $query['Orders']['checkOutbidStops']['results'][0];
+$self_limits = $query['Orders']['checkStopsOverBid']['results'][0];
 
 $buy_amount1 = ($_REQUEST['buy_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_amount']) : 0;
 $buy_price1 = ($_REQUEST['buy_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_price']) : $current_ask;
@@ -75,8 +81,8 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	if (!$asks && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($buy_subtotal1 * $currency_info['usd']) < 5 && $buy_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($buy_subtotal1 * $currency_info['usd']) < $CFG->orders_min_usd && $buy_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($buy_stop_price1 <= $current_ask && $buy_stop)
@@ -85,6 +91,10 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-stop-lower-price'));
 	if ($buy_stop && !($buy_stop_price1 > 0))
 		Errors::add(Lang::string('buy-errors-no-stop'));
+	if ($buy_price1 < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))))
+		Errors::add(str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')));
+	if ($self_stops)
+		Errors::add(Lang::string('buy-limit-under-stops'));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
@@ -125,8 +135,8 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
 	if (!$bids && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($sell_subtotal1 * $currency_info['usd']) < 5 && $sell_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($sell_subtotal1 * $currency_info['usd']) < $CFG->orders_min_usd && $sell_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($sell_stop_price1 >= $current_bid && $sell_stop)
@@ -135,6 +145,8 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('sell-stop-lower-price'));
 	if ($sell_stop && !($sell_stop_price1 > 0))
 		Errors::add(Lang::string('buy-errors-no-stop'));
+	if ($self_limits)
+		Errors::add(Lang::string('sell-limit-under-stops'));
 	
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
