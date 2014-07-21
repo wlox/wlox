@@ -47,4 +47,8 @@ $CFG->lang_table = $query['Lang']['getTable']['results'][0];
 /* Currencies */
 $CFG->currencies = $query['Currencies']['get']['results'][0];
 
+/* Orders */
+$CFG->orders_under_market_percent = 20;
+$CFG->orders_min_usd = 5;
+
 ?>
