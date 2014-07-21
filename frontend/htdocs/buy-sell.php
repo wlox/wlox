@@ -37,7 +37,7 @@ if ($_REQUEST['buy']) {
 }
 elseif ($_REQUEST['sell']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
-	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_price'],$currency1));
+	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }
 
 $query = API::send();
