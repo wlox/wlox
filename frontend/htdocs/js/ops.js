@@ -709,7 +709,7 @@ function switchBuyCurrency() {
 }
 
 function calculateBuy() {
-	$('#buy_amount,#buy_price,#sell_amount,#sell_price').bind("keyup change", function(){
+	$('#buy_amount,#buy_price,#buy_stop_price,#sell_amount,#sell_price,#sell_stop_price').bind("keyup change", function(){
 		calculateBuyPrice();
 	});
 	
@@ -818,6 +818,7 @@ function calculateBuy() {
 	});
 	
 	$('#buy_limit').click(function(){
+		calculateBuyPrice();
 		if ($(this).is(':checked')) {
 			$('#buy_market_price').prop('checked','');
 			$('#buy_price').removeAttr('readonly');
@@ -858,6 +859,7 @@ function calculateBuy() {
 			}
 		}
 		else {
+			calculateBuyPrice();
 			if ($('#sell_stop').is(':checked')) {
 				$('#sell_price_container').hide(400);
 			}
@@ -873,7 +875,8 @@ function calculateBuyPrice() {
 	
 	var buy_amount = ($('#buy_amount').val()) ? parseFloat($('#buy_amount').val().replace(',','')) : 0;
 	var buy_price = ($('#buy_price').val()) ? parseFloat($('#buy_price').val().replace(',','')) : 0;
-	var buy_subtotal = buy_amount * buy_price;
+	var buy_stop_price = ($('#buy_stop_price').val()) ? parseFloat($('#buy_stop_price').val().replace(',','')) : 0;
+	var buy_subtotal = buy_amount * (($('#buy_stop').is(':checked') && !$('#buy_limit').is(':checked')) ? buy_stop_price : buy_price);
 	var buy_commision = (user_fee * 0.01) * buy_subtotal;
 	var buy_total = buy_subtotal + buy_commision;
 	$('#buy_subtotal').html((buy_subtotal).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
@@ -881,7 +884,8 @@ function calculateBuyPrice() {
 	
 	var sell_amount = ($('#sell_amount').val()) ? parseFloat($('#sell_amount').val().replace(',','')) : 0;
 	var sell_price = ($('#sell_price').val()) ? parseFloat($('#sell_price').val().replace(',','')) : 0;
-	var sell_subtotal = sell_amount * sell_price;
+	var sell_stop_price = ($('#sell_stop_price').val()) ? parseFloat($('#sell_stop_price').val().replace(',','')) : 0;
+	var sell_subtotal = sell_amount * (($('#sell_stop').is(':checked') && !$('#sell_limit').is(':checked')) ? sell_stop_price : sell_price);
 	var sell_commision = (user_fee * 0.01) * sell_subtotal;
 	var sell_total = sell_subtotal - sell_commision;
 	$('#sell_subtotal').html((sell_subtotal).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
