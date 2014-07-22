@@ -29,7 +29,7 @@ $token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
 $remove = $_REQUEST['remove'];
 
 if ($remove) {
-	if (!$_REQUEST['submitted'] || $_REQUEST['send_sms']) {
+	if (!$_REQUEST['submitted'] || $_REQUEST['method'] == 'sms') {
 		if (User::$info['using_sms'] == 'Y') {
 			if (User::sendSMS()) {
 				$sent_sms = true;
@@ -66,13 +66,13 @@ if ($remove) {
 }
 
 if ($_REQUEST['step'] == 1) {
-	if (!($cell1 > 0) && !$_REQUEST['google_2fa'])
+	if (!($cell1 > 0) && $_REQUEST['method'] != 'google')
 		Errors::add(Lang::string('security-no-cell'));
-	if (!($country_code1 > 0) && !$_REQUEST['google_2fa'])
+	if (!($country_code1 > 0) && $_REQUEST['method'] != 'google')
 		Errors::add(Lang::string('security-no-cc'));
 	
 	if (!is_array(Errors::$errors)) {
-		if (!$_REQUEST['google_2fa']) {
+		if ($_REQUEST['method'] != 'google') {
 			API::add('User','registerAuthy',array($cell1,$country_code1));
 			$query = API::send();
 			$authy_id = $query['User']['registerAuthy']['results'][0]['user']['id'];
@@ -86,8 +86,8 @@ if ($_REQUEST['step'] == 1) {
 		}
 		
 		if (!is_array(Errors::$errors)) {
-			if (!$_REQUEST['google_2fa']) {
-				if ($_REQUEST['send_sms']) {
+			if ($_REQUEST['method'] != 'google') {
+				if ($_REQUEST['method'] == 'sms') {
 					if (User::sendSMS($authy_id))
 						$using_sms = 'Y';
 				}
@@ -367,6 +367,15 @@ include 'includes/head.php';
 							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<div class="param">
+								<label for="method"><?= Lang::string('security-method') ?></label>
+								<select name="method" id="method">
+									<option <?= ($_REQUEST['method'] == 'google') ? 'selected="selected"' : false ?> value="google">Google Authenticator</option>
+									<option <?= ($_REQUEST['method'] == 'authy') ? 'selected="selected"' : false ?> value="authy">Authy</option>
+									<option <?= ($_REQUEST['method'] == 'SMS') ? 'selected="selected"' : false ?> value="SMS">SMS</option>
+								</select>
+								<div class="clear"></div>
+							</div>
+							<div class="param method_show" style="display:none;">
 								<label for="authy-countries"><?= Lang::string('security-country') ?> (<?= Lang::string('security-optional-google') ?>)</label>
 								<select name="country_code" id="authy-countries">
 								<? 
@@ -377,7 +386,7 @@ include 'includes/head.php';
 								</select>
 								<div class="clear"></div>
 							</div>
-							<div class="param">
+							<div class="param method_show" style="display:none;">
 								<label for="authy-cellphone"><?= Lang::string('security-cell') ?> (<?= Lang::string('security-optional-google') ?>)</label>
 								<input name="cell" id="authy-cellphone" type="text" value="<?= $cell1 ?>" />
 								<div class="clear"></div>
@@ -385,8 +394,8 @@ include 'includes/head.php';
 							 <div class="mar_top2"></div>
 							 <ul class="list_empty">
 								<li><input type="submit" name="submit" value="<?= Lang::string('security-enable') ?>" class="but_user" /></li>
-								<li><input type="submit" name="google" value="<?= Lang::string('security-enable-google') ?>" class="but_user" /></li>
-								<li><input type="submit" name="sms" value="<?= Lang::string('security-send-sms') ?>" class="but_user" /></li>
+								<!-- li><input type="submit" name="google" value="<?= Lang::string('security-enable-google') ?>" class="but_user" /></li -->
+								<!--  li><input type="submit" name="sms" value="<?= Lang::string('security-send-sms') ?>" class="but_user" /></li -->
 							</ul>
 		                </div>
 		                <div class="clear"></div>

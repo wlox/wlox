@@ -868,6 +868,15 @@ function calculateBuy() {
 			}
 		}
 	});
+	
+	$('#method').bind("keyup change", function(){
+		if ($(this).val() != 'google') {
+			$('.method_show').show(400);
+		}
+		else {
+			$('.method_show').hide(400);
+		}
+	});
 }
 
 function calculateBuyPrice() {
