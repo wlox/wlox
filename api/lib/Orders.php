@@ -243,7 +243,7 @@ class Orders {
 				$executed_sql
 				AND orders.btc_price > 0
 				GROUP BY orders.id
-				ORDER BY orders.btc_price $order_asc";
+				ORDER BY orders.btc_price $order_asc, orders.id ASC";
 	
 		if ($for_update)
 			$sql .= ' FOR UPDATE';
