@@ -2,7 +2,7 @@
 chdir('..');
 include '../cfg/cfg.php';
 
-$currency1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['currency']);
+$currency1 = preg_replace("/[^a-zA-Z]/", "",$_REQUEST['currency']);
 
 API::add('Orders','getCurrentBid',array($currency1));
 API::add('Orders','getCurrentAsk',array($currency1));

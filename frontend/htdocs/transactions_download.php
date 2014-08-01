@@ -22,7 +22,7 @@ if ($transactions) {
 		fputcsv($output,array(
 			' '.$transaction['type'].' ',
 			' '.date('M j, Y, H:i:a',strtotime($transaction['date']) + $CFG->timezone_offset).' ',
-			' '.number_format($transaction['btc_net'],8).' ',
+			' '.number_format($transaction['btc'],8).' ',
 			' '.$transaction['fa_symbol'].number_format($transaction['btc_net'] * $transaction['fiat_price'],2).' ',
 			' '.$transaction['fa_symbol'].number_format($transaction['fiat_price'],2).' ',
 			' '.$transaction['fa_symbol'].number_format($transaction['fee'] * $transaction['fiat_price'],2).' ',

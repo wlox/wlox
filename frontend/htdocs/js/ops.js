@@ -568,11 +568,11 @@ function updateTransactions() {
 				var current_bid = ($('#bids_list .order_price').length > 0) ? parseFloat($('#bids_list .order_price:first').html().replace(',','')) : 0;
 				
 				if ($('#buy_price').length > 0 && $('#buy_price').is('[readonly]') && current_price > 0) {
-					$('#buy_price').val((current_price).toFixed(2));
+					$('#buy_price').val((current_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 					$("#buy_price").trigger("change");
 				}
 				if ($('#sell_price').length > 0 && $('#sell_price').is('[readonly]') && current_bid > 0) {
-					$('#sell_price').val((current_bid).toFixed(2));
+					$('#sell_price').val((current_bid).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 					$("#sell_price").trigger("change");
 				}
 				
@@ -698,8 +698,8 @@ function switchBuyCurrency() {
 				$('#buy_currency,#sell_currency').val(currency);
 				$('.sell_currency_label,.buy_currency_label').html(currency.toUpperCase());
 				$('.sell_currency_char,.buy_currency_char').html(json_data.currency_info.fa_symbol);
-				$('#buy_price').val(json_data.current_bid);
-				$('#sell_price').val(json_data.current_ask);
+				$('#buy_price').val(json_data.current_ask.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+				$('#sell_price').val(json_data.current_bid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 				$('#sell_user_available').html(json_data.available_btc);
 				$('#buy_user_available').html(json_data.available_fiat);
 				calculateBuyPrice();
@@ -1025,6 +1025,10 @@ $(document).ready(function() {
 	
 	$('#currency_selector').bind("keyup change", function(){
 		window.location.href = 'index.php?currency='+$(this).val();
+	});
+	
+	$('#fee_currency').bind("keyup change", function(){
+		window.location.href = 'fee-schedule.php?currency='+$(this).val();
 	});
 	
 	$('#language_selector').bind("keyup change", function(){

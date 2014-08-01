@@ -83,8 +83,8 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	if (!$asks && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($buy_subtotal1 * $currency_info['usd']) < 5 && $buy_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($buy_subtotal1 * $currency_info['usd_ask']) < 5 && $buy_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($buy_stop_price1 <= $current_ask && $buy_stop)
@@ -125,8 +125,8 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
 	if (!$bids && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($sell_subtotal1 * $currency_info['usd']) < 5 && $sell_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($sell_subtotal1 * $currency_info['usd_ask']) < 5 && $sell_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($sell_stop_price1 >= $current_bid && $sell_stop)

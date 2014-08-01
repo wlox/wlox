@@ -81,8 +81,8 @@ if ($_REQUEST['buy']) {
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	if (!$asks && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($buy_subtotal1 * $currency_info['usd']) < $CFG->orders_min_usd && $buy_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($buy_subtotal1 * $currency_info['usd_ask']) < $CFG->orders_min_usd && $buy_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($buy_stop_price1 <= $current_ask && $buy_stop)
@@ -135,8 +135,8 @@ if ($_REQUEST['sell']) {
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
 	if (!$bids && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($sell_subtotal1 * $currency_info['usd']) < $CFG->orders_min_usd && $sell_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
+	if (($sell_subtotal1 * $currency_info['usd_ask']) < $CFG->orders_min_usd && $sell_amount1 > 0)
+		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
 		Errors::add(Lang::string('buy-errors-outbid-self'));
 	if ($sell_stop_price1 >= $current_bid && $sell_stop)
@@ -557,9 +557,9 @@ if (!$bypass) {
 								$mine = ($bid['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr">
-							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['fiat_price'],2).'</span></td>
+							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['btc_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
-							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['fiat'],2).'</span></td>
+							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format(($bid['btc_price'] * $bid['btc']),2).'</span></td>
 						</tr>';
 							}
 						}
@@ -583,9 +583,9 @@ if (!$bypass) {
 								$mine = ($ask['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr">
-							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['fiat_price'],2).'</span></td>
+							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['btc_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
-							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['fiat'],2).'</span></td>
+							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format(($ask['btc_price'] * $ask['btc']),2).'</span></td>
 						</tr>';
 							}
 						}

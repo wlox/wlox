@@ -1,8 +1,15 @@
 <?php
 include '../cfg/cfg.php';
 
+if ($_REQUEST['currency'])
+	$_SESSION['currency'] = strtolower(ereg_replace("[^a-zA-Z]", "",$_REQUEST['currency']));
+elseif (!$_SESSION['currency'])
+	$_SESSION['currency'] = 'usd';
+
+$currency1 = $_SESSION['currency'];
+
 API::add('Content','getRecord',array('fee-schedule'));
-API::add('FeeSchedule','get');
+API::add('FeeSchedule','get',array($currency1));
 $query = API::send();
 
 $content = $query['Content']['getRecord']['results'][0];
@@ -26,7 +33,22 @@ include 'includes/head.php';
     		<table class="table-list trades">
 				<tr>
 					<th><?= Lang::string('fee-schedule-fee') ?></th>
-					<th><?= Lang::string('fee-schedule-volume') ?></th>
+					<th>
+						<?= Lang::string('fee-schedule-volume') ?>
+						<span class="graph_options" style="margin-left:5px;">
+							<span style="margin:0;float:none;display:inline;">
+								<select id="fee_currency">
+								<? 
+								if ($CFG->currencies) {
+									foreach ($CFG->currencies as $currency) {
+										echo '<option '.(strtolower($currency['currency']) == $currency1 || (!$currency1 && $currency['currency'] == 'USD') ? 'selected="selected"' : '' ).' name="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
+									}
+								}
+								?>
+								</select>
+							</span>
+						</span>
+					</th>
 				</tr>
 				<? 
 				if ($fee_schedule) {
@@ -36,7 +58,7 @@ include 'includes/head.php';
 				?>
 				<tr>
 					<td><?= $fee['fee'] ?>%</td>
-					<td><?= $symbol.' $'.$from ?></td>
+					<td><?= $symbol.' '.$fee['fa_symbol'].$from ?></td>
 				</tr>
 				<?
 					}
