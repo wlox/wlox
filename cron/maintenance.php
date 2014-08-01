@@ -10,12 +10,12 @@ $CFG->in_cron = 1;
 $sql = 'SELECT id FROM historical_data WHERE `date` = (CURDATE() - INTERVAL 1 DAY) LIMIT 0,1';
 $result = db_query_array($sql);
 if (!$result) {
-	$sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtotime('-1 day')))."',btc_price FROM transactions WHERE `date` <= (CURDATE() - INTERVAL 1 DAY) ORDER BY `date` DESC LIMIT 0,1) ";
+	$sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtotime('-1 day')))."',(transactions.btc_price * currencies.usd_ask) AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE transactions.date <= (CURDATE() - INTERVAL 1 DAY) ORDER BY transactions.date DESC LIMIT 0,1) ";
 	$result = db_query($sql);
 }
 
 // determine users' monthly volume
-$sql = 'UPDATE site_users s1 JOIN transactions ON (s1.id = transactions.site_user OR s1.id = transactions.site_user1) SET s1.fee_schedule = (SELECT fee_schedule.id FROM (SELECT ROUND(SUM(transactions.btc * currencies.usd),2) AS volume, site_users.id AS user_id FROM site_users LEFT JOIN transactions ON (site_users.id = transactions.site_user OR site_users.id = transactions.site_user1) LEFT JOIN currencies ON (currencies.id = transactions.currency) WHERE transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) GROUP BY site_users.id) AS volumes LEFT JOIN fee_schedule ON (volumes.volume >= fee_schedule.from_usd AND (volumes.volume <= fee_schedule.to_usd OR fee_schedule.to_usd = 0)) WHERE volumes.user_id = s1.id GROUP BY volumes.volume)';
+$sql = 'UPDATE site_users s1 JOIN transactions ON (s1.id = transactions.site_user OR s1.id = transactions.site_user1) SET s1.fee_schedule = (SELECT fee_schedule.id FROM (SELECT ROUND(SUM(transactions.btc * currencies.usd_ask),2) AS volume, site_users.id AS user_id FROM site_users LEFT JOIN transactions ON (site_users.id = transactions.site_user OR site_users.id = transactions.site_user1) LEFT JOIN currencies ON (currencies.id = transactions.currency) WHERE transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) GROUP BY site_users.id) AS volumes LEFT JOIN fee_schedule ON (volumes.volume >= fee_schedule.from_usd AND (volumes.volume <= fee_schedule.to_usd OR fee_schedule.to_usd = 0)) WHERE volumes.user_id = s1.id GROUP BY volumes.volume)';
 $result = db_query($sql);
 $sql = 'UPDATE site_users SET fee_schedule = 1 WHERE fee_schedule = 0';
 $result = db_query($sql);

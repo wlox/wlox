@@ -39,7 +39,8 @@ if ($CFG->currencies) {
 	if ($data['query']['results']['rate']) {
 		foreach ($data['query']['results']['rate'] as $row) {
 			$key = str_replace('USD','',$row['id']);
-			$rate = $row['Ask'];
+			$ask = $row['Ask'];
+			$bid = $row['Bid'];
 			
 			if (strlen($key) < 3 || strstr($key,'='))
 				continue;
@@ -48,10 +49,10 @@ if ($CFG->currencies) {
 			$result = db_query_array($sql);
 			
 			if ($result) {
-				db_update('currencies',$result[0]['id'],array('usd'=>$rate));
+				db_update('currencies',$result[0]['id'],array('usd_bid'=>$bid,'usd_ask'=>$ask));
 			}
 			else {
-				db_insert('currencies',array('usd'=>$rate,'currency'=>$key));
+				db_insert('currencies',array('usd_bid'=>$bid,'usd_ask'=>$ask,'currency'=>$key));
 			}
 		}
 	}

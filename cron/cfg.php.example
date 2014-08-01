@@ -42,6 +42,8 @@ $CFG->withdraw_fiat_desc = 1;
 $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
 $CFG->history_deposit_id = 4;
+$CFG->cross_currency_trades = 1;
+$CFG->currency_conversion_fee = 0.025;
 
 /* Emails */
 $CFG->email_smtp_host = 'smtp.yourhost.com';

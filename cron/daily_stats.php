@@ -9,7 +9,7 @@ include 'cfg.php';
 // get total of each currency
 $currencies = Currencies::get();
 foreach ($currencies as $currency) {
-	$totals[] = 'SUM('.strtolower($currency['currency']).' * '.$currency['usd'].') AS '.strtolower($currency['currency']);
+	$totals[] = 'SUM('.strtolower($currency['currency']).' * '.$currency['usd_ask'].') AS '.strtolower($currency['currency']);
 }
 $sql = 'SELECT COUNT(id) AS total_users, SUM(btc) AS btc, '.implode(',',$totals).' FROM site_users';
 $result = db_query_array($sql);
@@ -33,7 +33,7 @@ $result = db_query_array($sql);
 $open_orders_btc = $result[0]['btc'];
 
 // get total transactions for the day
-$sql = 'SELECT SUM(btc) AS total_btc, AVG(transactions.btc) AS avg_btc, SUM(fee + fee1) AS total_fees FROM transactions WHERE DATE(`date`) = (CURDATE() - INTERVAL 1 DAY)';
+$sql = 'SELECT SUM(transactions.btc) AS total_btc, AVG(transactions.btc) AS avg_btc, SUM(((transactions.fee + transactions.fee1)  * transactions.btc_price * currencies.usd_ask) + IFNULL(conversions.amount_received - conversions.amount_needed,0)) AS total_fees FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN conversions ON (conversions.transaction = transactions.id AND conversions.is_active = "Y") WHERE DATE(transactions.date) = (CURDATE() - INTERVAL 1 DAY)';
 $result = db_query_array($sql);
 $transactions_btc = $result[0]['total_btc'];
 $avg_transaction = $result[0]['avg_btc'];
@@ -41,7 +41,7 @@ $trans_per_user = $transactions_btc / $total_users;
 $total_fees = $result[0]['total_fees'];
 $fees_per_user = $total_fees / $total_users;
 
-$sql = 'SELECT SUM(fee) AS fees_incurred FROM fees WHERE DATE(`date`) = (CURDATE() - INTERVAL 1 DAY)';
+$sql = 'SELECT SUM(fees.fee*currencies.usd_ask) AS fees_incurred FROM fees LEFT JOIN currencies ON (currencies.id = 28) WHERE DATE(fees.date) = (CURDATE() - INTERVAL 1 DAY)';
 $result = db_query_array($sql);
 $gross_profit = $total_fees - $result[0]['fees_incurred'];
 
