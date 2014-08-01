@@ -111,7 +111,7 @@ class User {
 		if (!$CFG->session_active)
 			return false;
 	
-		$sql = "SELECT SUM(transactions.btc * transactions.btc_price * currencies.usd) AS volume FROM transactions
+		$sql = "SELECT SUM(transactions.btc * transactions.btc_price * currencies.usd_ask) AS volume FROM transactions
 				LEFT JOIN currencies ON (currencies.id = transactions.currency)
 				WHERE (site_user = ".User::$info['id']." OR site_user1 = ".User::$info['id'].")
 				AND transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
