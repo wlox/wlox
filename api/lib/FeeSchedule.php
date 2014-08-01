@@ -1,7 +1,12 @@
 <?php
 class FeeSchedule {
-	function get() {
-		$sql = "SELECT * FROM fee_schedule ORDER BY fee_schedule.order ASC, id ASC";
+	function get($currency=false) {
+		global $CFG;
+		
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$currency_info = ($currency) ? $CFG->currencies[strtoupper($currency)] : $CFG->currencies['USD'];
+		
+		$sql = "SELECT fee_schedule.*, (fee_schedule.from_usd/currencies.usd_ask) AS from_usd, (fee_schedule.to_usd/currencies.usd_ask) AS to_usd, currencies.fa_symbol AS fa_symbol FROM fee_schedule LEFT JOIN currencies ON (currencies.id = {$currency_info['id']}) ORDER BY fee_schedule.order ASC, fee_schedule.id ASC";
 		return db_query_array($sql);
 	}
 	

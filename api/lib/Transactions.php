@@ -26,14 +26,15 @@ class Transactions {
 		//$currency = (!$currency) ? 'usd' : $currency;
 		
 		if (!$count)
-			$sql = "SELECT transactions.*, currencies.currency AS currency, (currencies.usd * transactions.fiat) AS usd_amount, (currencies.usd * transactions.btc_price) AS usd_price, transactions.btc_price AS fiat_price, currencies.fa_symbol AS fa_symbol, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net" : "").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
+			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", transactions.btc_price AS fiat_price, currencies.currency AS currency, currencies.fa_symbol AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
 		else
 			$sql = "SELECT COUNT(transactions.id) AS total FROM transactions ";
 			
 		$sql .= " 
 		LEFT JOIN transaction_types ON (transaction_types.id = transactions.transaction_type)
 		LEFT JOIN transaction_types transaction_types1 ON (transaction_types1.id = transactions.transaction_type1)
-		LEFT JOIN currencies ON (currencies.id = transactions.currency)
+		LEFT JOIN currencies currencies ON (currencies.id = transactions.currency)
+		LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1)
 		WHERE 1 ";
 			
 		if ($user > 0)
@@ -154,7 +155,7 @@ class Transactions {
 		
 		$user = User::$info['id'];
 		$sql = "
-		SELECT transactions.*, UNIX_TIMESTAMP(transactions.date) AS datestamp, currencies.currency AS currency, (currencies.usd * transactions.fiat) AS usd_amount, transactions.btc_price AS fiat_price, currencies.fa_symbol AS fa_symbol ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net" : "")."
+		SELECT transactions.*, UNIX_TIMESTAMP(transactions.date) AS datestamp, currencies.currency AS currency, (currencies.usd_ask * transactions.fiat) AS usd_amount, transactions.btc_price AS fiat_price, currencies.fa_symbol AS fa_symbol ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net" : "")."
 		FROM transactions
 		LEFT JOIN transaction_types ON (transaction_types.id = transactions.transaction_type)
 		LEFT JOIN transaction_types transaction_types1 ON (transaction_types1.id = transactions.transaction_type1)
