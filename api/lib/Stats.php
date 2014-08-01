@@ -16,13 +16,13 @@ class Stats {
 		elseif ($timeframe == '1year')
 			$start = date('Y-m-d',strtotime('-1 year'));
 		
-		$sql = "SELECT usd FROM currencies WHERE currency = '$currency'";
+		$sql = "SELECT usd_ask FROM currencies WHERE currency = '$currency'";
 		$result = db_query_array($sql);
 		
 		if (!$result)
 			return false;
 		
-		$sql = "SELECT (UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS `date`,ROUND((usd/{$result[0]['usd']}),2) AS price FROM historical_data WHERE `date` >= '$start' ORDER BY `date` ASC";
+		$sql = "SELECT (UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS `date`,ROUND((usd/{$result[0]['usd_ask']}),2) AS price FROM historical_data WHERE `date` >= '$start' ORDER BY `date` ASC";
 		return db_query_array($sql);
 	}
 	
@@ -53,10 +53,10 @@ class Stats {
 			$result2 = db_query_array($sql);
 		}
 
-		$sql = "SELECT * FROM orders WHERE `date` < CURDATE() AND currency = $currency_id AND order_type = {$CFG->order_type_ask} ORDER BY `date` DESC LIMIT 0,1";
+		$sql = "SELECT * FROM transactions WHERE `date` < CURDATE() AND currency = $currency_id ORDER BY `date` DESC LIMIT 0,1";
 		$result3 = db_query_array($sql);
 		
-		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
+		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 		$result4 = db_query_array($sql);
 		
 		$sql = "SELECT btc_price AS max FROM transactions WHERE `date` >= CURDATE() AND currency = $currency_id ORDER BY btc_price DESC LIMIT 0,1";
