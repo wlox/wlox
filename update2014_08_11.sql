@@ -7,8 +7,8 @@ ALTER TABLE `conversions`
 
 
 ALTER TABLE `fee_schedule`
-    ADD `fee1` double(10,2) NOT NULL DEFAULT '' COMMENT '' AFTER order,
-    ADD `global_btc` double(16,8) unsigned NOT NULL DEFAULT '' COMMENT '' AFTER fee1;
+    ADD `fee1` double(10,2) NOT NULL DEFAULT 0 COMMENT '' AFTER `order`,
+    ADD `global_btc` double(16,8) unsigned NOT NULL DEFAULT 0 COMMENT '' AFTER fee1;
 
 
 ALTER TABLE `history`
