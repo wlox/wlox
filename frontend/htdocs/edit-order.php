@@ -25,11 +25,11 @@ $query = API::send();
 $currency_info = $query['Currencies']['getRecord']['results'][0];
 $currency1 = strtolower($currency_info['currency']);
 
-if ($order_info['is_bid']) {
+if ($order_info['is_bid'] && !$_REQUEST['buy_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
 	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
 }
-else {
+elseif (!$_REQUEST['sell_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
 	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }

@@ -31,11 +31,11 @@ API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array(User::$info['id'],$currency_info['id']));
 
-if ($_REQUEST['buy']) {
+if ($_REQUEST['buy'] && !$_REQUEST['buy_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
 	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
 }
-elseif ($_REQUEST['sell']) {
+elseif ($_REQUEST['sell'] && !$_REQUEST['sell_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
 	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }
