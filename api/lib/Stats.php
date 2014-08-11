@@ -29,31 +29,27 @@ class Stats {
 	function getCurrent($currency_id,$currency_abbr=false) {
 		global $CFG;
 		
-		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
+		$usd_info = $CFG->currencies['USD'];
+		$currency_id = ($currency_id > 0) ? preg_replace("/[^0-9]/", "",$currency_id) : $usd_info['id'];
 		$currency_abbr = preg_replace("/[^a-zA-Z]/", "",$currency_abbr);
 		
 		if ($currency_abbr) {
 			$c_info = DB::getRecord('currencies',false,$currency_abbr,0,'currency');
 			$currency_id = $c_info['id'];
 		}
+		elseif ($currency_id > 0) {
+			$c_info = DB::getRecord('currencies',$currency_id,0,1);
+		}
+		
+		$conversion = ($usd_info['id'] == $currency_id) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$c_info['usd_ask'].', '.$c_info['usd_ask'].' / currencies.usd_ask))';
 		
 		$sql = "SELECT * FROM current_stats WHERE id = 1";
 		$result1 = db_query_array($sql);
-		
-		$sql = "SELECT *, MAX(btc_price) AS max, MIN(btc_price) AS min FROM orders WHERE `date` >= CURDATE() AND currency = $currency_id AND order_type = {$CFG->order_type_ask} ORDER BY `date` DESC LIMIT 0,1";
+
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,transactions.btc_price * $conversion),2)" : 'transactions.btc_price')." AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 		$result2 = db_query_array($sql);
 
-		if (!($result2[0]['btc_price'] > 0)) {
-			$sql = "SELECT *, MAX(btc_price) AS max, MIN(btc_price) AS min FROM orders WHERE 1 AND currency = $currency_id AND order_type = {$CFG->order_type_ask} ORDER BY `date` DESC LIMIT 0,1";
-			$result2 = db_query_array($sql);
-		}
-		
-		if (!($result2[0]['btc_price'] > 0)) {
-			$sql = "SELECT btc_price FROM transactions WHERE currency = $currency_id ORDER BY `date` DESC LIMIT 0,1";
-			$result2 = db_query_array($sql);
-		}
-
-		$sql = "SELECT * FROM transactions WHERE `date` < CURDATE() AND currency = $currency_id ORDER BY `date` DESC LIMIT 0,1";
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,transactions.btc_price * $conversion),2)" : 'transactions.btc_price')." AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE transactions.date < CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 		$result3 = db_query_array($sql);
 		
 		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
@@ -81,7 +77,7 @@ class Stats {
 	function getBTCTraded() {
 		global $CFG;
 		
-		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
+		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 		return db_query_array($sql);
 	}
 }

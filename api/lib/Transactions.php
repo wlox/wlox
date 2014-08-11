@@ -1,6 +1,6 @@
 <?php
 class Transactions {
-	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false,$dont_paginate=false) {
+	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false) {
 		global $CFG;
 		
 		$page = preg_replace("/[^0-9]/", "",$page);
@@ -15,6 +15,9 @@ class Transactions {
 		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.date';
 		$order_desc = ($order_desc) ? 'ASC' : 'DESC';
 		$user = ($user) ? User::$info['id'] : false;
+		$usd_info = $CFG->currencies['USD'];
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
 		
 		if ($type == 'buy')
 			$type = $CFG->transactions_buy_id;
@@ -26,7 +29,7 @@ class Transactions {
 		//$currency = (!$currency) ? 'usd' : $currency;
 		
 		if (!$count)
-			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", transactions.btc_price AS fiat_price, currencies.currency AS currency, currencies.fa_symbol AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
+			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) * 1000) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,transactions.btc_price * $conversion),2)" : 'transactions.btc_price')." AS btc_price, currencies.currency AS currency, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
 		else
 			$sql = "SELECT COUNT(transactions.id) AS total FROM transactions ";
 			
@@ -45,8 +48,8 @@ class Transactions {
 			$sql .= " AND (transactions.transaction_type = $type OR transactions.transaction_type1 = $type) ";
 		elseif ($type > 0 && $user)
 			$sql .= " AND IF(transactions.site_user = $user,transactions.transaction_type,transactions.transaction_type1) = $type ";
-		if ($currency)
-			$sql .= " AND currencies.currency = '$currency' ";
+		if ($currency && $user)
+			$sql .= " AND transactions.currency = {$currency_info['id']} ";
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
