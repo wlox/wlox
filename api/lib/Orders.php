@@ -346,7 +346,7 @@ class Orders {
 				$compatible[] = array('continue'=>1);
 				$trans_total = 0;
 				//$btc_commision = 0;
-				$fiat_commision = 0;
+				//$fiat_commision = 0;
 				$max_price = 0;
 				$executed_orders = array();
 				$c = count($compatible);
@@ -497,7 +497,7 @@ class Orders {
 				$compatible[] = array('continue'=>1);
 				$trans_total = 0;
 				//$btc_commision = 0;
-				$fiat_commision = 0;
+				//$fiat_commision = 0;
 				$min_price = 0;
 				$executed_orders = array();
 				$c = count($compatible);
