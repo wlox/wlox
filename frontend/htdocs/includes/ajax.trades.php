@@ -13,6 +13,9 @@ if (!$notrades) {
 	API::add('Transactions','get',array(false,false,5,$currency1));
 	API::add('Stats','getBTCTraded');
 }
+else {
+	$limit = false;
+}
 
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,1));
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,false,false,1));
