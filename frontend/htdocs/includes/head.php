@@ -110,6 +110,7 @@
 <input type="hidden" id="cfg_orders_edit" value="<?= Lang::string('orders-edit') ?>" />
 <input type="hidden" id="cfg_orders_delete" value="<?= Lang::string('orders-delete') ?>" />
 <input type="hidden" id="buy_errors_no_compatible" value="<?= Lang::string('buy-errors-no-compatible') ?>" />
+<input type="hidden" id="orders_converted_from" value="<?= Lang::string('orders-converted-from') ?>" />
 <div class="site_wrapper">
    
 <!-- HEADER -->

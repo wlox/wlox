@@ -17,6 +17,7 @@ API::add('User','getOnHold');
 API::add('User','getAvailable');
 API::add('User','getVolume');
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
+API::add('Stats','getBTCTraded');
 $query = API::send();
 
 $currencies = $CFG->currencies;
@@ -24,6 +25,7 @@ $on_hold = $query['User']['getOnHold']['results'][0];
 $available = $query['User']['getAvailable']['results'][0];
 $volume = $query['User']['getVolume']['results'][0];
 $fee_bracket = $query['FeeSchedule']['getRecord']['results'][0];
+$total_btc_volume = $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'];
 
 $referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
 if ($referer == 'login.php' || $referer == 'verify-token.php' || $referer == 'first-login.php') {
@@ -133,12 +135,20 @@ include 'includes/head.php';
 				<div class="clear"></div>
 				<div class="balances">
 					<div class="one_half">
+						<div class="label"><?= Lang::string('account-fee-bracket1') ?>:</div>
+						<div class="amount"><?= $fee_bracket['fee1'] ?>% <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
+	                </div>
+	                <div class="one_half last">
 						<div class="label"><?= Lang::string('account-fee-bracket') ?>:</div>
 						<div class="amount"><?= $fee_bracket['fee'] ?>% <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
 	                </div>
-	                <div class="one_half last">
+	                <div class="one_half">
 	                	<div class="label"><?= Lang::string('account-30-day-vol') ?>:</div>
 	                	<div class="amount">$<?= number_format($volume,2) ?></div>
+	                </div>
+	                 <div class="one_half last">
+	                	<div class="label"><?= Lang::string('account-global-btc') ?>:</div>
+	                	<div class="amount"><?= number_format($total_btc_volume,8) ?></div>
 	                </div>
 		            <div class="clear"></div>
 	            </div>

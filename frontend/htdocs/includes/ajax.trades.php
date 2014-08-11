@@ -10,7 +10,7 @@ $currency_info = $CFG->currencies[strtoupper($currency1)];
 
 
 if (!$notrades) {
-	API::add('Transactions','getList',array($currency1,$notrades,$limit_7));
+	API::add('Transactions','get',array(false,false,5,$currency1));
 	API::add('Stats','getBTCTraded');
 }
 
@@ -22,7 +22,7 @@ $return['asks'][] = $query['Orders']['get']['results'][1];
 $return['bids'][] = $query['Orders']['get']['results'][0];
 
 if (!$notrades) {
-	$return['transactions'][] = $query['Transactions']['getList']['results'][0];
+	$return['transactions'][] = $query['Transactions']['get']['results'][0];
 	$return['btc_traded'] = $query['Stats']['getBTCTraded']['results'][0];
 }
 

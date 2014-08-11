@@ -42,7 +42,7 @@ elseif ($_REQUEST['sell']) {
 
 $query = API::send();
 
-$user_fee = $query['FeeSchedule']['getRecord']['results'][0];
+$user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
 $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask =  $query['Orders']['getCurrentAsk']['results'][0];
@@ -51,17 +51,19 @@ $asks = $query['Orders']['get']['results'][1];
 $self_orders = $query['Orders']['checkOutbidSelf']['results'][0];
 $self_stops = $query['Orders']['checkOutbidStops']['results'][0];
 $self_limits = $query['Orders']['checkStopsOverBid']['results'][0];
+$user_fee_bid = (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || $_REQUEST['buy_market_price'] || !$_REQUEST['buy_amount']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$user_fee_ask = (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || $_REQUEST['sell_market_price'] || !$_REQUEST['sell_amount']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 
 $buy_amount1 = ($_REQUEST['buy_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_amount']) : 0;
 $buy_price1 = ($_REQUEST['buy_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_price']) : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
-$buy_fee_amount1 = ($user_fee['fee'] * 0.01) * $buy_subtotal1;
+$buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 $buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
 
 $sell_amount1 = ($_REQUEST['sell_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_amount']) : 0;
 $sell_price1 = ($_REQUEST['sell_price'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_price']) : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
-$sell_fee_amount1 = ($user_fee['fee'] * 0.01) * $sell_subtotal1;
+$sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
 
 if ($_REQUEST['buy']) {
@@ -99,7 +101,7 @@ if ($_REQUEST['buy']) {
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
 			$buy_price1 = ($buy_stop && !$buy_limit) ? $buy_stop_price1 : $buy_price1;
-			API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee['fee'],$buy_market_price1,false,false,false,$buy_stop_price1));
+			API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee_bid,$buy_market_price1,false,false,false,$buy_stop_price1));
 			$query = API::send();
 			$operations = $query['Orders']['executeOrder']['results'][0];
 
@@ -151,7 +153,7 @@ if ($_REQUEST['sell']) {
 	if (!is_array(Errors::$errors) && !$cancel) {
 		if ($confirmed) {
 			$sell_price1 = ($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1;
-			API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee['fee'],$sell_market_price1,false,false,false,$sell_stop_price1));
+			API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee_ask,$sell_market_price1,false,false,false,$sell_stop_price1));
 			$query = API::send();
 			$operations = $query['Orders']['executeOrder']['results'][0];
 			
@@ -197,7 +199,8 @@ if (!$bypass) {
 		<?= ($notice) ? '<div class="notice">'.$notice.'</div>' : '' ?>
 		<div class="testimonials-4">
 			<? if (!$ask_confirm) { ?>
-			<input type="hidden" id="user_fee" value="<?= $user_fee['fee'] ?>" />
+			<input type="hidden" id="user_fee" value="<?= $user_fee_both['fee'] ?>" />
+			<input type="hidden" id="user_fee1" value="<?= $user_fee_both['fee1'] ?>" />
 			<div class="one_half">
 				<div class="content">
 					<h3 class="section_label">
@@ -268,7 +271,7 @@ if (!$bypass) {
 							</div>
 							<div class="calc">
 								<div class="label"><?= Lang::string('buy-fee') ?> <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
-								<div class="value"><span id="buy_user_fee"><?= $user_fee['fee'] ?></span>%</div>
+								<div class="value"><span id="buy_user_fee"><?= $user_fee_bid ?></span>%</div>
 								<div class="clear"></div>
 							</div>
 							<div class="calc bigger">
@@ -355,7 +358,7 @@ if (!$bypass) {
 							</div>
 							<div class="calc">
 								<div class="label"><?= Lang::string('buy-fee') ?> <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
-								<div class="value"><span id="sell_user_fee"><?= $user_fee['fee'] ?></span>%</div>
+								<div class="value"><span id="sell_user_fee"><?= $user_fee_ask ?></span>%</div>
 								<div class="clear"></div>
 							</div>
 							<div class="calc bigger">
@@ -439,7 +442,7 @@ if (!$bypass) {
 							</div>
 							<div class="calc">
 								<div class="label"><?= Lang::string('buy-fee') ?> <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
-								<div class="value"><span id="sell_user_fee"><?= $user_fee['fee'] ?></span>%</div>
+								<div class="value"><span id="sell_user_fee"><?= $user_fee_bid ?></span>%</div>
 								<div class="clear"></div>
 							</div>
 							<div class="calc bigger">
@@ -513,7 +516,7 @@ if (!$bypass) {
 							</div>
 							<div class="calc">
 								<div class="label"><?= Lang::string('buy-fee') ?> <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
-								<div class="value"><span id="sell_user_fee"><?= $user_fee['fee'] ?></span>%</div>
+								<div class="value"><span id="sell_user_fee"><?= $user_fee_ask ?></span>%</div>
 								<div class="clear"></div>
 							</div>
 							<div class="calc bigger">
@@ -557,7 +560,7 @@ if (!$bypass) {
 								$mine = ($bid['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr">
-							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['btc_price'],2).'</span></td>
+							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['btc_price'],2).'</span> '.(($bid['btc_price'] != $bid['fiat_price']) ? '<a title="'.Lang::string('orders-converted-from').'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format(($bid['btc_price'] * $bid['btc']),2).'</span></td>
 						</tr>';
@@ -583,7 +586,7 @@ if (!$bypass) {
 								$mine = ($ask['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr">
-							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['btc_price'],2).'</span></td>
+							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['btc_price'],2).'</span> '.(($ask['btc_price'] != $ask['fiat_price']) ? '<a title="'.Lang::string('orders-converted-from').'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
 							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format(($ask['btc_price'] * $ask['btc']),2).'</span></td>
 						</tr>';
