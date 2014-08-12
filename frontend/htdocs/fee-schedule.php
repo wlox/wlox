@@ -32,6 +32,7 @@ include 'includes/head.php';
     	<div class="table-style">
     		<table class="table-list trades">
 				<tr>
+					<th><?= Lang::string('fee-schedule-fee1') ?></th>
 					<th><?= Lang::string('fee-schedule-fee') ?></th>
 					<th>
 						<?= Lang::string('fee-schedule-volume') ?>
@@ -49,6 +50,7 @@ include 'includes/head.php';
 							</span>
 						</span>
 					</th>
+					<th><?= Lang::string('fee-schedule-flc') ?></th>
 				</tr>
 				<? 
 				if ($fee_schedule) {
@@ -57,10 +59,14 @@ include 'includes/head.php';
 						$from = ($fee['to_usd'] > 0) ? number_format($fee['to_usd'],0) : number_format($fee['from_usd'],0);
 				?>
 				<tr>
+					<?= ($fee['fee1'] != $last_fee1) ? '<td>'.$fee['fee1'].'%</td>' : '<td class="inactive"></td>' ?>
 					<td><?= $fee['fee'] ?>%</td>
 					<td><?= $symbol.' '.$fee['fa_symbol'].$from ?></td>
+					<?= ($fee['global_btc'] != $last_btc) ? '<td>'.number_format($fee['global_btc'],1).' BTC</td>' : '<td class="inactive"></td>' ?>
 				</tr>
 				<?
+						$last_fee1 = $fee['fee1'];
+						$last_btc = $fee['global_btc'];
 					}
 				}
 				?>

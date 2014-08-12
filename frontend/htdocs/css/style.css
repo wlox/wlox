@@ -3528,6 +3528,7 @@ h3 .highlight{
 .trades td .identify.stop_order{background-color:#DB82FF;}
 .trades td .oco{color:#727272;font-size: 11px;}
 .trades td .fa-exchange{color:#727272;font-size: 10px;margin-left: 2px;}
+.trades td.inactive{background-color:#FFF;}
 ul.list_empty {
 	float: left;
 	padding: 0px;
