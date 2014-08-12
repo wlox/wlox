@@ -44,9 +44,12 @@ $current_bid = $query['Orders']['getCurrentBid']['results'][0];
 $current_ask = $query['Orders']['getCurrentAsk']['results'][0];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
-$self_orders = $query['Orders']['checkOutbidSelf']['results'][0];
-$self_stops = $query['Orders']['checkOutbidStops']['results'][0];
-$self_limits = $query['Orders']['checkStopsOverBid']['results'][0];
+$self_orders = $query['Orders']['checkOutbidSelf']['results'][0][0]['price'];
+$self_stops = $query['Orders']['checkOutbidStops']['results'][0][0]['price'];
+$self_limits = $query['Orders']['checkStopsOverBid']['results'][0][0]['price'];
+$self_orders_currency = $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'];
+$self_stops_currency = $query['Orders']['checkOutbidStops']['results'][0][0]['currency'];
+$self_limits_currency = $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'];
 
 if ($order_info['site_user'] != $order_info['user_id'] || !($order_info['id'] > 0)) {
 	Link::redirect('open-orders.php');
@@ -100,7 +103,7 @@ if ($_REQUEST['buy']) {
 	if (($buy_subtotal1 * $currency_info['usd_ask']) < 5 && $buy_amount1 > 0)
 		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
-		Errors::add(Lang::string('buy-errors-outbid-self'));
+		Errors::add(Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-max-price')) : ''));
 	if ($buy_stop_price1 <= $current_ask && $buy_stop)
 		Errors::add(Lang::string('buy-stop-lower-ask'));
 	if ($buy_stop_price1 <= $buy_price1 && $buy_stop && $buy_limit)
@@ -110,7 +113,7 @@ if ($_REQUEST['buy']) {
 	if ($buy_price1 < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))))
 		Errors::add(str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')));
 	if ($self_stops)
-		Errors::add(Lang::string('buy-limit-under-stops'));
+		Errors::add(Lang::string('buy-limit-under-stops').(($currency_info['id'] != $self_stops_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_stops,2),' '.Lang::string('limit-min-price')) : ''));
 	
 	if (!is_array(Errors::$errors)) {
 		API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee_bid,$buy_market_price1,$order_info['id'],false,false,$buy_stop_price1));
@@ -146,7 +149,7 @@ if ($_REQUEST['sell']) {
 	if (($sell_subtotal1 * $currency_info['usd_ask']) < 5 && $sell_amount1 > 0)
 		Errors::add(str_replace('[amount]',number_format((5/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
 	if ($self_orders)
-		Errors::add(Lang::string('buy-errors-outbid-self'));
+		Errors::add(Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-min-price')) : ''));
 	if ($sell_stop_price1 >= $current_bid && $sell_stop)
 		Errors::add(Lang::string('sell-stop-higher-bid'));
 	if ($sell_stop_price1 >= $sell_price1 && $sell_stop && $sell_limit)
@@ -154,7 +157,7 @@ if ($_REQUEST['sell']) {
 	if ($sell_stop && !($sell_stop_price1 > 0))
 		Errors::add(Lang::string('buy-errors-no-stop'));
 	if ($self_limits)
-		Errors::add(Lang::string('sell-limit-under-stops'));
+		Errors::add(Lang::string('sell-limit-under-stops').(($currency_info['id'] != $self_limits_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_limits,2),' '.Lang::string('limit-max-price')) : ''));
 
 	if (!is_array(Errors::$errors)) {
 		API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee_ask,$sell_market_price1,$order_info['id'],false,false,$sell_stop_price1));
@@ -389,7 +392,7 @@ if (!$bypass) {
 								$mine = ($bid['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr">
-							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['fiat_price'],2).'</span> '.(($bid['btc_price'] != $bid['fiat_price']) ? '<a title="'.Lang::string('orders-converted-from').'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
+							<td>'.$mine.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['fiat_price'],2).'</span> '.(($bid['btc_price'] != $bid['fiat_price']) ? '<a title="'.str_replace('[currency]',$bid['currency_abbr'],Lang::string('orders-converted-from')).'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['fiat'],2).'</span></td>
 						</tr>';
@@ -415,7 +418,7 @@ if (!$bypass) {
 								$mine = ($ask['mine']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr">
-							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['fiat_price'],2).'</span> '.(($ask['btc_price'] != $ask['fiat_price']) ? '<a title="'.Lang::string('orders-converted-from').'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
+							<td>'.$mine.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['fiat_price'],2).'</span> '.(($ask['btc_price'] != $ask['fiat_price']) ? '<a title="'.str_replace('[currency]',$ask['currency_abbr'],Lang::string('orders-converted-from')).'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
 							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['fiat'],2).'</span></td>
 						</tr>';
