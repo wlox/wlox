@@ -159,7 +159,7 @@ if ($_REQUEST['sell']) {
 			API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee_ask,$sell_market_price1,false,false,false,$sell_stop_price1));
 			$query = API::send();
 			$operations = $query['Orders']['executeOrder']['results'][0];
-			
+
 			if ($operations['new_order'] > 0) {
 				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
 				exit;
