@@ -13,7 +13,7 @@ if (!$notrades) {
 	API::add('Transactions','get',array(false,false,5,$currency1));
 	API::add('Stats','getBTCTraded');
 }
-else {
+elseif (!$_REQUEST['get10']) {
 	$limit = false;
 }
 
