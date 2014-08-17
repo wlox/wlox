@@ -11,7 +11,7 @@ elseif (!User::isLoggedIn())
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename=transactions_'.date('Y-m-d').'.csv');
 
-API::add('Transactions','get',array(false,false,false,false,User::$info['id'],false,false,false,false,1));
+API::add('Transactions','get',array(false,false,false,false,1,false,false,false,false,1));
 $query = API::send();
 
 $transactions = $query['Transactions']['get']['results'][0];
