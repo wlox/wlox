@@ -852,7 +852,8 @@ class Form {
 		}
 		
 		if (is_array($options_array) && !$subtable) {
-			if (is_array($options_array[0])) {
+			$key1 = key($options_array);
+			if (is_array($options_array[$key1])) {
 				$options_array1 = $options_array;
 				unset($options_array);
 				foreach ($options_array1 as $i => $option_array) {
