@@ -11,7 +11,7 @@ class BankAccounts{
 		$sql = "SELECT bank_accounts.*, currencies.currency AS currency FROM bank_accounts LEFT JOIN currencies ON (bank_accounts.currency = currencies.id) WHERE 1 AND site_user = ".User::$info['id'];
 
 		if ($currency_id > 0)
-			$sql .= " AND currency = $currency_id ";
+			$sql .= " AND bank_accounts.currency = $currency_id ";
 
 		$result = db_query_array($sql);
 		
