@@ -14,7 +14,7 @@ class User {
 		if (!($session_id > 0) || !$CFG->session_active)
 			return false;
 	
-		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.pass,site_users.country,site_users.email FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
+		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.pass,site_users.country,site_users.email, site_users.default_currency FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
 		return $result[0];
 	}
 	
