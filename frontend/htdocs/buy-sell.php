@@ -11,7 +11,7 @@ elseif (!User::isLoggedIn())
 if ($_REQUEST['currency'])
 	$_SESSION['currency'] = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
 elseif (!$_SESSION['currency'])
-	$_SESSION['currency'] = 'usd';
+	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
 
 $currency1 = ereg_replace("[^a-z]", "",$_SESSION['currency']);
 $currency_info = $CFG->currencies[strtoupper($currency1)];

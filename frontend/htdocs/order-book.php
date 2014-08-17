@@ -7,7 +7,7 @@ $page_title = Lang::string('order-book');
 if ($_REQUEST['currency'])
 	$_SESSION['currency'] = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
 elseif (!$_SESSION['currency'])
-	$_SESSION['currency'] = 'usd';
+	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
 	
 $currency1 = $_SESSION['currency'];
 $currency_symbol = strtoupper($currency1);

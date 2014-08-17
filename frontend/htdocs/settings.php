@@ -323,6 +323,7 @@ include 'includes/head.php';
                 $personal->textInput('last_name',Lang::string('settings-last-name'));
                 $personal->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $personal->textInput('email',Lang::string('settings-email'),'email');
+                $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$CFG->currencies,false,array('currency'));
                 $personal->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('settings-save-info').'" class="but_user" /></div><input type="hidden" name="submitted" value="1" />');
                 $personal->display();
                 ?>

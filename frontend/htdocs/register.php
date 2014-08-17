@@ -79,7 +79,6 @@ include 'includes/head.php';
                 </h3>
                 <div class="clear"></div>
                 <?
-               
                 $register->textInput('first_name',Lang::string('settings-first-name'),1);
                 $register->textInput('last_name',Lang::string('settings-last-name'),1);
                 $register->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));

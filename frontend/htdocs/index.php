@@ -4,7 +4,7 @@ include '../cfg/cfg.php';
 if ($_REQUEST['currency'])
 	$_SESSION['currency'] = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
 elseif (!$_SESSION['currency'])
-	$_SESSION['currency'] = 'usd';
+	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
 
 $page_title = Lang::string('home-title');
 $currency1 = $_SESSION['currency'];
