@@ -29,7 +29,7 @@ API::add('Orders','getCurrentBid',array($currency1));
 API::add('Orders','getCurrentAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
-API::add('BankAccounts','get',array(User::$info['id'],$currency_info['id']));
+API::add('BankAccounts','get',array($currency_info['id']));
 
 if ($_REQUEST['buy'] && !$_REQUEST['buy_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
@@ -294,7 +294,7 @@ if (!$bypass) {
 			<div class="one_half last">
 				<div class="content">
 					<h3 class="section_label">
-						<span class="left"><i class="fa fa-usd fa-2x"></i></span>
+						<span class="left"><i class="fa fa-money fa-2x"></i></span>
 						<span class="right"><?= Lang::string('sell-bitcoins') ?></span>
 					</h3>
 					<div class="clear"></div>

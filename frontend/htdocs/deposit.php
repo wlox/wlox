@@ -78,7 +78,7 @@ if (!$_REQUEST['bypass']) {
 			<div class="one_half last">
 				<div class="content">
 					<h3 class="section_label">
-						<span class="left"><i class="fa fa-usd fa-2x"></i></span>
+						<span class="left"><i class="fa fa-money fa-2x"></i></span>
 						<span class="right"><?= Lang::string('deposit-fiat-instructions') ?></span>
 					</h3>
 					<div class="clear"></div>
@@ -92,7 +92,7 @@ if (!$_REQUEST['bypass']) {
 							$i = 1;
 							if ($bank_accounts) {
 								foreach ($bank_accounts as $account) {
-									echo '<option '.(($i == 1) ? 'selected="selected"' : '').' value="'.$account['id'].'">'.$account['account_number'].' - ('.$account['description'].')</option>';
+									echo '<option '.(($i == 1) ? 'selected="selected"' : '').' value="'.$account['id'].'">'.$account['account_number'].' - ('.$account['currency'].')</option>';
 									++$i;
 								}
 							}	
