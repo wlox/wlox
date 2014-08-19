@@ -278,7 +278,7 @@ class User {
 			$info['fee_schedule'] = $CFG->default_fee_schedule_id;
 			$info['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 			unset($info['terms']);
-			
+
 			if (time() < strtotime('2014-09-06 00:00:00')) {
 				$default_currency = DB::getRecord('currencies',$info['default_currency'],0,1);
 				$btc_currency = DB::getRecord('currencies',$CFG->btc_currency_id,0,1);
