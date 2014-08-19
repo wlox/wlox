@@ -75,6 +75,12 @@ if ($data1) {
 			$i++;
 			continue;
 		}
+		elseif ($i == 2) {
+			$row1 = explode(',',$row);
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$row1[4],'usd_bid'=>$row1[4]));
+			$i++;
+			continue;
+		}
 
 		$row1 = explode(',',$row);
 		
@@ -86,10 +92,6 @@ if ($data1) {
 		}
 		else {
 			db_update('historical_data',$result[0]['id'],array(strtolower($currency)=>$row1[4]));
-		}
-		
-		if ($i == $c) {
-			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$row1[4],'usd_bid'=>$row1[4]));
 		}
 		
 		$i++;
