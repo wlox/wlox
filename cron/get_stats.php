@@ -68,9 +68,10 @@ $exchange = 'BITSTAMP';
 $data = file_get_contents('http://www.quandl.com/api/v1/datasets/BITCOIN/'.$exchange.$currency.'.csv?trim_start=2011-01-01');
 $data1 = explode("\n",$data);
 if ($data1) {
-	$i = 0;
+	$i = 1;
+	$c = count($data1);
 	foreach ($data1 as $row) {
-		if ($i == 0) {
+		if ($i == 1) {
 			$i++;
 			continue;
 		}
@@ -85,6 +86,10 @@ if ($data1) {
 		}
 		else {
 			db_update('historical_data',$result[0]['id'],array(strtolower($currency)=>$row1[4]));
+		}
+		
+		if ($i == $c) {
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$max_price,'usd_bid'=>$min_price));
 		}
 		
 		$i++;
