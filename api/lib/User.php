@@ -126,6 +126,12 @@ class User {
 				WHERE "random_num" NOT IN (SELECT user FROM site_users)
 				LIMIT 1 ';
 		$result = db_query_array($sql);
+		
+		if (!$result) {
+			$sql = 'SELECT FLOOR(10000000 + RAND() * 89999999) AS random_num ';
+			$result = db_query_array($sql);
+		}
+		
 		return $result[0]['random_num'];
 	}
 	
