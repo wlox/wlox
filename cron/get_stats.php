@@ -75,14 +75,12 @@ if ($data1) {
 			$i++;
 			continue;
 		}
-		elseif ($i == 2) {
-			$row1 = explode(',',$row);
-			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$row1[4],'usd_bid'=>$row1[4]));
-			$i++;
-			continue;
-		}
-
+		
 		$row1 = explode(',',$row);
+		
+		if ($i == 2) {
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$row1[4],'usd_bid'=>$row1[4]));
+		}
 		
 		$sql = "SELECT * FROM historical_data WHERE `date` = '{$row1[0]}'";
 		$result = db_query_array($sql);
