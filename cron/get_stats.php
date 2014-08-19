@@ -89,7 +89,7 @@ if ($data1) {
 		}
 		
 		if ($i == $c) {
-			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$max_price,'usd_bid'=>$min_price));
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$row1[4],'usd_bid'=>$row1[4]));
 		}
 		
 		$i++;
