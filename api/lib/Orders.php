@@ -661,9 +661,9 @@ class Orders {
 		}
 		
 		if ($max_price > 0 && strtolower($currency1) == 'usd')
-			db_update('currencies',$CFG->btc_currency_id,array('usd_bid'=>$max_price));
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$max_price));
 		if ($min_price > 0 && strtolower($currency1) == 'usd')
-			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$min_price));
+			db_update('currencies',$CFG->btc_currency_id,array('usd_bid'=>$min_price));
 			
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders);
 	}
