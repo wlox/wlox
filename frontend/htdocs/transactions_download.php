@@ -17,15 +17,16 @@ $query = API::send();
 $transactions = $query['Transactions']['get']['results'][0];
 if ($transactions) {
 	$output = fopen('php://output', 'w');
-	fputcsv($output, array(' '.Lang::string('transactions-type').' ',' '.Lang::string('transactions-time').' ',' '.Lang::string('transactions-btc').' ',' '.Lang::string('transactions-fiat').' ',' '.Lang::string('transactions-price').' ',' '.Lang::string('transactions-fee').' '));
+	fputcsv($output, array(' '.Lang::string('transactions-type').' ',' '.Lang::string('transactions-time').' ',' '.Lang::string('transactions-btc').' ',' '.Lang::string('currency').' ',' '.Lang::string('transactions-fiat').' ',' '.Lang::string('transactions-price').' ',' '.Lang::string('transactions-fee').' '));
 	foreach ($transactions as $transaction) {
 		fputcsv($output,array(
 			' '.$transaction['type'].' ',
-			' '.date('M j, Y, H:i:a',strtotime($transaction['date']) + $CFG->timezone_offset).' ',
+			' '.date('M j, Y, H:i:a',strtotime($transaction['date'])).' UTC ',
 			' '.number_format($transaction['btc'],8).' ',
-			' '.$transaction['fa_symbol'].number_format($transaction['btc_net'] * $transaction['fiat_price'],2).' ',
-			' '.$transaction['fa_symbol'].number_format($transaction['fiat_price'],2).' ',
-			' '.$transaction['fa_symbol'].number_format($transaction['fee'] * $transaction['fiat_price'],2).' ',
+			' '.$transaction['currency'].' ',
+			' '.number_format($transaction['btc_net'] * $transaction['fiat_price'],2).' ',
+			' '.number_format($transaction['fiat_price'],2).' ',
+			' '.number_format($transaction['fee'] * $transaction['fiat_price'],2).' ',
 		));
 	}
 }
