@@ -276,6 +276,7 @@ class User {
 			$info['notify_login'] = 'Y';
 			$info['no_logins'] = 'Y';
 			$info['fee_schedule'] = $CFG->default_fee_schedule_id;
+			$info['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 			unset($info['terms']);
 			
 			$record_id = db_insert('site_users',$info);
