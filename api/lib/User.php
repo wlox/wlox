@@ -268,6 +268,9 @@ class User {
 
 		$new_id = self::getNewId();
 		if ($new_id > 0) {
+			$sql = 'SELECT id FROM fee_schedule ORDER BY from_usd ASC LIMIT 0,1';
+			$result = db_query_array($sql);
+			
 			$info['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 			$info['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
@@ -281,7 +284,7 @@ class User {
 			$info['notify_deposit_bank'] = 'Y';
 			$info['notify_login'] = 'Y';
 			$info['no_logins'] = 'Y';
-			$info['fee_schedule'] = $CFG->default_fee_schedule_id;
+			$info['fee_schedule'] = $result[0]['id'];
 			$info['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 			unset($info['terms']);
 			
