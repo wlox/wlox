@@ -51,6 +51,7 @@ if (!$CFG->bypass || ($CFG->bypass && $CFG->print)) {
 	$header->jsFile('js/jquery.swfupload.js');
 	$header->jsFile('ckeditor/ckeditor.js');
 	$header->jsFile('js/Ops.js');
+	$header->js('CKEDITOR.dtd.$removeEmpty[\'span\'] = false;');
 	$header->display();
 	$header->getJsGlobals();
 }
