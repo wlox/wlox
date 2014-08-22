@@ -30,11 +30,14 @@ class SiteEmail{
 	function contactForm($contact_info) {
 		global $CFG;
 		
-		$email = SiteEmail::getRecord('login-notify');
+		$email = SiteEmail::getRecord('contact');
 		$pais = SiteEmail::getCountry($contact_info['country']);
-		$contact_info = $pais['name'];
+		$contact_info['country'] = $pais['name'];
+
+		if (User::$info['id'] > 0)
+			$contact_info['user_id'] = User::$info['id'];
 		
-		return Email::send($contact_info['email'],$CFG->support_email,$email['title'],$CFG->form_email_from,false,$email['content'],$contact_info);
+		return Email::send($contact_info['email'],'contact@1btcxe.com',$email['title'],$CFG->form_email_from,false,$email['content'],$contact_info);
 	}
 }
 ?>
