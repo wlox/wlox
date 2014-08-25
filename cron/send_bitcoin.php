@@ -50,6 +50,7 @@ if ($result) {
 			db_update('site_users',$addresses[$row['send_address']],array('btc'=>$user_balances[$addresses[$row['send_address']]] + $row['amount']));
 			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
 			db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$addresses[$row['send_address']],'currency'=>$CFG->btc_currency_id,'amount'=>$row['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id));
+			$users[$row['site_user']] = bcadd($row['amount'],$users[$row['site_user']],8);
 			continue;
 		}
 		
