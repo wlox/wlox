@@ -30,6 +30,15 @@ class Encryption
         }
         return $plaintext;
     }
+    
+    public function hash($pass) {
+    	$blowfish_salt = bin2hex(openssl_random_pseudo_bytes(22));
+    	return crypt($pass, "$2a$12$".$blowfish_salt);
+    }
+    
+    public function verify_hash($pass,$hash) {
+    	return (crypt($pass, $hash) == $hash);
+    }
 }
 
 ?>
