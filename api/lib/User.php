@@ -14,7 +14,7 @@ class User {
 		if (!($session_id > 0) || !$CFG->session_active)
 			return false;
 	
-		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.pass,site_users.country,site_users.email, site_users.default_currency FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
+		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.country,site_users.email, site_users.default_currency FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
 		return $result[0];
 	}
 	
@@ -210,6 +210,7 @@ class User {
 		if (strlen($pass) < 8)
 			return false;
 		
+		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
 	
@@ -221,6 +222,7 @@ class User {
 		if (!$CFG->session_active || strlen($pass) < 8 || User::$info['no_logins'] != 'Y')
 			return false;
 		
+		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('pass'=>$pass));
 	}
 	
@@ -254,7 +256,8 @@ class User {
 		$new_id = self::getNewId();
 		$user['new_user'] = $new_id;
 		$user['new_password'] = self::randomPassword(12);
-		db_update('site_users',$id,array('user'=>$user['new_user'],'pass'=>$user['new_password'],'no_logins'=>'Y'));
+		$pass1 = Encryption::hash($user['new_password']);
+		db_update('site_users',$id,array('user'=>$user['new_user'],'pass'=>$pass1,'no_logins'=>'Y'));
 		
 		$email = SiteEmail::getRecord('forgot');
 		Email::send($CFG->form_email,$user['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user);
@@ -271,12 +274,13 @@ class User {
 			$sql = 'SELECT id FROM fee_schedule ORDER BY from_usd ASC LIMIT 0,1';
 			$result = db_query_array($sql);
 			
+			$pass1 = self::randomPassword(12);
 			$info['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 			$info['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 			$info['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
 			$info['user'] = $new_id;
-			$info['pass'] = self::randomPassword(12);
+			$info['pass'] = Encryption::hash($pass1);
 			$info['date'] = date('Y-m-d H:i:s');
 			$info['confirm_withdrawal_email_btc'] = 'Y';
 			$info['confirm_withdrawal_email_bank'] = 'Y';
@@ -302,6 +306,7 @@ class User {
 			$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
 			db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>$record_id,'date'=>date('Y-m-d H:i:s')));
 		
+			$info['pass'] = $pass1;
 			$email = SiteEmail::getRecord('register');
 			Email::send($CFG->form_email,$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
 		
@@ -415,6 +420,7 @@ class User {
 		if (strlen($update['pass']) < 8 || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
 
+		$update['pass'] = Encryption::hash($update['pass']);
 		return db_update('site_users',User::$info['id'],$update);
 	}
 	
