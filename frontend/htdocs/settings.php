@@ -31,13 +31,27 @@ if ($authcode1) {
 		Errors::add(Lang::string('settings-request-expired'));
 }
 
+if (!$_REQUEST['settings']['pass']) {
+	unset($_REQUEST['settings']['pass']);
+	unset($_REQUEST['settings']['pass2']);
+	unset($_REQUEST['verify_fields']['pass']);
+	unset($_REQUEST['verify_fields']['pass2']);
+}
+else {
+	$_REQUEST['verify_fields']['pass'] = 'password';
+	$_REQUEST['verify_fields']['pass2'] = 'password';
+}
+
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->get($query['User']['getInfo']['results'][0]);
-$personal->info['pass'] = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]", "",$personal->info['pass']);
 $personal->info['first_name'] = ereg_replace("/[^\da-z  ]/i", "",$personal->info['first_name']);
 $personal->info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$personal->info['last_name']);
 $personal->info['country'] = ereg_replace("[^0-9]", "",$personal->info['country']);
 $personal->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$personal->info['email']);
+
+if (!$personal->info['email'])
+	unset($personal->info['email']);
+
 $personal->verify();
 	
 if ($_REQUEST['submitted'] && !$token1 && !is_array($personal->errors)) {
@@ -316,11 +330,10 @@ include 'includes/head.php';
                 </h3>
                 <div class="clear"></div>
                 <?
-                $personal->hiddenInput('user',false,User::$info['user']);
-                $personal->passwordInput('pass',Lang::string('settings-pass'),true);
-                $personal->passwordInput('pass2',Lang::string('settings-pass-confirm'),true,false,false,false,false,false,'pass');
-                $personal->textInput('first_name',Lang::string('settings-first-name'));
-                $personal->textInput('last_name',Lang::string('settings-last-name'));
+                $personal->passwordInput('pass',Lang::string('settings-pass'));
+                $personal->passwordInput('pass2',Lang::string('settings-pass-confirm'),false,false,false,false,false,false,'pass');
+                $personal->textInput('first_name',Lang::string('settings-first-name'),true);
+                $personal->textInput('last_name',Lang::string('settings-last-name'),true);
                 $personal->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $personal->textInput('email',Lang::string('settings-email'),'email');
                 $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$CFG->currencies,false,array('currency'));
