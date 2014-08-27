@@ -7,9 +7,13 @@ $pass1 = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]","",$_REQUEST['pass']);
 if (!$user1 || !$pass1)
 	$invalid_login = 1;
 
-$result = db_query_array("SELECT * FROM site_users WHERE user = '$user1' AND pass = '$pass1'");
+$result = db_query_array("SELECT * FROM site_users WHERE user = '$user1'");
 if (!$result)
 	$invalid_login = 1;
+elseif ($result) {
+	$invalid_login = (!Encryption::verify_hash($pass1,$result[0]['pass']));
+}
+
 
 if ($invalid_login) {
 	echo json_encode(array('error'=>'invalid-login'));
