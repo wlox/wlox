@@ -272,9 +272,11 @@ class User {
 			return false;
 		
 		$info['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
-		if (self::userExists($info['email'])) {
+		$exist_id = self::userExists($info['email']);
+		if ($exist_id > 0) {
+			$user_info = DB::getRecord('site_users',$exist_id,0,1);
 			$email = SiteEmail::getRecord('register-existing');
-			Email::send($CFG->form_email,$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+			Email::send($CFG->form_email,$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user_info);
 			return false;
 		}
 
