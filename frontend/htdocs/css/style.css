@@ -847,6 +847,7 @@ a.button_slider:hover {
 }
 a.forgot{color:#FFF;}
 a.forgot:hover{color:#ddd;}
+.captcha_image{border: 1px solid #AAAAAA;margin-bottom: -10px;margin-top: 5px;}
 
 .portfolio_sidebar_widget .fresh_projects_list section .display .small-group div.small .info h1{
 	background: none;

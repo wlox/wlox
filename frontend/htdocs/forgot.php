@@ -5,18 +5,19 @@ include '../cfg/cfg.php';
 $page_title = Lang::string('login-forgot');
 $email1 = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$_REQUEST['forgot']['email']);
 
-if ($_REQUEST['forgot']) {
-	API::add('User','userExists',array($email1));
-	$query = API::send();
-	
-	if ($query['User']['userExists']['results'][0] > 0) {
-		API::add('User','resetUser',array($query['User']['userExists']['results'][0]));
-		API::send();
+if ($_REQUEST['forgot'] && $email1) {
+	include_once 'securimage/securimage.php';
+	$securimage = new Securimage();
+
+	if ($securimage->check($_REQUEST['forgot']['captcha'])) {
+		API::add('User','resetUser',array($email1));
+		$query = API::send();
+		print_ar($query);
 		Messages::$messages = array();
 		Messages::add(Lang::string('login-password-sent-message'));
 	}
 	else {
-		Errors::add(Lang::string('login-account-not-found'));
+		Errors::add(Lang::string($CFG->capcha_error));
 	}
 }
 
@@ -59,9 +60,19 @@ include 'includes/head.php';
 	    		<div class="loginform_inputs">
 		    		<div class="input_contain">
 		    			<i class="fa fa-user"></i>
-		    			<input type="text" class="login" name="forgot[email]" value="<?= $email1 ?>">
+		    			<input type="text" class="login" name="forgot[email]" value="<?= $email1 ?>" />
 		    		</div>
 	    		</div>
+	    		<div>
+	    			<div><?= Lang::string('settings-capcha') ?></div> 
+	    			<img class="captcha_image" src="securimage/securimage_show.php" />
+	    		</div>
+	    		<div class="loginform_inputs">
+	    			<div class="input_contain">
+	    				<i class="fa fa-arrow-circle-o-up"></i>
+		    			<input type="text" class="login" name="forgot[captcha]" value="" />
+		    		</div>
+		    	</div>
 	    		<input type="submit" name="submit" value="<?= Lang::string('login-forgot-send-new') ?>" class="but_user" />
 	    	</div>
     	</form>

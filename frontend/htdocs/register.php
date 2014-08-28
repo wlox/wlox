@@ -13,14 +13,6 @@ $register->verify();
 if ($_REQUEST['register'] && !$register->info['terms'])
 	$register->errors[] = Lang::string('settings-terms-error');
 
-if ($_REQUEST['register']) {
-	API::add('User','userExists',array($register->info['email']));
-	$query = API::send();
-}
-	
-if ($query['User']['userExists']['results'][0])
-	$email_exists = Lang::string('settings-unique-error');
-
 if ($_REQUEST['register'] && (is_array($register->errors) || $email_exists)) {
 	$errors = array();
 	
