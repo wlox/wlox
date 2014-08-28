@@ -241,26 +241,28 @@ class User {
 			return false;
 	}
 	
-	function resetUser($id) {
+	function resetUser($email) {
 		global $CFG;
 		
-		$id = preg_replace("/[^0-9]/", "",$id);
+		$email = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$email);
 		
+		if (!$email)
+			return false;
+		
+		$id = self::userExists($email);
 		if (!($id > 0))
 			return false;
 		
 		$user = DB::getRecord('site_users',$id,0,1);
-		if (!$user)
-			return false;
-		
 		$new_id = self::getNewId();
 		$user['new_user'] = $new_id;
 		$user['new_password'] = self::randomPassword(12);
 		$pass1 = Encryption::hash($user['new_password']);
+
 		db_update('site_users',$id,array('user'=>$user['new_user'],'pass'=>$pass1,'no_logins'=>'Y'));
 		
-		$email = SiteEmail::getRecord('forgot');
-		Email::send($CFG->form_email,$user['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user);
+		$email1 = SiteEmail::getRecord('forgot');
+		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
 	}
 	
 	function registerNew($info) {
@@ -268,6 +270,13 @@ class User {
 		
 		if (!is_array($info))
 			return false;
+		
+		$info['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
+		if (self::userExists($info['email'])) {
+			$email = SiteEmail::getRecord('register-existing');
+			Email::send($CFG->form_email,$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+			return false;
+		}
 
 		$new_id = self::getNewId();
 		if ($new_id > 0) {
@@ -278,7 +287,6 @@ class User {
 			$info['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 			$info['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
-			$info['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
 			$info['user'] = $new_id;
 			$info['pass'] = Encryption::hash($pass1);
 			$info['date'] = date('Y-m-d H:i:s');
