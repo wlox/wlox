@@ -1,6 +1,10 @@
 <?php
 include '../cfg/cfg.php';
 
+if ($_REQUEST['contact']) {
+	$_REQUEST['is_caco'] = (!$_REQUEST['is_caco']) ? array('contact'=>1) : $_REQUEST['is_caco'];
+}
+
 API::add('Content','getRecord',array('contact'));
 API::add('Content','getRecord',array('contact-small'));
 API::add('User','getCountries');

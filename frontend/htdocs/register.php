@@ -1,6 +1,10 @@
 <?php
 include '../cfg/cfg.php';
 
+if ($_REQUEST['register']) {
+	$_REQUEST['is_caco'] = (!$_REQUEST['is_caco']) ? array('register'=>1) : $_REQUEST['is_caco'];
+}
+
 $register = new Form('register',false,false,'form3');
 //$register->get(User::$info['id']);
 $register->info['first_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$register->info['first_name']);
