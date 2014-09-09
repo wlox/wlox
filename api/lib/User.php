@@ -150,9 +150,9 @@ class User {
 			return false;
 		
 		$authy_id = ($authy_id > 0) ? $authy_id : User::$info['authy_id'];
-		$response = shell_exec('curl -i "https://api.authy.com/protected/json/sms/'.$authy_id.'?force=true&api_key='.$CFG->authy_api_key.'"');
+		$response = shell_exec('curl "https://api.authy.com/protected/json/sms/'.$authy_id.'?force=true&api_key='.$CFG->authy_api_key.'"');
 		$response1 = json_decode($response,true);
-		
+
 		return $response1;
 	
 		/*
@@ -355,7 +355,7 @@ class User {
 		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')
 			return false;
 		
-		db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
+		return db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
 	}
 	
 	function enableGoogle2fa($cell,$country_code) {

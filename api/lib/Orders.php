@@ -313,6 +313,10 @@ class Orders {
 			$currency1 = strtolower($edit_currency['currency']);
 		}
 		
+		if ($market_price) {
+			$price = ($buy) ? self::getCurrentAsk($currency1) : self::getCurrentBid($currency1);
+		}
+
 		if (!$external_transaction)
 			db_start_transaction();
 		
