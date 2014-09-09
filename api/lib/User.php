@@ -16,7 +16,7 @@ class User {
 	
 		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.country,site_users.email, site_users.default_currency FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
 		return $result[0];
-	}
+
 	
 	function logOut($session_id=false) {
 		if (!($session_id > 0))
@@ -302,7 +302,7 @@ class User {
 			$info['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 			unset($info['terms']);
 
-			if (time() < strtotime('2014-09-06 00:00:00')) {
+			if (time() < strtotime('2014-09-19 11:00:00')) {
 				$default_currency = DB::getRecord('currencies',$info['default_currency'],0,1);
 				$btc_currency = DB::getRecord('currencies',$CFG->btc_currency_id,0,1);
 				$info[strtolower($default_currency['currency'])] =  50000 / $default_currency['usd_ask'];
