@@ -18,6 +18,8 @@
 .text p{margin-bottom: 10px;}
 .text ul{margin-left: 20px;}
 .text ul li {list-style-type: disc;}
+.text .bigger{font-size:18px;color:#00BDBD; font-weight:bold;font-weight: bold;margin: 10px 0;display: inline-block;}
+.text.dotted{border: 3px dashed #FF4949;padding: 10px 15px;margin-bottom: 15px;	}
 
 /*------------------*/
 /*	SITE STRUCTURE
@@ -3530,6 +3532,9 @@ h3 .highlight{
 .trades td .oco{color:#727272;font-size: 11px;}
 .trades td .fa-exchange{color:#727272;font-size: 10px;margin-left: 2px;}
 .trades td.inactive{background-color:#FFF;}
+.trades td.api-key{font-size: 16px;color:#00BDBD;font-weight: bold;}
+.trades td.api-label{text-decoration: underline;color:#727272;font-weight: 700;}
+.trades td.api-label.first{color:#FFF;background-color:#aaaaaa;}
 ul.list_empty {
 	float: left;
 	padding: 0px;
