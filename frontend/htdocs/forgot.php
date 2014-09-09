@@ -12,7 +12,7 @@ if ($_REQUEST['forgot'] && $email1) {
 	if ($securimage->check($_REQUEST['forgot']['captcha'])) {
 		API::add('User','resetUser',array($email1));
 		$query = API::send();
-		print_ar($query);
+
 		Messages::$messages = array();
 		Messages::add(Lang::string('login-password-sent-message'));
 	}
