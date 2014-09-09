@@ -150,7 +150,7 @@ class User {
 			return false;
 		
 		$authy_id = ($authy_id > 0) ? $authy_id : User::$info['authy_id'];
-		$response = shell_exec('curl https://api.authy.com/protected/json/sms/'.$authy_id.'?api_key='.$CFG->authy_api_key);
+		$response = shell_exec('curl -i "https://api.authy.com/protected/json/sms/'.$authy_id.'?force=true&api_key='.$CFG->authy_api_key.'"');
 		$response1 = json_decode($response,true);
 		
 		return $response1;
