@@ -71,6 +71,7 @@ $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
 
 if ($_REQUEST['buy']) {
 	$buy_market_price1 = ereg_replace("[^0-9]", "",$_REQUEST['buy_market_price']);
+	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
 	$buy_stop = ereg_replace("[^0-9]", "",$_REQUEST['buy_stop']);
 	$buy_stop_price1 = ($buy_stop) ? ereg_replace("[^0-9.]", "",$_REQUEST['buy_stop_price']) : false;
 	$buy_limit = ereg_replace("[^0-9]", "",$_REQUEST['buy_limit']);
@@ -125,6 +126,7 @@ if ($_REQUEST['buy']) {
 
 if ($_REQUEST['sell']) {
 	$sell_market_price1 = ereg_replace("[^0-9]", "",$_REQUEST['sell_market_price']);
+	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
 	$sell_stop = ereg_replace("[^0-9]", "",$_REQUEST['sell_stop']);
 	$sell_stop_price1 = ($sell_stop) ? ereg_replace("[^0-9.]", "",$_REQUEST['sell_stop_price']) : false;
 	$sell_limit = ereg_replace("[^0-9]", "",$_REQUEST['sell_limit']);
