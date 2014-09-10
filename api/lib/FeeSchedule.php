@@ -10,11 +10,17 @@ class FeeSchedule {
 		return db_query_array($sql);
 	}
 	
-	function getRecord($braket_id=false) {
+	function getRecord($braket_id=false,$user=false) {
 		$braket_id = preg_replace("/[^0-9]/", "",$braket_id);
 		
-		if (!($braket_id > 0))
+		if ($user && !$CFG->session_active)
 			return false;
+		
+		if (!($braket_id > 0) && !$user)
+			return false;
+		
+		if ($user)
+			$braket_id = User::$info['fee_schedule'];
 		
 		return DB::getRecord('fee_schedule',$braket_id,0,1);
 	}
