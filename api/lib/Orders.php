@@ -3,6 +3,9 @@ class Orders {
 	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false) {
 		global $CFG;
 		
+		if ($user && !(User::$info['id'] > 0))
+			return false;
+		
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		$page = preg_replace("/[^0-9]/", "",$page);
