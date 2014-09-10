@@ -5,7 +5,7 @@ class BitcoinAddresses{
 	function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false) {
 		global $CFG;
 		
-		if (!$CFG->session_active)
+		if (!$CFG->session_active || !(User::$info['id'] > 0))
 			return false;
 		
 		$page = preg_replace("/[^0-9]/", "",$page);
@@ -42,7 +42,7 @@ class BitcoinAddresses{
 			return $result[0]['total'];
 	}
 	
-	function getNew() {
+	function getNew($return_address=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -58,7 +58,7 @@ class BitcoinAddresses{
 		$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
 		$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
 		
-		return $new_id;
+		return ($return_address) ? $new_address : $new_id;
 	}
 	
 	function getAddress($address) {

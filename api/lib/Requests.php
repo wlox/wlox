@@ -1,6 +1,6 @@
 <?php
 class Requests{
-	function get($count=false,$page=false,$per_page=false,$withdrawals=false) {
+	function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -8,10 +8,12 @@ class Requests{
 		
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
+		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$type = ($withdrawals) ? $CFG->request_withdrawal_id : $CFG->request_deposit_id;
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$type = ($withdrawals) ? $CFG->request_withdrawal_id : $CFG->request_deposit_id;
 		
 		if (!$count)
 			$sql = "SELECT requests.*, request_descriptions.name_{$CFG->language} AS description, request_status.name_{$CFG->language} AS status, currencies.fa_symbol AS fa_symbol FROM requests LEFT JOIN request_descriptions ON (request_descriptions.id = requests.description) LEFT JOIN request_status ON (request_status.id = requests.request_status) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE 1 ";
@@ -22,6 +24,15 @@ class Requests{
 		
 		if ($type > 0)
 			$sql .= " AND requests.request_type = $type ";
+		
+		if ($currency)
+			$sql .= " AND requests.currency = {$currency_info['id']} ";
+		
+		if ($status == 'pending')
+			$sql .= " AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ";
+		
+		if ($status == 'completed')
+			$sql .= " AND requests.request_status = {$CFG->request_completed_id} ";
 		
 		if ($per_page > 0 && !$count)
 			$sql .= " ORDER BY requests.date DESC LIMIT $r1,$per_page ";
