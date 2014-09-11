@@ -27,15 +27,15 @@ elseif ($action1 == 'orders') {
 	
 	if ($bids) {
 		foreach ($bids as $bid) {
-			$min_bid = (!$min_bid || $bid['btc_price'] < $min_bid);
-			$max_bid = (!$max_bid || $bid['btc_price'] > $max_bid);
+			$min_bid = (!$min_bid || $bid['btc_price'] < $min_bid) ? $bid['btc_price'] : $min_bid;
+			$max_bid = (!$max_bid || $bid['btc_price'] > $max_bid) ? $bid['btc_price'] : $max_bid;
 		}
 	
 	}
 	if ($asks) {
 		foreach ($asks as $ask) {
-			$min_ask = (!$min_ask || $ask['btc_price'] < $min_ask);
-			$max_ask = (!$max_ask || $ask['btc_price'] > $max_ask);
+			$min_ask = (!$min_ask || $ask['btc_price'] < $min_ask) ? $ask['btc_price'] : $min_ask;
+			$max_ask = (!$max_ask || $ask['btc_price'] > $max_ask) ? $ask['btc_price'] : $max_ask;
 		}
 	}
 	
@@ -55,6 +55,9 @@ elseif ($action1 == 'orders') {
 			$vars[] = '['.$bid['btc_price'].','.$cum_btc.']';
 		}
 		
+		if ($max_bid && $c_asks > 1)
+			$vars[] = '['.($max_bid - $lower_range).','.$cum_btc.']';
+		
 	}
 	if ($asks) {
 		$cum_btc = 0;
@@ -65,6 +68,9 @@ elseif ($action1 == 'orders') {
 			$cum_btc += $ask['btc'];
 			$vars1[] = '['.$ask['btc_price'].','.$cum_btc.']';
 		}
+		
+		if ($min_ask && $c_bids > 1)
+			$vars1[] = '['.($min_ask + $lower_range).','.$cum_btc.']';
 	}
 	echo '{"bids": ['.implode(',', array_reverse($vars)).'],"asks": ['.implode(',', $vars1).']}';
 }
