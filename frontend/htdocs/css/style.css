@@ -3595,6 +3595,24 @@ ul.list_empty.form_buttons {
 	color:#444;
 	border: 1px solid #444;
 }
+
+.filters input[type=text]{
+	font-family: 'Open Sans', sans-serif;
+	border: 1px solid #aaa;
+    padding: 5px;
+	background-color:#FFF;
+	color:#727272;
+	height: 21px;
+}
+.filters input[type=text]:hover{
+	color:#444;
+	border: 1px solid #444;
+}
+.filters input[type=text]:focus{
+	color:#444;
+	border: 1px solid #444;
+}
+
 #filters_area{
 	position:relative;
 }

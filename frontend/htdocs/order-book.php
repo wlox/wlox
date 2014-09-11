@@ -13,12 +13,15 @@ $currency1 = $_SESSION['currency'];
 $currency_symbol = strtoupper($currency1);
 $currency_info = $CFG->currencies[$currency_symbol];
 
+
 API::add('Orders','get',array(false,false,false,$currency1,false,false,1,false,false,1));
 API::add('Orders','get',array(false,false,false,$currency1,false,false,false,false,1,1));
+API::add('Transactions','get',array(false,false,1,$currency1));
 $query = API::send();
 
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
+$last_transaction = $query['Transactions']['get']['results'][0][0];
 
 include 'includes/head.php';
 ?>
@@ -40,6 +43,7 @@ include 'includes/head.php';
 			</div>
 		</div>
 		<div class="mar_top3"></div>
+		<div class="clear"></div>
 		<div class="filters">
 			<form method="GET" action="order-book.php">
 				<ul class="list_empty">
@@ -55,8 +59,13 @@ include 'includes/head.php';
 							?>
 						</select>
 					</li>
+					<li>
+						<label for="last_price"><?= Lang::string('home-stats-last-price') ?></label>
+						<input type="text" id="last_price" value="<?= number_format($last_transaction['btc_price'],2) ?>" disabled="disabled" />
+					</li>
 				</ul>
 			</form>
+			<div class="clear"></div>
 		</div>
 		<div class="one_half">
 			<h3><?= Lang::string('orders-bid') ?></h3>

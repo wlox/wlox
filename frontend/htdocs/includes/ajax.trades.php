@@ -17,6 +17,9 @@ elseif (!$_REQUEST['get10']) {
 	$limit = false;
 }
 
+if ($_REQUEST['last_price'])
+	API::add('Transactions','get',array(false,false,1,$currency1));
+
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,1));
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,false,false,1));
 $query = API::send();
@@ -28,5 +31,8 @@ if (!$notrades) {
 	$return['transactions'][] = $query['Transactions']['get']['results'][0];
 	$return['btc_traded'] = $query['Stats']['getBTCTraded']['results'][0];
 }
+
+if ($_REQUEST['last_price'])
+	$return['last_price'] = $query['Transactions']['get']['results'][0][0]['btc_price'];
 
 echo json_encode($return);

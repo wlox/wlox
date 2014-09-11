@@ -269,7 +269,7 @@ function updateTransactions() {
 	var update = setInterval(function(){
 		while (!ajax_active) {
 			var currency = (notrades) ? (($('#user_fee').length > 0) ? $('#buy_currency').val() : $('#graph_orders_currency').val()) : $('#graph_price_history_currency').val();
-			$.getJSON("includes/ajax.trades.php?currency="+currency+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '')+((get_10) ? '&get10=1' : ''),function(json_data) {
+			$.getJSON("includes/ajax.trades.php?currency="+currency+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '&last_price=1')+((get_10) ? '&get10=1' : ''),function(json_data) {
 				if (!notrades && json_data.transactions[0] != null) {
 					var i = 0;
 					$.each(json_data.transactions[0],function(i) {
@@ -282,9 +282,9 @@ function updateTransactions() {
 								var open_price = parseFloat($('#stats_open').html().replace(',',''));
 								var change_perc = (current_price - open_price).toFixed(2);
 								var change_abs = Math.abs(change_perc);
-								$('#stats_last_price').html((current_price).toFixed(2));
+								$('#stats_last_price').html((current_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 								$('#stats_daily_change_abs').html(change_abs);
-								$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2));
+								$('#stats_daily_change_perc').html(((change_abs/current_price) * 100).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 								
 								if (change_perc > 0) 
 									$('#up_or_down').replaceWith('<i id="up_or_down" class="fa fa-caret-up" style="color:#60FF51;"></i>');
@@ -574,6 +574,10 @@ function updateTransactions() {
 				}
 				else {
 					$('#no_asks').css('display','');
+				}
+				
+				if (parseFloat(json_data.last_price) && $('#last_price').length > 0) {
+					$('#last_price').val(parseFloat(json_data.last_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 				}
 				
 				var current_price = ($('#asks_list .order_price').length > 0) ? parseFloat($('#asks_list .order_price:first').html().replace(',','')) : 0;
