@@ -38,7 +38,7 @@ class User {
 		$commands['commands'] = json_encode($commands);
 		
 		openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = urlencode($signature);
+		$commands['signature'] = bin2hex($signature);
 		
 		$ch = curl_init($CFG->auth_verify_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
@@ -88,7 +88,7 @@ class User {
 		$commands['commands'] = json_encode($commands);
 		
 		openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = $signature;
+		$commands['signature'] = bin2hex($signature);
 	
 		$ch = curl_init($CFG->auth_verify_token_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);

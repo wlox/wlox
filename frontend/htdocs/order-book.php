@@ -61,7 +61,7 @@ include 'includes/head.php';
 					</li>
 					<li>
 						<label for="last_price"><?= Lang::string('home-stats-last-price') ?></label>
-						<input type="text" id="last_price" value="<?= number_format($last_transaction['btc_price'],2) ?>" disabled="disabled" />
+						<input type="text" id="last_price" value="<?= $last_transaction['fa_symbol'].number_format($last_transaction['btc_price'],2) ?>" disabled="disabled" />
 					</li>
 				</ul>
 			</form>

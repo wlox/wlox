@@ -29,12 +29,12 @@ class API{
 		$commands['lang'] = $CFG->language;
 		$commands['commands'] = json_encode(API::$commands);
 		$commands['token'] = API::$token;
-		$commands['settings_change_id'] = urlencode(API::$settings_change_id);
+		$commands['settings_change_id'] = bin2hex(API::$settings_change_id);
 		$commands['request_id'] = API::$request_id;
 		$commands['ip'] = $remote_ip_parts[0];
 
 		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = urlencode($signature);
+		$commands['signature'] = bin2hex($signature);
 		
 		$ch = curl_init($CFG->api_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);

@@ -34,5 +34,6 @@ if (!$notrades) {
 
 if ($_REQUEST['last_price'])
 	$return['last_price'] = $query['Transactions']['get']['results'][0][0]['btc_price'];
+	$return['fa_symbol'] = $query['Transactions']['get']['results'][0][0]['fa_symbol'];
 
 echo json_encode($return);

@@ -303,7 +303,7 @@ function updateTransactions() {
 							$('#stats_max').html(parseFloat(this.btc_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 						
 						var active_transactions = $('#transactions_list tr').length;
-						if (active_transactions >= 6)
+						if (active_transactions >= 5)
 							$('#transactions_list tr:last').remove();
 						
 						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+this.btc_price+'</td></tr>').insertAfter(('#transactions_list tr:first'));
@@ -577,7 +577,7 @@ function updateTransactions() {
 				}
 				
 				if (parseFloat(json_data.last_price) && $('#last_price').length > 0) {
-					$('#last_price').val(parseFloat(json_data.last_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+					$('#last_price').val(json_data.fa_symbol + parseFloat(json_data.last_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 				}
 				
 				var current_price = ($('#asks_list .order_price').length > 0) ? parseFloat($('#asks_list .order_price:first').html().replace(',','')) : 0;
