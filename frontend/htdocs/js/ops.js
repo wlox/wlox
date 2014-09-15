@@ -306,7 +306,7 @@ function updateTransactions() {
 						if (active_transactions >= 5)
 							$('#transactions_list tr:last').remove();
 						
-						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+this.btc_price+'</td></tr>').insertAfter(('#transactions_list tr:first'));
+						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+parseFloat(this.btc_price).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")+'</td></tr>').insertAfter(('#transactions_list tr:first'));
 						timeSince($(elem).find('.time_since'));
 						$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 						$('#stats_traded').html((json_data.btc_traded).toFixed(2));
