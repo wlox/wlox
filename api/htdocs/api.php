@@ -8,7 +8,7 @@ $system_classes[] = 'DB';
 include '../cfg/cfg.php';
 
 $session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
-$signature1 = urldecode($_POST['signature']);
+$signature1 = hex2bin($_POST['signature']);
 $nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
 $token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $settings_change_id1 = $_REQUEST['settings_change_id'];
@@ -103,7 +103,7 @@ elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
 
 // email 2fa for settings changes
 if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
-	$request_id = Encryption::decrypt(urldecode($settings_change_id1));
+	$request_id = Encryption::decrypt(hex2bin($settings_change_id1));
 	if ($request_id > 0) {
 		$change_request = DB::getRecord('change_settings',$request_id,0,1);
 		if ($change_request) {
