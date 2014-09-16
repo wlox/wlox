@@ -32,6 +32,7 @@ if ($delete_id1 > 0) {
 $currency1 = ($_REQUEST['currency'] != 'All') ? $_REQUEST['currency'] : false;
 $order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
 $trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
+$id1 = ereg_replace("[^0-9]", "",$_REQUEST['id']);
 $bypass = $_REQUEST['bypass'];
 
 API::add('Orders','get',array(false,false,false,$currency1,1,false,1,$order_by1,false,1));
@@ -119,6 +120,7 @@ if (!$bypass) {
 	        			<? 
 	        			if ($bids) {
 							foreach ($bids as $bid) {
+								$blink = ($bid['id'] == $id1) ? 'blink' : '';
 								$double = 0;
 								if ($bid['market_price'] == 'Y')
 									$type = '<div class="identify market_order">M</div>';
@@ -132,7 +134,7 @@ if (!$bypass) {
 								}
 								
 								echo '
-						<tr id="bid_'.$bid['id'].'" class="bid_tr">
+						<tr id="bid_'.$bid['id'].'" class="bid_tr '.$blink.'">
 							<td>'.$type.'</td>
 							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
@@ -170,6 +172,7 @@ if (!$bypass) {
 	        			<? 
 	        			if ($asks) {
 							foreach ($asks as $ask) {
+								$blink = ($ask['id'] == $id1) ? 'blink' : '';
 								$double = 0;
 								if ($ask['market_price'] == 'Y')
 									$type = '<div class="identify market_order">M</div>';
@@ -183,7 +186,7 @@ if (!$bypass) {
 								}
 								
 								echo '
-						<tr id="ask_'.$ask['id'].'" class="ask_tr">
+						<tr id="ask_'.$ask['id'].'" class="ask_tr '.$blink.'">
 							<td>'.$type.'</td>
 							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>

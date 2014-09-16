@@ -3535,6 +3535,7 @@ h3 .highlight{
 .trades td.api-key{font-size: 16px;color:#00BDBD;font-weight: bold;}
 .trades td.api-label{text-decoration: underline;color:#727272;font-weight: 700;}
 .trades td.api-label.first{color:#FFF;background-color:#aaaaaa;}
+.trades tr.blink td{background-color:#A2EEEE;}
 ul.list_empty {
 	float: left;
 	padding: 0px;

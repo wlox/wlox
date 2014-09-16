@@ -281,7 +281,7 @@ else
         			<? 
         			if ($bids) {
 						foreach ($bids as $bid) {
-							$mine = (User::$info['id'] == $bid['site_user']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
+							$mine = ($bid['mine']) ? '<a class="fa fa-user" href="open-orders.php?id='.$bid['id'].'" title="'.Lang::string('home-your-order').'"></a>' : '';
 							echo '
 					<tr id="bid_'.$bid['id'].'" class="bid_tr">
 						<td>'.$mine.'<span class="order_amount">'.number_format($bid['btc'],8).'</span> BTC<input type="hidden" id="order_id" value="'.$bid['id'].'" /></td>
@@ -303,7 +303,7 @@ else
         			<? 
         			if ($asks) {
 						foreach ($asks as $ask) {
-							$mine = (User::$info['id'] == $ask['site_user']) ? '<a class="fa fa-user" href="javascript:return false;" title="'.Lang::string('home-your-order').'"></a>' : '';
+							$mine = ($ask['mine']) ? '<a class="fa fa-user" href="open-orders.php?id='.$ask['id'].'" title="'.Lang::string('home-your-order').'"></a>' : '';
 							echo '
 					<tr id="ask_'.$ask['id'].'" class="ask_tr">
 						<td>'.$mine.'<span class="order_amount">'.number_format($ask['btc'],8).'</span> BTC<input type="hidden" id="order_id" value="'.$ask['id'].'" /></td>
