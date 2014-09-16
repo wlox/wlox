@@ -86,7 +86,7 @@ class Orders {
 	
 	function getCurrentBid($currency,$currency_id=false,$absolute=false) {
 		global $CFG;
-		$absolute = true;
+
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$usd_info = $CFG->currencies['USD'];
@@ -95,7 +95,7 @@ class Orders {
 		
 		$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " - ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_bid} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price DESC LIMIT 0,1";
 		$result = db_query_array($sql);
-		
+
 		if (!$result) {
 			$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " + ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_ask} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price DESC LIMIT 0,1";
 			$result = db_query_array($sql);
@@ -116,7 +116,7 @@ class Orders {
 	
 	function getCurrentAsk($currency,$currency_id=false,$absolute=false) {
 		global $CFG;
-		$absolute = true;
+
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$usd_info = $CFG->currencies['USD'];
