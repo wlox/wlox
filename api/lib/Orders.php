@@ -31,7 +31,7 @@ class Orders {
 		//$btc_price = ($currency && !$user && $CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))),2) AS btc_price, " : false;
 		
 		if (!$count)
-			$sql = "SELECT orders.*, $btc_price order_types.name_{$CFG->language} AS type, currencies.currency AS currency, (currencies.$usd_field * orders.fiat) AS usd_amount, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol, IF(".$user_id." = orders.site_user ".(($currency && $CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : '').",1,0) AS mine, currencies.currency AS currency_abbr FROM orders ";
+			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." $btc_price order_types.name_{$CFG->language} AS type, currencies.currency AS currency, (currencies.$usd_field * orders.fiat) AS usd_amount, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol, ".(!$user ? 'SUM(' : '')."IF(".$user_id." = orders.site_user ".(($currency && $CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : '').",1,0)".(!$user ? ')' : '')." AS mine, currencies.currency AS currency_abbr FROM orders ";
 		else
 			$sql = "SELECT COUNT(orders.id) AS total FROM orders ";
 			
@@ -52,6 +52,9 @@ class Orders {
 		
 		if ($currency && ($user > 0 || !$CFG->cross_currency_trades))
 			$sql .= " AND orders.currency = {$currency_info['id']} ";
+		
+		if (!$user)
+			$sql .= ' GROUP BY fiat_price ';
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
