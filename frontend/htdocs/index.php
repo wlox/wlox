@@ -259,7 +259,7 @@ else
 						foreach ($transactions as $transaction) {
 							echo '
 					<tr id="order_'.$transaction['id'].'">
-						<td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'.$transaction['time_since'].'" /></td>
+						<td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'.strtotime($transaction['date']).'" /></td>
 						<td>'.number_format($transaction['btc'],8).' BTC</td>
 						<td>'.$currency_info['fa_symbol'].number_format($transaction['btc_price'],2).'</td>
 					</tr>';
@@ -285,7 +285,7 @@ else
 							echo '
 					<tr id="bid_'.$bid['id'].'" class="bid_tr">
 						<td>'.$mine.'<span class="order_amount">'.number_format($bid['btc'],8).'</span> BTC<input type="hidden" id="order_id" value="'.$bid['id'].'" /></td>
-						<td>'.$currency_info['fa_symbol'].'<span class="order_price">'.number_format($bid['btc_price'],2).'</span></td>
+						<td>'.$currency_info['fa_symbol'].'<span class="order_price">'.number_format($bid['btc_price'],2).'</span> '.(($bid['btc_price'] != $bid['fiat_price']) ? '<a title="'.str_replace('[currency]',$bid['currency_abbr'],Lang::string('orders-converted-from')).'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 					</tr>';
 						}
 					}
@@ -307,7 +307,7 @@ else
 							echo '
 					<tr id="ask_'.$ask['id'].'" class="ask_tr">
 						<td>'.$mine.'<span class="order_amount">'.number_format($ask['btc'],8).'</span> BTC<input type="hidden" id="order_id" value="'.$ask['id'].'" /></td>
-						<td>'.$currency_info['fa_symbol'].'<span class="order_price">'.number_format($ask['btc_price'],2).'</span></td>
+						<td>'.$currency_info['fa_symbol'].'<span class="order_price">'.number_format($ask['btc_price'],2).'</span> '.(($ask['btc_price'] != $ask['fiat_price']) ? '<a title="'.str_replace('[currency]',$ask['currency_abbr'],Lang::string('orders-converted-from')).'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '').'</td>
 					</tr>';
 						}
 					}

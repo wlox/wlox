@@ -364,48 +364,59 @@ function updateTransactions() {
 						}
 						else {
 							var last_price = 999999999999999999999;
+							var mine = (this.mine > 0) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
 							var json_elem = this;
-
+							var skip_next = false;
+							var j = 1;
 							if ($('#bids_list .order_price').length > 0) {
 								$.each($('#bids_list .order_price'),function(i){
-									var price = parseFloat($(this).html());
-									var new_price = parseFloat(json_elem.btc_price);
-									var active_bids = $('#bids_list .order_price').length;
-									
-									if ((new_price <= last_price && new_price >= price) || (active_bids < trades_amount && i == (active_bids - 1)) || (notrades && i == (active_bids - 1) && !get_10)) {
-										if (notrades) {
-											if (open_orders_user) {
-												var double = 0;
-												if (json_elem.market_price == 'Y')
-													var type = '<td><div class="identify market_order">M</div></td>';
-												else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
-													var type = '<td><div class="identify limit_order">L</div></td>';
-												else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
-													var type = '<td><div class="identify stop_order">S</div></td>';
-												else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
-													var type = '<td><div class="identify limit_order">L</div></td>';
-													double = 1;
-												}
-											}
-											
-											var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-											var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+formatCurrency(((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
-										
-											if (double)
-												string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
-										}
-										else
-											var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
-										
-										if (new_price <= last_price && new_price >= price)
-											var elem = $(string).insertBefore($(this).parents('tr'));
-										else
-											var elem = $(string).insertAfter($(this).parents('tr'));
-										
-										$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
+									if (skip_next) {
+										skip_next = false;
+										j++;
+										return;
 									}
 									
+									var price = parseFloat($(this).html());
+									var next_price = ($(this).parents('tr').next('tr').find('.order_price').length > 0) ? parseFloat($(this).parents('tr').next('tr').find('.order_price').html()) : 0;
+									var new_price = parseFloat(json_elem.btc_price);
+									var active_bids = $('#bids_list .order_price').length;
+									this_elem = (next_price == price) ? $(this).next('.order_price') : this;
+									skip_next = (next_price == price);
+									
+									if (notrades) {
+										if (open_orders_user) {
+											var double = 0;
+											if (json_elem.market_price == 'Y')
+												var type = '<td><div class="identify market_order">M</div></td>';
+											else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+												var type = '<td><div class="identify limit_order">L</div></td>';
+											else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+												var type = '<td><div class="identify stop_order">S</div></td>';
+											else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+												var type = '<td><div class="identify limit_order">L</div></td>';
+												double = 1;
+											}
+										}
+										
+										var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
+										var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+formatCurrency(((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
+									
+										if (double)
+											string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
+									}
+									else
+										var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									
+									if (new_price > price && new_price < last_price)
+										var elem = $(string).insertBefore($(this_elem).parents('tr'));
+									else if (new_price == price) 
+										var elem = $(string).insertAfter($(this_elem).parents('tr'));
+									else if (new_price < price && active_bids == j)
+										var elem = $(string).insertAfter($(this_elem).parents('tr'));
+
+									$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 									last_price = price;
+									j++;
 								});
 							}
 							else {
@@ -425,13 +436,13 @@ function updateTransactions() {
 									}
 									
 									var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
+									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'">'+type+'<td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price)))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
 									
 									if (double)
-										string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
+										string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
-									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 								
 								var elem = $(string).insertAfter($('#no_bids'));
 								$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
@@ -494,48 +505,60 @@ function updateTransactions() {
 						}
 						else {
 							var last_price = 0;
+							var mine = (this.mine > 0) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
 							var json_elem = this;
-							
+							var skip_next = false;
+							var j = 1;
 							if ($('#asks_list .order_price').length > 0) {
 								$.each($('#asks_list .order_price'),function(i){
-									var price = parseFloat($(this).html());
-									var new_price = parseFloat(json_elem.btc_price);
-									var active_asks = $('#asks_list .order_price').length;
-									
-									if ((new_price >= last_price && new_price <= price) || (active_asks < trades_amount && i == (active_asks - 1)) || (notrades && i == (active_asks - 1) && !get_10)) {
-										if (notrades) {
-											if (open_orders_user) {
-												var double = 0;
-												if (json_elem.market_price == 'Y')
-													var type = '<td><div class="identify market_order">M</div></td>';
-												else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
-													var type = '<td><div class="identify limit_order">L</div></td>';
-												else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
-													var type = '<td><div class="identify stop_order">S</div></td>';
-												else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
-													var type = '<td><div class="identify limit_order">L</div></td>';
-													double = 1;
-												}
-											}
-											
-											var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-											var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
-											
-											if (double)
-												string += '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
-										}
-										else
-											var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
-										
-										if (new_price >= last_price && new_price <= price)
-											var elem = $(string).insertBefore($(this).parents('tr'));
-										else
-											var elem = $(string).insertAfter($(this).parents('tr'));
-										
-										$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
+									if (skip_next) {
+										skip_next = false;
+										i++;
+										return;
 									}
 									
+									var price = parseFloat($(this).html());
+									var next_price = ($(this).parents('tr').next('tr').find('.order_price').length > 0) ? parseFloat($(this).parents('tr').next('tr').find('.order_price').html()) : 0;
+									var new_price = parseFloat(json_elem.btc_price);
+									var active_asks = $('#asks_list .order_price').length;
+									this_elem = (next_price == price) ? $(this).next('.order_price') : this;
+									skip_next = (next_price == price);
+									
+									if (notrades) {
+										if (open_orders_user) {
+											var double = 0;
+											if (json_elem.market_price == 'Y')
+												var type = '<td><div class="identify market_order">M</div></td>';
+											else if (json_elem.btc_price > 0 && !(json_elem.stop_price > 0))
+												var type = '<td><div class="identify limit_order">L</div></td>';
+											else if (json_elem.stop_price > 0 && !(json_elem.btc_price > 0))
+												var type = '<td><div class="identify stop_order">S</div></td>';
+											else if (json_elem.stop_price > 0 && json_elem.btc_price > 0) {
+												var type = '<td><div class="identify limit_order">L</div></td>';
+												double = 1;
+											}
+										}
+										
+										var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
+										var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
+										
+										if (double)
+											string += '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
+									}
+									else
+										var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									
+									
+									if (new_price < price && new_price > last_price)
+										var elem = $(string).insertBefore($(this_elem).parents('tr'));
+									else if (new_price == price) 
+										var elem = $(string).insertAfter($(this_elem).parents('tr'));
+									else if (new_price > price && active_asks == j)
+										var elem = $(string).insertAfter($(this_elem).parents('tr'));
+									
+									$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 									last_price = price;
+									j++;
 								});
 							}
 							else {
@@ -555,13 +578,13 @@ function updateTransactions() {
 									}
 									
 									var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'"><i class="fa fa-times"></i></a></td>' : false;
-									var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
+									var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'">'+type+'<td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency((json_elem.btc_price > 0) ? json_elem.btc_price : json_elem.stop_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',json_elem.currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td>'+edit_str+'</tr>';
 									
 									if (double)
-										string += '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
+										string += '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
-									var string = '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									var string = '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 								
 								var elem = $(string).insertAfter($('#no_asks'));
 								$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
@@ -935,29 +958,29 @@ function buttonDisable() {
 function localDates() {
 	$('.localdate').each(function(){
 		var date = new Date(parseInt($(this).val()*1000));
-		var offset = date.getTimezoneOffset() * 60;
-		var date1 = new Date(parseInt((parseInt($(this).val()) + parseInt(offset))*1000));
-		var hours = date1.getHours();
-		var minutes = date1.getMinutes();
+		//var offset = date.getTimezoneOffset() * 60;
+		//var date1 = new Date(parseInt((parseInt($(this).val()) + parseInt(offset))*1000));
+		var hours = date.getHours();
+		var minutes = date.getMinutes();
 		var ampm = hours >= 12 ? 'pm' : 'am';
 		hours = hours % 12;
 		hours = hours ? hours : 12; // the hour '0' should be '12'
 		minutes = minutes < 10 ? '0'+minutes : minutes;
 		var strTime = hours + ':' + minutes + ' ' + ampm;
 		
-		$(this).parent().html($('#javascript_mon_'+date1.getMonth()).val()+' '+date1.getDate()+', '+date1.getFullYear()+', '+strTime);
+		$(this).parent().html($('#javascript_mon_'+date.getMonth()).val()+' '+date.getDate()+', '+date.getFullYear()+', '+strTime);
 	});
 }
 
 function timeSince(elem) {
 	var miliseconds = $(elem).siblings('.time_since_seconds').val();
-	var date = new Date(parseInt(miliseconds));
-	var offset = date.getTimezoneOffset() * 60;
-	var date1 = new Date(parseInt(miliseconds) + (parseInt(offset)*1000));
+	var date = new Date(parseInt(miliseconds)*1000);
+	//var offset = date.getTimezoneOffset() * 60;
+	//var date1 = new Date(parseInt(miliseconds) + (parseInt(offset)*1000));
 	var time_unit;
 	
 	$(elem).countdown({ 
-	    since: date1,
+	    since: date,
 	    significant: 1,
 	    layout: '{o<}{on} {ol}{o>}{w<}{wn} {wl}{w>}{d<}{dn} {dl}{d>}{h<}{hn} {hl}{h>}{m<}{mn} {ml}{m>}{s<}{sn} {sl}{s>}'
 	});

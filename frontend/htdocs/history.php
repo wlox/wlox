@@ -52,7 +52,7 @@ if (!$bypass) {
 						foreach ($history as $item) {
 							echo '
 					<tr>
-						<td><input type="hidden" class="localdate" value="'.(strtotime($item['date']) + $CFG->timezone_offset).'" /></td>
+						<td><input type="hidden" class="localdate" value="'.(strtotime($item['date'])/* + $CFG->timezone_offset*/).'" /></td>
 						<td>'.$item['type'].(($item['request_currency']) ? ' ('.$item['request_currency'].')' : false).'</td>
 						<td>'.(($item['ip']) ? $item['ip'] : 'N/A').'</td>
 					</tr>';
