@@ -528,15 +528,18 @@ class User {
 
 	}
 	
-	function notifyLogin($ipaddress) {
+	function notifyLogin() {
 		global $CFG;
 		
-		if (!$CFG->session_active || User::$info['notify_login'] != 'Y')
+		if (!$CFG->session_active)
 			return false;
 		
-		$ipaddress1 = preg_replace("/[^0-9\.]/", "",$ipaddress);
+		$ipaddress1 = $CFG->client_ip;
 		
 		db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$ipaddress1,'history_action'=>$CFG->history_login_id,'site_user'=>User::$info['id']));
+		
+		if (User::$info['notify_login'] != 'Y')
+			return false;
 		
 		$email = SiteEmail::getRecord('login-notify');
 		$info = User::$info;
