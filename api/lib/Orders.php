@@ -321,6 +321,7 @@ class Orders {
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		$bid = self::getCurrentBid($currency1,false,1);
 		$ask = self::getCurrentAsk($currency1,false,1);
+		$bid = ($bid > $ask) ? $ask : $bid;
 		
 		if ($edit_id > 0) {
 			$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
