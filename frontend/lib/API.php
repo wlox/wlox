@@ -20,9 +20,6 @@ class API{
 	
 	function send() {
 		global $CFG;
-		
-		$remote_ip = ($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$remote_ip_parts = explode(',',$remote_ip);
 
 		$commands['session_id'] = $_SESSION['session_id'];
 		$commands['nonce'] = $_SESSION['nonce'];
@@ -31,7 +28,7 @@ class API{
 		$commands['token'] = API::$token;
 		$commands['settings_change_id'] = bin2hex(API::$settings_change_id);
 		$commands['request_id'] = API::$request_id;
-		$commands['ip'] = $remote_ip_parts[0];
+		$commands['ip'] = self::getUserIp();
 
 		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
 		$commands['signature'] = bin2hex($signature);
@@ -50,6 +47,37 @@ class API{
 		
 		API::$commands = array();
 		return $result;
+	}
+	
+	function getUserIp($force_string=null) {
+		$ip_addresses = array();
+		$ip_elements = array(
+				'HTTP_X_FORWARDED_FOR', 'HTTP_FORWARDED_FOR',
+				'HTTP_X_FORWARDED', 'HTTP_FORWARDED',
+				'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_CLUSTER_CLIENT_IP',
+				'HTTP_X_CLIENT_IP', 'HTTP_CLIENT_IP',
+				'REMOTE_ADDR'
+		);
+		
+		foreach ( $ip_elements as $element ) {
+			if(isset($_SERVER[$element])) {
+				if (!is_string($_SERVER[$element]) )
+					continue;
+				
+				$address_list = explode(',',$_SERVER[$element]);
+				$address_list = array_map('trim',$address_list);
+
+				foreach ($address_list as $x)
+					$ip_addresses[] = $x;
+			}
+		}
+		
+		if (count($ip_addresses) == 0)
+			return false;
+		elseif ($force_string === true || ($force_string === null && count($ip_addresses) == 1))
+			return $ip_addresses[0];
+		else
+			return $ip_addresses;
 	}
 }
 

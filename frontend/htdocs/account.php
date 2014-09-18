@@ -29,12 +29,8 @@ $total_btc_volume = $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_
 
 $referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
 if ($referer == 'login.php' || $referer == 'verify-token.php' || $referer == 'first-login.php') {
-	if (User::$info['notify_login'] == 'Y') {
-		$remote_ip = ($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-		$remote_ip_parts = explode(',',$remote_ip);
-		API::add('User','notifyLogin',array($remote_ip_parts[0]));
-		$query = API::send();
-	}
+	API::add('User','notifyLogin');
+	$query = API::send();
 }
 
 $page_title = Lang::string('account');
