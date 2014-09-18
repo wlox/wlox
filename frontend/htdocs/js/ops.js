@@ -302,14 +302,15 @@ function updateTransactions() {
 						if (this.btc_price > current_max)
 							$('#stats_max').html(formatCurrency(this.btc_price));
 						
-						var active_transactions = $('#transactions_list tr').length;
-						if (active_transactions >= 5)
-							$('#transactions_list tr:last').remove();
-						
 						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+'</td></tr>').insertAfter(('#transactions_list tr:first'));
 						timeSince($(elem).find('.time_since'));
 						$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 						$('#stats_traded').html(formatCurrency(json_data.btc_traded));
+						
+						var active_transactions = $('#transactions_list tr:not(#no_transactions)').length;
+						if (active_transactions > 5)
+							$('#transactions_list tr:not(#no_transactions):last').remove();
+						
 						i++;
 					});
 				}
