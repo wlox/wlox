@@ -406,7 +406,7 @@ function updateTransactions() {
 											string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 									}
 									else
-										var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+										var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 									
 									if (new_price > price && new_price < last_price)
 										var elem = $(string).insertBefore($(this_elem).parents('tr'));
@@ -443,7 +443,7 @@ function updateTransactions() {
 										string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
-									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 								
 								var elem = $(string).insertAfter($('#no_bids'));
 								$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
@@ -547,7 +547,7 @@ function updateTransactions() {
 											string += '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 									}
 									else
-										var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+										var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 									
 									
 									if (new_price < price && new_price > last_price)
@@ -585,7 +585,7 @@ function updateTransactions() {
 										string += '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+json_elem.fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 								}
 								else
-									var string = '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+mine+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+									var string = '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+json_elem.fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
 								
 								var elem = $(string).insertAfter($('#no_asks'));
 								$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
