@@ -74,10 +74,8 @@ class API{
 		
 		if (count($ip_addresses) == 0)
 			return false;
-		elseif ($force_string === true || ($force_string === null && count($ip_addresses) == 1))
-			return $ip_addresses[0];
 		else
-			return $ip_addresses;
+			return $ip_addresses[0];
 	}
 }
 
