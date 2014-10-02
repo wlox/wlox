@@ -302,13 +302,6 @@ class User {
 			$info['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 			unset($info['terms']);
 			
-			if (time() < strtotime('2014-09-19 11:00:00')) {
-				$default_currency = DB::getRecord('currencies',$info['default_currency'],0,1);
-				$btc_currency = DB::getRecord('currencies',$CFG->btc_currency_id,0,1);
-				$info[strtolower($default_currency['currency'])] =  50000 / $default_currency['usd_ask'];
-				$info['btc'] =  50000 / $btc_currency['usd_ask'];
-			}
-			
 			$record_id = db_insert('site_users',$info);
 		
 			require_once('../lib/easybitcoin.php');
@@ -426,8 +419,11 @@ class User {
 		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 		$update['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
+		
+		if (!$update['pass'])
+			unset($update['pass']);
 
-		if (strlen($update['pass']) < 8 || !$update['first_name'] || !$update['last_name'] || !$update['email'])
+		if (($update['pass'] && strlen($update['pass']) < 8) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
 
 		$update['pass'] = Encryption::hash($update['pass']);
