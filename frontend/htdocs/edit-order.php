@@ -8,6 +8,11 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
+if ($_REQUEST['buy'] || $_REQUEST['sell']) {
+	if (!in_array($_REQUEST['uniq'],$_SESSION["editorder_uniq"]))
+		Errors::add('Page expired.');
+}
+
 $order_id1 = ereg_replace("[^0-9]", "",$_REQUEST['order_id']);
 $bypass = $_REQUEST['bypass'];
 
@@ -175,6 +180,12 @@ if ($_REQUEST['sell']) {
 	}
 }
 
+$uniq_time = time();
+$_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+if (count($_SESSION["editorder_uniq"]) > 3) {
+	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+}
+
 $page_title = Lang::string('edit-order');
 if (!$bypass) {
 	include 'includes/head.php';
@@ -279,6 +290,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />
+							<input type="hidden" name="uniq" value="<?= $_SESSION["editorder_uniq"][$uniq_time] ?>" />
 							<input type="submit" name="submit" value="<?= $page_title ?>" class="but_user" />
 						</div>
 					</form>
@@ -367,6 +379,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="sell" value="1" />
+							<input type="hidden" name="uniq" value="<?= $_SESSION["editorder_uniq"][$uniq_time] ?>" />
 							<input type="submit" name="submit" value="<?= $page_title ?>" class="but_user" />
 						</div>
 					</form>

@@ -13,6 +13,10 @@ $currency1 = ereg_replace("[^0-9]", "",$_REQUEST['currency']);
 $description1 = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_ ]/", "",$_REQUEST['description']);
 $remove_id1 = ereg_replace("[^0-9]", "",$_REQUEST['remove_id']);
 
+if ($account1 > 0 || $remove_id1 > 0) {
+	if ($_SESSION["bankaccount_uniq"] != $_REQUEST['uniq'])
+		Errors::add('Page expired.');
+}
 
 API::add('Content','getRecord',array((($_REQUEST['action'] == 'add') ? 'bank-accounts-add' : 'bank-accounts')));
 API::add('BankAccounts','get');
@@ -64,6 +68,7 @@ if ($remove_id1 > 0) {
 	}
 }
 
+$_SESSION["bankaccount_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -101,7 +106,7 @@ include 'includes/head.php';
 					<td><?= $account['account_number'] ?></td>
 					<td><?= $account['currency'] ?></td>
 					<td><?= $account['description'] ?></td>
-					<td><a href="bank-accounts.php?remove_id=<?= $account['id'] ?>"><i class="fa fa-minus-circle"></i> <?= Lang::string('bank-accounts-remove') ?></a></td>
+					<td><a href="bank-accounts.php?remove_id=<?= $account['id'] ?>&uniq=<?= $_SESSION["bankaccount_uniq"] ?>"><i class="fa fa-minus-circle"></i> <?= Lang::string('bank-accounts-remove') ?></a></td>
 				</tr>
 				<?
 					}
@@ -120,6 +125,7 @@ include 'includes/head.php';
 			<? Errors::display(); ?>
 			<form id="add_bank_account" action="bank-accounts.php" method="POST">
 				<input type="hidden" name="action" value="add" />
+				<input type="hidden" name="uniq" value="<?= $_SESSION["bankaccount_uniq"] ?>" />
 				<div class="buyform">
 					<div class="content">
 		            	<h3 class="section_label">

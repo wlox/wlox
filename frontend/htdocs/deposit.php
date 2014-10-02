@@ -139,7 +139,7 @@ if (!$_REQUEST['bypass']) {
 							echo '
 					<tr>
 						<td>'.$request['id'].'</td>
-						<td><input type="hidden" class="localdate" value="'.(strtotime($request['date']) + $CFG->timezone_offset).'" /></td>
+						<td><input type="hidden" class="localdate" value="'.(strtotime($request['date'])/* + $CFG->timezone_offset*/).'" /></td>
 						<td>'.$request['description'].'</td>
 						<td>'.(($request['fa_symbol'] == 'BTC') ? number_format($request['amount'],8).' '.$request['fa_symbol'] : $request['fa_symbol'].number_format($request['amount'],2)).'</td>
 						<td>'.$request['status'].'</td>

@@ -9,7 +9,7 @@ elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
 $delete_id1 = ereg_replace("[^0-9]", "",$_REQUEST['delete_id']);
-if ($delete_id1 > 0) {
+if ($delete_id1 > 0 && $_SESSION["openorders_uniq"] == $_REQUEST['uniq']) {
 	API::add('Orders','getRecord',array($delete_id1));
 	$query = API::send();
 	$del_order = $query['Orders']['getRecord']['results'][0];
@@ -27,7 +27,6 @@ if ($delete_id1 > 0) {
 		Link::redirect('open-orders.php?message=order-cancelled');
 	}
 }
-
 
 $currency1 = ($_REQUEST['currency'] != 'All') ? $_REQUEST['currency'] : false;
 $order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
@@ -59,6 +58,7 @@ elseif ($_REQUEST['message'] == 'order-cancelled')
 	Messages::add(Lang::string('orders-order-cancelled'));
 
 $page_title = Lang::string('open-orders');
+$_SESSION["openorders_uniq"] = md5(uniqid(mt_rand(),true));
 
 if (!$bypass) {
 	include 'includes/head.php';
@@ -139,7 +139,7 @@ if (!$bypass) {
 							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['fiat'],2).'</span></td>
-							<td><a href="edit-order.php?order_id='.$bid['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$bid['id'].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
+							<td><a href="edit-order.php?order_id='.$bid['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$bid['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
 								if ($double) {
 									echo '
@@ -191,7 +191,7 @@ if (!$bypass) {
 							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
 							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['fiat'],2).'</span></td>
-							<td><a href="edit-order.php?order_id='.$ask['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$ask['id'].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
+							<td><a href="edit-order.php?order_id='.$ask['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$ask['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
 								
 								if ($double) {

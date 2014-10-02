@@ -5,7 +5,7 @@ include '../cfg/cfg.php';
 $page_title = Lang::string('login-forgot');
 $email1 = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$_REQUEST['forgot']['email']);
 
-if ($_REQUEST['forgot'] && $email1) {
+if ($_REQUEST['forgot'] && $email1 && $_SESSION["forgot_uniq"] == $_REQUEST['uniq']) {
 	include_once 'securimage/securimage.php';
 	$securimage = new Securimage();
 
@@ -21,6 +21,7 @@ if ($_REQUEST['forgot'] && $email1) {
 	}
 }
 
+$_SESSION["forgot_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -73,6 +74,7 @@ include 'includes/head.php';
 		    			<input type="text" class="login" name="forgot[captcha]" value="" />
 		    		</div>
 		    	</div>
+		    	<input type="hidden" name="uniq" value="<?= $_SESSION["forgot_uniq"] ?>" />
 	    		<input type="submit" name="submit" value="<?= Lang::string('login-forgot-send-new') ?>" class="but_user" />
 	    	</div>
     	</form>

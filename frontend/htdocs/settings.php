@@ -42,17 +42,26 @@ else {
 	$_REQUEST['verify_fields']['pass2'] = 'password';
 }
 
+if ($_REQUEST['settings']) {
+	$match = preg_match_all("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/",$_REQUEST['settings']['pass'],$matches);
+	$_REQUEST['settings']['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['settings']['pass']);
+	$_REQUEST['settings']['pass2'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['settings']['pass2']);
+	$_REQUEST['settings']['first_name'] = preg_replace("/[^\da-z  ]/i", "",$_REQUEST['settings']['first_name']);
+	$_REQUEST['settings']['last_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['settings']['last_name']);
+	$_REQUEST['settings']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['settings']['country']);
+	$_REQUEST['settings']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['settings']['email']);
+}
+
 $personal = new Form('settings',false,false,'form1','site_users');
 $personal->get($query['User']['getInfo']['results'][0]);
-$personal->info['first_name'] = ereg_replace("/[^\da-z  ]/i", "",$personal->info['first_name']);
-$personal->info['last_name'] = ereg_replace("/[^\da-z ]/i", "",$personal->info['last_name']);
-$personal->info['country'] = ereg_replace("[^0-9]", "",$personal->info['country']);
-$personal->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$personal->info['email']);
 
 if (!$personal->info['email'])
 	unset($personal->info['email']);
 
 $personal->verify();
+
+if ($match)
+	$personal->errors[] = htmlentities(str_replace('[characters]',implode(',',array_unique($matches[0])),Lang::string('login-pass-chars-error')));
 	
 if ($_REQUEST['submitted'] && !$token1 && !is_array($personal->errors)) {
 	if ($_REQUEST['request_2fa']) {
@@ -304,6 +313,7 @@ elseif ($_REQUEST['message'] == 'settings-account-unlocked')
 	Messages::add(Lang::string('settings-account-unlocked'));
 
 $page_title = Lang::string('settings');
+//$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 
 include 'includes/head.php';
 ?>
@@ -338,6 +348,7 @@ include 'includes/head.php';
                 $personal->textInput('email',Lang::string('settings-email'),'email');
                 $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$CFG->currencies,false,array('currency'));
                 $personal->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('settings-save-info').'" class="but_user" /></div><input type="hidden" name="submitted" value="1" />');
+                $personal->hiddenInput('uniq',1,$_SESSION["settings_uniq"]);
                 $personal->display();
                 ?>
             	<div class="clear"></div>
@@ -353,6 +364,7 @@ include 'includes/head.php';
 				<form id="buy_form" action="settings.php" method="POST">
 					<input type="hidden" name="prefs" value="1" />
 					<input type="hidden" name="submitted" value="1" />
+					<input type="hidden" name="uniq" value="<?= $_SESSION["settings_uniq"] ?>" />
 					<div class="buyform">
 						<div class="spacer"></div>
 						<? if (User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y') { ?>
@@ -415,7 +427,7 @@ include 'includes/head.php';
 				<div class="mar_top3"></div>
            		<div class="clear"></div>
 				<ul class="list_empty">
-					<li><a class="but_user" href="settings.php?lock_account=1&submitted=1"><?= Lang::string('settings-lock-account') ?></a></li>
+					<li><a class="but_user" href="settings.php?lock_account=1&submitted=1&uniq=<?= $_SESSION["settings_uniq"] ?>"><?= Lang::string('settings-lock-account') ?></a></li>
 				</ul>
 				<div class="clear"></div>
 			</div>
@@ -431,7 +443,7 @@ include 'includes/head.php';
 				<div class="mar_top3"></div>
            		<div class="clear"></div>
 				<ul class="list_empty">
-					<li><a class="but_user" href="settings.php?deactivate_account=1&submitted=1"><?= Lang::string('settings-delete-account') ?></a></li>
+					<li><a class="but_user" href="settings.php?deactivate_account=1&submitted=1&uniq=<?= $_SESSION["settings_uniq"] ?>"><?= Lang::string('settings-delete-account') ?></a></li>
 				</ul>
 				<div class="clear"></div>
 			</div>
@@ -447,7 +459,7 @@ include 'includes/head.php';
 				<div class="mar_top3"></div>
            		<div class="clear"></div>
 				<ul class="list_empty">
-					<li><a class="but_user" href="settings.php?unlock_account=1&submitted=1"><?= Lang::string('settings-unlock-account') ?></a></li>
+					<li><a class="but_user" href="settings.php?unlock_account=1&submitted=1&uniq=<?= $_SESSION["settings_uniq"] ?>"><?= Lang::string('settings-unlock-account') ?></a></li>
 				</ul>
 				<div class="clear"></div>
 			</div>
@@ -463,7 +475,7 @@ include 'includes/head.php';
 				<div class="mar_top3"></div>
            		<div class="clear"></div>
 				<ul class="list_empty">
-					<li><a class="but_user" href="settings.php?reactivate_account=1&submitted=1"><?= Lang::string('settings-reactivate-account') ?></a></li>
+					<li><a class="but_user" href="settings.php?reactivate_account=1&submitted=1&uniq=<?= $_SESSION["settings_uniq"] ?>"><?= Lang::string('settings-reactivate-account') ?></a></li>
 				</ul>
 				<div class="clear"></div>
 			</div>

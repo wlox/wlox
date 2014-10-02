@@ -2,6 +2,12 @@
 include '../cfg/cfg.php';
 
 if ($_REQUEST['contact']) {
+	$_REQUEST['contact']['first_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['first_name']);
+	$_REQUEST['contact']['last_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['last_name']);
+	$_REQUEST['contact']['company'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['company']);
+	$_REQUEST['contact']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['contact']['email']);
+	$_REQUEST['contact']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']);
+	$_REQUEST['contact']['subject'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['subject']);
 	$_REQUEST['is_caco'] = (!$_REQUEST['is_caco']) ? array('contact'=>1) : $_REQUEST['is_caco'];
 }
 
@@ -17,6 +23,10 @@ $countries = $query['User']['getCountries']['results'][0];
 
 $contact = new Form('contact',false,false,'form2');
 $contact->verify();
+
+if ($_REQUEST['contact'] && $_SESSION["contact_uniq"] != $_REQUEST['contact']['uniq'])
+	$contact->errors[] = 'Page expired.';
+
 if ($_REQUEST['contact'] && is_array($contact->errors)) {
 	$errors = array();
 	foreach ($contact->errors as $key => $error) {
@@ -41,6 +51,7 @@ elseif ($_REQUEST['contact'] && !is_array($contact->errors)) {
 	$show_mask = true;
 }
 
+$_SESSION["contact_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -69,6 +80,7 @@ include 'includes/head.php';
 			    $contact->textEditor('message',Lang::string('settings-message'),1,false,false,false,false,true,false,200);
 			    $contact->captcha(Lang::string('settings-capcha'));
 			    $contact->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('contact-send').'" class="but_user" /></div>');
+			    $contact->hiddenInput('uniq',1,$_SESSION["contact_uniq"]);
 			    $contact->display();
 			    ?>
 		    </div>

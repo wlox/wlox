@@ -26,7 +26,7 @@ Usage
 
 Enable the plugin by adding it to `extraPlugins` and specify the `imageBrowser_listUrl` parameter::
 
-	CKEditor.replace('textareaId', {
+	CKEDITOR.replace('textareaId', {
 		"extraPlugins": "imagebrowser",
 		"imageBrowser_listUrl": "/path/to/images_list.json"
 	});

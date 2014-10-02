@@ -2,17 +2,19 @@
 include '../cfg/cfg.php';
 
 if ($_REQUEST['register']) {
+	$_REQUEST['register']['first_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['first_name']);
+	$_REQUEST['register']['last_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['last_name']);
+	$_REQUEST['register']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['register']['country']);
+	$_REQUEST['register']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['register']['email']);
+	$_REQUEST['register']['default_currency'] = preg_replace("/[^0-9]/", "",$_REQUEST['register']['default_currency']);
 	$_REQUEST['is_caco'] = (!$_REQUEST['is_caco']) ? array('register'=>1) : $_REQUEST['is_caco'];
 }
 
 $register = new Form('register',false,false,'form3');
-//$register->get(User::$info['id']);
-$register->info['first_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$register->info['first_name']);
-$register->info['last_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$register->info['last_name']);
-$register->info['country'] = ereg_replace("[^0-9]", "",$register->info['country']);
-$register->info['email'] = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$register->info['email']);
 $register->verify();
 
+if ($_REQUEST['register'] && $_SESSION["register_uniq"] != $_REQUEST['register']['uniq'])
+	$register->errors[] = 'Page expired.';
 
 if ($_REQUEST['register'] && !$register->info['terms'])
 	$register->errors[] = Lang::string('settings-terms-error');
@@ -52,6 +54,7 @@ $countries = $query['User']['getCountries']['results'][0];
 
 $page_title = Lang::string('home-register');
 
+$_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -83,6 +86,7 @@ include 'includes/head.php';
                 $register->checkBox('terms',Lang::string('settings-terms-accept'),false,false,false,false,false,false,'checkbox_label');
                 $register->captcha(Lang::string('settings-capcha'));
                 $register->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('home-register').'" class="but_user" /></div>');
+                $register->hiddenInput('uniq',1,$_SESSION["register_uniq"]);
                 $register->display();
                 ?>
             	<div class="clear"></div>
