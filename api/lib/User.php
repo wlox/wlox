@@ -419,8 +419,11 @@ class User {
 		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 		$update['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
+		
+		if (!$update['pass'])
+			unset($update['pass']);
 
-		if (strlen($update['pass']) < 8 || !$update['first_name'] || !$update['last_name'] || !$update['email'])
+		if (($update['pass'] && strlen($update['pass']) < 8) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
 
 		$update['pass'] = Encryption::hash($update['pass']);

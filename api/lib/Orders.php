@@ -95,6 +95,8 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$currency_info = ($currency_id > 0) ? DB::getRecord('currencies',$currency_id,0,1) : $CFG->currencies[strtoupper($currency)];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
+		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
+		$conversion2 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
 		
 		$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " - ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_bid} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price DESC LIMIT 0,1";
 		$result = db_query_array($sql);
@@ -104,7 +106,7 @@ class Orders {
 			$result = db_query_array($sql);
 			
 			if (!$result) {
-				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
+				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion2,transactions.ask_at_transaction * $conversion1),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion2,transactions.bid_at_transaction * $conversion1))),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 				$result = db_query_array($sql);
 				
 				if (!$result) {
@@ -125,7 +127,8 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$currency_info = ($currency_id > 0) ? DB::getRecord('currencies',$currency_id,0,1) : $CFG->currencies[strtoupper($currency)];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
-		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(orders.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
+		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
+		$conversion2 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
 		
 		$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " + ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_ask} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price ASC LIMIT 0,1";
 		$result = db_query_array($sql);
@@ -135,7 +138,7 @@ class Orders {
 			$result = db_query_array($sql);
 			
 			if (!$result) {
-				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
+				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion2,transactions.ask_at_transaction * $conversion1),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion2,transactions.bid_at_transaction * $conversion1))),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 				$result = db_query_array($sql);
 			
 				if (!$result) {
