@@ -2701,17 +2701,17 @@ class Form {
 		
 		if (!$CFG->in_include) {
 			$is_tab = ($this->go_to_is_tab) ? $this->go_to_is_tab : $CFG->is_tab;
-			echo '<input type="hidden" id="form_table" name="form_table" value="'.$this->table.'" />';
-			echo '<input type="hidden" id="form_name" name="form_name" value="'.$this->name.'" />';
-			echo '<input type="hidden" name="is_tab" value="'.$is_tab.'" />';
+			echo '<input type="hidden" id="form_table" name="form_table" value="'.htmlspecialchars($this->table).'" />';
+			echo '<input type="hidden" id="form_name" name="form_name" value="'.htmlspecialchars($this->name).'" />';
+			echo '<input type="hidden" name="is_tab" value="'.htmlspecialchars($is_tab).'" />';
 			
 			if ($CFG->url) {
 				$url = ($this->go_to_url) ? $this->go_to_url : $CFG->url;
 				$action = ($this->go_to_action) ? $this->go_to_action : $CFG->action;
-				echo '<input type="hidden" name="current_url" value="'.$url.'" />';
+				echo '<input type="hidden" name="current_url" value="'.htmlspecialchars($url).'" />';
 				if ($this->return_to_self) {
-					echo '<input type="hidden" name="id" value="'.$this->record_id.'" />';
-					echo '<input type="hidden" name="action" value="'.$action.'" />';
+					echo '<input type="hidden" name="id" value="'.htmlspecialchars($this->record_id).'" />';
+					echo '<input type="hidden" name="action" value="'.htmlspecialchars($action).'" />';
 					echo '<input type="hidden" name="return_to_self" value="1" />';
 				}
 			}
@@ -2842,45 +2842,45 @@ class Form {
 		// send required fields
 		if (is_array($this->required)) {
 			foreach ($this->required as $field => $type) {
-				echo '<input type="hidden" name="verify_fields['.$field.']" value="'.$type.'" />';
+				echo '<input type="hidden" name="verify_fields['.htmlspecialchars($field).']" value="'.htmlspecialchars($type).'" />';
 			}
 		}
 		
 		// send db types for fields
 		if (is_array($this->db_fields)) {
 			foreach ($this->db_fields as $field => $type) {
-				echo '<input type="hidden" class="form_db_field" name="db_fields['.$field.']" value="'.$type.'" />';
+				echo '<input type="hidden" class="form_db_field" name="db_fields['.htmlspecialchars($field).']" value="'.htmlspecialchars($type).'" />';
 			}
 		}
 		
 		// send compare fields
 		if (is_array($this->compare)) {
 			foreach ($this->compare as $field => $value) {
-				echo '<input type="hidden" class="compare_fields" name="compare_fields['.$field.']" value="'.$value.'" />';
+				echo '<input type="hidden" class="compare_fields" name="compare_fields['.htmlspecialchars($field).']" value="'.htmlspecialchars($value).'" />';
 			}
 		}
 		
 		// send unique fields
 		if (is_array($this->unique)) {
 			foreach ($this->unique as $field => $value) {
-				echo '<input type="hidden" class="unique_fields" name="unique_fields['.$field.']" value="'.$value.'" />';
+				echo '<input type="hidden" class="unique_fields" name="unique_fields['.htmlspecialchars($field).']" value="'.htmlspecialchars($value).'" />';
 			}
 		}
 		
 		if (is_array($this->delete_whitespace)) {
 			foreach ($this->delete_whitespace as $field) {
-				echo '<input type="hidden" name="delete_whitespace[]" value="'.$field.'" />';
+				echo '<input type="hidden" name="delete_whitespace[]" value="'.htmlspecialchars($field).'" />';
 			}
 		}
 		
 		if (is_array($this->color_fields)) {
 			foreach ($this->color_fields as $field) {
-				echo '<input type="hidden" name="color_fields[]" value="'.$field.'" />';
+				echo '<input type="hidden" name="color_fields[]" value="'.htmlspecialchars($field).'" />';
 			}
 		}
 		
 		if ($this->record_id) {
-			echo '<input type="hidden" name="record_id" value="'.$this->record_id.'" />';
+			echo '<input type="hidden" name="record_id" value="'.htmlspecialchars($this->record_id).'" />';
 		}
 		echo '
 		<div style="clear:both;"></div>
