@@ -11,6 +11,7 @@ if ($_REQUEST['register']) {
 }
 
 $register = new Form('register',false,false,'form3');
+unset($register->info['uniq']);
 $register->verify();
 
 if ($_REQUEST['register'] && $_SESSION["register_uniq"] != $_REQUEST['register']['uniq'])
