@@ -1,7 +1,6 @@
 <?php 
 include '../cfg.php';
 
-$headers = apache_request_headers();
 $session_id1 = ereg_replace("[^0-9]","",$_POST['session_id']);
 $signature1 = hex2bin($_POST['signature']);
 $nonce1 = ereg_replace("[^0-9]","",$_POST['nonce']);
