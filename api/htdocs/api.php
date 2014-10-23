@@ -14,7 +14,7 @@ $token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $settings_change_id1 = $_REQUEST['settings_change_id'];
 $request_id1 = $_REQUEST['request_id'];
 $api_key1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
-$api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
+$api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']);
 $CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
 $CFG->client_ip = preg_replace("/[^0-9\.]/","",$_POST['ip']);
 
@@ -52,12 +52,14 @@ if ($session_id1) {
 
 // verify api key
 if ($api_key1 && $api_signature1) {
-	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = '.$api_key1.' AND api_keys.nonce >= '.$nonce1);
-	$hash = hash_hmac('sha256',$_POST['commands'],$result[0]['secret']);
+	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'" AND api_keys.nonce <= '.$nonce1);
+	$hash = hash_hmac('sha256',$nonce1.$result[0]['user'].$result[0]['api_key'],$result[0]['secret']);
 	if ($result) {
 		if ($api_signature1 == $hash) {
 			User::setInfo($result[0]);
-			db_update('api_keys',$result[0]['key_id'],array('nonce'=>($result[0]['nonce'] + 1)));
+			
+			if ($_REQUEST['api_update_nonce'])
+				db_update('api_keys',$result[0]['key_id'],array('nonce'=>$nonce1));
 				
 			if (!$CFG->language)
 				$CFG->language = 'en';
@@ -71,10 +73,10 @@ if ($api_key1 && $api_signature1) {
 			}
 		}
 		else
-			$return['error'] = 'invalid-signature';
+			$return['error'] = 'AUTH_INVALID_SIGNATURE';
 	}
 	else
-		$return['error'] = 'session-not-found';
+		$return['error'] = 'AUTH_INVALID_KEY';
 }
 
 // verify token

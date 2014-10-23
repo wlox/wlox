@@ -11,6 +11,8 @@ class FeeSchedule {
 	}
 	
 	function getRecord($braket_id=false,$user=false) {
+		global $CFG;
+		
 		$braket_id = preg_replace("/[^0-9]/", "",$braket_id);
 		
 		if ($user && !$CFG->session_active)

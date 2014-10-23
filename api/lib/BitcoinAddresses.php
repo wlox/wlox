@@ -2,7 +2,7 @@
 class BitcoinAddresses{
 	static $bitcoin;
 	
-	function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false) {
+	function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false,$public_api=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active || !(User::$info['id'] > 0))
@@ -16,8 +16,10 @@ class BitcoinAddresses{
 		$r1 = $page * $per_page;
 		$user = User::$info['id'];
 		
-		if (!$count)
+		if (!$count && !$public_api)
 			$sql = "SELECT * FROM bitcoin_addresses WHERE 1 ";
+		elseif (!$count && $public_api)
+			$sql = "SELECT address,`date` FROM bitcoin_addresses WHERE 1 ";
 		else
 			$sql = "SELECT COUNT(id) AS total FROM bitcoin_addresses WHERE 1  ";
 		
