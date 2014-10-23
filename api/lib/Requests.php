@@ -1,6 +1,6 @@
 <?php
 class Requests{
-	function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false) {
+	function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false,$public_api=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -15,12 +15,19 @@ class Requests{
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		
-		if (!$count)
-			$sql = "SELECT requests.*, request_descriptions.name_{$CFG->language} AS description, request_status.name_{$CFG->language} AS status, currencies.fa_symbol AS fa_symbol FROM requests LEFT JOIN request_descriptions ON (request_descriptions.id = requests.description) LEFT JOIN request_status ON (request_status.id = requests.request_status) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE 1 ";
+		if (!$count && !$public_api)
+			$sql = "SELECT requests.*, request_descriptions.name_{$CFG->language} AS description, request_status.name_{$CFG->language} AS status, currencies.fa_symbol AS fa_symbol ";
+		elseif (!$count && $public_api)
+			$sql = "SELECT requests.id AS id, requests.date AS date, currencies.currency AS currency, IF(requests.currency = {$CFG->btc_currency_id},requests.amount,ROUND(requests.amount,2)) AS amount, (IF(requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id},'PENDING',IF(requests.request_status = {$CFG->request_completed_id},'COMPLETED','CANCELED'))) AS status";
 		else
-			$sql = "SELECT COUNT(requests.id) AS total FROM requests WHERE 1 ";
+			$sql = "SELECT COUNT(requests.id) AS total ";
 		
-		$sql .= " AND requests.site_user = ".User::$info['id'];
+		$sql .= " 
+		FROM requests 
+		LEFT JOIN request_descriptions ON (request_descriptions.id = requests.description) 
+		LEFT JOIN request_status ON (request_status.id = requests.request_status) 
+		LEFT JOIN currencies ON (requests.currency = currencies.id) 
+		WHERE 1 AND requests.site_user = ".User::$info['id'];
 		
 		if ($type > 0)
 			$sql .= " AND requests.request_type = $type ";

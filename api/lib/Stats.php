@@ -1,6 +1,6 @@
 <?php
 class Stats {
-	function getHistorical($timeframe='1year',$currency='usd') {
+	function getHistorical($timeframe='1year',$currency='usd',$public_api=false) {
 		global $CFG;
 		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -22,7 +22,7 @@ class Stats {
 		if (!$result)
 			return false;
 		
-		$sql = "SELECT (UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS `date`,ROUND((usd/{$result[0]['usd_ask']}),2) AS price FROM historical_data WHERE `date` >= '$start' ORDER BY `date` ASC";
+		$sql = "SELECT ".((!$public_api) ? "(UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS" : '')." `date`,ROUND((usd/{$result[0]['usd_ask']}),2) AS price FROM historical_data WHERE `date` >= '$start' GROUP BY `date` ORDER BY `date` ASC";
 		return db_query_array($sql);
 	}
 	

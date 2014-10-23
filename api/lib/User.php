@@ -117,7 +117,7 @@ class User {
 				AND transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
 				LIMIT 0,1";
 		$result = db_query_array($sql);
-			return $result[0]['volume'];
+		return $result[0]['volume'];
 	}
 	
 	function getNewId() {
