@@ -6,14 +6,6 @@ include 'cfg.php';
 $CFG->session_active = 1;
 $CFG->in_cron = 1;
 
-// compile historical data
-$sql = 'SELECT id FROM historical_data WHERE `date` = (CURDATE() - INTERVAL 1 DAY) LIMIT 0,1';
-$result = db_query_array($sql);
-if (!$result) {
-	$sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtotime('-1 day')))."',(transactions.btc_price * currencies.usd_ask) AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE transactions.date <= (CURDATE() - INTERVAL 1 DAY) ORDER BY transactions.date DESC LIMIT 0,1) ";
-	$result = db_query($sql);
-}
-
 // get 24 hour BTC volume
 $sql = "SELECT IFNULL(SUM(btc),0) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 $result = db_query_array($sql);
@@ -77,4 +69,62 @@ if ($result) {
 	db_query($sql);
 }
 db_commit();
+
+// currency ledger
+if ((date('H') == 0 || date('H') == 12) && (date('i') >= 0 && date('i') < 5)) {
+	db_start_transaction();
+	// check total fiat needed for withdrawals
+	$sql = "SELECT currency, SUM(amount) AS amount FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency != {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} GROUP BY currency FOR UPDATE";
+	$result = db_query_array($sql);
+	if ($result) {
+		foreach ($result as $row) {
+			$withdrawals[$row['currency']] = $row['amount'];
+		}
+	}
+	
+	// get escrow balances from CryptoCapital
+	//////////////////////////////////////////
+	
+	// get current currency ledger
+	$sql = 'SELECT * FROM conversions WHERE is_active != "Y" FOR UPDATE';
+	$result = db_query_array($sql);
+	if ($result) {
+		foreach ($result as $row) {
+			$ledger[$row['currency']] = $row['amount'];
+		}
+	}
+	
+	// factor new transactions into ledger balances
+	$sql = 'SELECT IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1) AS currency, IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) AS currency1, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.btc_price * transactions.btc, transactions.orig_btc_price * transactions.btc )) AS amount, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.orig_btc_price * transactions.btc, transactions.btc_price * transactions.btc)) AS amount_needed FROM transactions WHERE factored != "Y" AND conversion = \'Y\' GROUP BY CONCAT(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) , \'-\', IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1)) FOR UPDATE';
+	$result = db_query_array($sql);
+	if ($result) {
+		foreach ($result as $row) {
+			$ledger[$row['currency']] = ($ledger[$row['currency']]) ? $ledger[$row['currency']] + $row['amount'] : $row['amount'];
+			$ledger[$row['currency1']] = ($ledger[$row['currency1']]) ? $ledger[$row['currency1']] - $row['amount_needed'] : ($row['amount_needed'] * -1);
+		}
+	}
+	
+	if ($ledger) {
+		foreach ($ledger as $currency => $amount) {
+			/*
+			 if ($withdrawals[$currency] > $amount) {
+			// consolidate that particular currency to satisfy withdrawals
+			/////////////////////////////////////////////
+			}
+			*/
+	
+			$sql = 'SELECT id FROM conversions WHERE currency = '.$currency.' AND is_active != "Y" LIMIT 0,1';
+			$result = db_query_array($sql);
+			if ($result)
+				db_update('conversions',$result[0]['id'],array('amount'=>$amount,'total_withdrawals'=>$withdrawals[$currency],'date1'=>date('Y-m-d H:i:s')));
+			else
+				db_insert('conversions',array('amount'=>$amount,'total_withdrawals'=>$withdrawals[$currency],'date'=>date('Y-m-d H:i:s'),'date1'=>date('Y-m-d H:i:s'),'currency'=>$currency,'is_active'=>'N','factored'=>'N'));
+		}
+	}
+	
+	$sql = 'UPDATE transactions SET factored = "Y" WHERE factored != "Y"';
+	db_query($sql);
+	db_commit();
+}
+
 echo 'done'.PHP_EOL;
