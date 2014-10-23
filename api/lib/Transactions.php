@@ -1,6 +1,6 @@
 <?php
 class Transactions {
-	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false) {
+	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false,$public_api_all=false) {
 		global $CFG;
 		
 		if ($user && !(User::$info['id'] > 0))
@@ -32,12 +32,19 @@ class Transactions {
 		
 		//$currency = (!$currency) ? 'usd' : $currency;
 		
-		if (!$count)
-			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF((transactions.orig_btc_price * $conversion1) <= (transactions.ask_at_transaction * $conversion),transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF((transactions.orig_btc_price * $conversion1) >= (transactions.bid_at_transaction * $conversion),transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS btc_price, currencies.currency AS currency, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp FROM transactions ";
+		if (!$count && !$public_api_all)
+			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = {$currency_info['id']},transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF((transactions.orig_btc_price * $conversion1) <= (transactions.ask_at_transaction * $conversion),transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF((transactions.orig_btc_price * $conversion1) >= (transactions.bid_at_transaction * $conversion),transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS btc_price, currencies.currency AS currency, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp ";
+		elseif ($public_api_all && $user)
+			$sql = "SELECT transactions.id AS id, transactions.date AS date, transactions.btc AS btc, LOWER(IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language})) AS type, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS price, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1)),2) AS amount, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.fee,transactions.fee1)),2) AS fee, currencies.currency AS currency ";
+		elseif ($public_api_all && !$user && $currency)
+			$sql = "SELECT transactions.id AS id, transactions.date AS date, transactions.btc AS btc, IF(transactions.currency = {$currency_info['id']},transactions.btc_price,transactions.orig_btc_price) AS price, ROUND((IF(transactions.currency = {$currency_info['id']},transactions.btc_price,transactions.orig_btc_price) * transactions.btc),2) AS amount, IF(transactions.currency = {$currency_info['id']},currencies.currency,currencies1.currency) AS currency ";
+		elseif ($public_api_all && !$user)
+			$sql = "SELECT transactions.id AS id, transactions.date AS date, transactions.btc AS btc, transactions.btc_price AS price, ROUND((transactions.btc_price * transactions.btc),2) AS amount, currencies.currency AS currency ";
 		else
 			$sql = "SELECT COUNT(transactions.id) AS total FROM transactions ";
 			
 		$sql .= " 
+		FROM transactions
 		LEFT JOIN transaction_types ON (transaction_types.id = transactions.transaction_type)
 		LEFT JOIN transaction_types transaction_types1 ON (transaction_types1.id = transactions.transaction_type1)
 		LEFT JOIN currencies currencies ON (currencies.id = transactions.currency)
@@ -54,6 +61,8 @@ class Transactions {
 			$sql .= " AND IF(transactions.site_user = $user,transactions.transaction_type,transactions.transaction_type1) = $type ";
 		if ($currency && $user)
 			$sql .= " AND transactions.currency = {$currency_info['id']} ";
+		if ($currency && $public_api_all && !$user)
+			$sql .= " AND (transactions.currency = {$currency_info['id']} || transactions.currency1 = {$currency_info['id']}) ";
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
