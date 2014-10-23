@@ -57,18 +57,24 @@ $withdraw->verify();
 
 if ($_REQUEST['withdraw'] && !is_array($withdraw->errors)) {
 	if ($withdraw->info['currency'] > 0 && $withdraw->info['amount'] > 0) {
-		$currency_info = DB::getRecord('currencies',$withdraw->info['currency'],0,1);
+		db_start_transaction();
 		
+		$currency_info = DB::getRecord('currencies',$withdraw->info['currency'],0,1,false,false,false,1);
 		if (!$currency_info) {
 			$withdraw->errors[] = 'Invalid currency.';
 		}
+		elseif (!($currency_info[strtolower($currency_info['currency']).'_escrow'] - $withdraw->info['amount'] > 0)) {
+			$withdraw->errors[] = 'Balance too low to satisfy withdrawal.';
+		}
 		else {
-			$status = DB::getRecord('status',1,0,1);
+			$status = DB::getRecord('status',1,0,1,false,false,false,1);
 			$sql = 'UPDATE status SET '.strtolower($currency_info['currency']).'_escrow = '.strtolower($currency_info['currency']).'_escrow - '.$withdraw->info['amount'].' WHERE id = 1';
 			db_query($sql);
 			
 			$withdraw->messages[] = $withdraw->info['amount'].' subtracted from '.$currency_info['currency'];
 		}
+		
+		db_commit();
 	}
 }
 
