@@ -1,6 +1,6 @@
 <?php 
 class API{
-	private static $commands,$nonce,$token,$settings_change_id,$request_id;
+	private static $commands,$nonce,$token,$settings_change_id,$request_id,$api_signature,$api_key,$api_update_nonce;
 	
 	function add($classname,$method,$arguments=false) {
 		API::$commands[$classname][][$method] = $arguments;
@@ -18,11 +18,26 @@ class API{
 		API::$request_id = $request_id;
 	}
 	
-	function send() {
+	function apiKey($api_key) {
+		API::$api_key = $api_key;
+	}
+	
+	function apiSignature($api_signature) {
+		API::$api_signature = $api_signature;
+	}
+	
+	function apiUpdateNonce() {
+		API::$api_update_nonce = 1;
+	}
+	
+	function send($nonce=false) {
 		global $CFG;
+		
+		if (!is_array(API::$commands))
+			return false;
 
 		$commands['session_id'] = $_SESSION['session_id'];
-		$commands['nonce'] = $_SESSION['nonce'];
+		$commands['nonce'] = ($nonce > 0) ? $nonce : $_SESSION['nonce'];
 		$commands['lang'] = $CFG->language;
 		$commands['commands'] = json_encode(API::$commands);
 		$commands['token'] = API::$token;
@@ -32,6 +47,12 @@ class API{
 
 		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
 		$commands['signature'] = bin2hex($signature);
+		
+		if (API::$api_key) {
+			$commands['api_key'] = API::$api_key;
+			$commands['api_signature'] = API::$api_signature;
+			$commands['api_update_nonce'] = API::$api_update_nonce;
+		}
 		
 		$ch = curl_init($CFG->api_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);

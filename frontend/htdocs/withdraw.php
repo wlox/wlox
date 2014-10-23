@@ -151,7 +151,7 @@ elseif ($_REQUEST['fiat']) {
 	if (!($fiat_amount1 > 0))
 		Errors::add(Lang::string('withdraw-amount-zero'));
 	if (!$bank_accounts[$bank_account['account_number']])
-		Errors::add(Lang::string('withdraw-account-not-associated'));
+		Errors::add(Lang::string('withdraw-account-not-found'));
 	if ($fiat_amount1 > $user_available[strtoupper($currency1)])
 		Errors::add(Lang::string('withdraw-too-much'));
 		
