@@ -215,7 +215,7 @@ if ($total_received > 0) {
 				}
 			}
 			
-			db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees)));
+			db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees),'last_sweep'=>date('Y-m-d H:i:s')));
 			echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 		}
 	}
@@ -245,7 +245,7 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
 			}
 		}
 		
-		db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees)));
+		db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees),'last_sweep'=>date('Y-m-d H:i:s')));
 		echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 	}
 }
