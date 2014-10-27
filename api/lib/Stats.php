@@ -67,7 +67,7 @@ class Stats {
 
 		$stats['bid'] = $bid;
 		$stats['ask'] = $ask;
-		$stats['last_price'] = $result2[0]['btc_price'];
+		$stats['last_price'] = ($result2[0]['btc_price']) ? $result2[0]['btc_price'] : $ask;
 		$stats['daily_change'] = ($result3[0]['btc_price'] > 0 && $result2[0]['btc_price'] > 0) ? $result2[0]['btc_price'] - $result3[0]['btc_price'] : '0';
 		$stats['daily_change_percent'] = ($stats['last_price'] > 0) ? ($stats['daily_change']/$stats['last_price']) * 100 : 0;
 		$stats['max'] = ($result5[0]['max'] > 0) ? $result5[0]['max'] : $result2[0]['btc_price'];
