@@ -171,9 +171,9 @@ echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
 
 if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
-	$ch = curl_init('https://www.havelockinvestments.com/r/deposit');
+	$ch = curl_init($CFG->hv_addr);
 	curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-	curl_setopt($ch,CURLOPT_POSTFIELDS,array('key'=>'8Rwb8vvpnHGuuAQfUz7A8kLqf5cAXhpWzayyMkc2tkmdm4C7u97tkJYJE4JcbyzT'));
+	curl_setopt($ch,CURLOPT_POSTFIELDS,array('key'=>$CFG->hv_key));
 	curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 	$result1 = curl_exec($ch);
 	$result = json_decode($result1,true);
