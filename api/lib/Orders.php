@@ -278,9 +278,9 @@ class Orders {
 			$price1 = ($price >= $abs_bid || !$abs_bid) ? $price : $abs_bid;
 		
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' (1/currencies.usd_ask)' : ' (IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
-		$price_str = "ROUND(IF(orders.currency = {$currency_info['id']},orders.stop_price, $price1 * $conversion),2)";
+		$price_str = "ROUND(IF(orders.currency = {$currency_info['id']},$price1, $price1 * $conversion),2)";
 
-		$sql = "UPDATE orders LEFT JOIN currencies ON (orders.currency = currencies.id) SET orders.market_price = 'Y', orders.stop_price = '', orders.btc_price = $price1
+		$sql = "UPDATE orders LEFT JOIN currencies ON (orders.currency = currencies.id) SET orders.market_price = 'Y', orders.stop_price = ''
 				WHERE ((orders.stop_price >= $price_str AND orders.order_type = {$CFG->order_type_ask}) OR (orders.stop_price <= $price_str AND orders.order_type = {$CFG->order_type_bid}))
 				AND orders.stop_price > 0
 				".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false);
