@@ -12,12 +12,7 @@ $transactions = $_SESSION['export_withdrawals'];
 if ($transactions) {
 	$output = fopen('php://output', 'w');
 	foreach ($transactions as $transaction) {
-		fputcsv($output,array(
-		'"'.$transaction[0].'"',
-		'"'.$transaction[1].'"',
-		'"'.$transaction[2].'"',
-		'"'.$transaction[3].'"'
-		));
+		fputcsv($output,$transaction);
 	}
 }
 ?>
