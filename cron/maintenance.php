@@ -37,16 +37,16 @@ db_query($sql);
 
 // set market price orders at market price
 db_start_transaction();
-$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,orders.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
+$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,currencies.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		if ($row['order_type'] == $CFG->order_type_bid) {
-			$price = Orders::getCurrentAsk(false,$row['currency']);
+			$price = Orders::getCurrentAsk($row['currency']);
 			$buy = true;
 		}
 		else {
-			$price = Orders::getCurrentBid(false,$row['currency']);
+			$price = Orders::getCurrentBid($row['currency']);
 			$buy = false;
 		}
 		
