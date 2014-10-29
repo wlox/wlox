@@ -2657,7 +2657,7 @@ class Form {
 			if (!$this->has_areas && !strstr($this->name,'form_filters') && !$CFG->in_popup && $CFG->backstage_mode) {
 				echo '
 				<div class="area full_box">
-					<h2>'.Ops::getPageTitle().'</h2>
+					<h2>'.(($CFG->form_legend) ? $CFG->form_legend : Ops::getPageTitle()).'</h2>
 					<div class="box_bar"></div>
 					<div class="box_tl"></div>
 					<div class="box_tr"></div>

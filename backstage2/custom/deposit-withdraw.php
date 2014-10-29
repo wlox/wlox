@@ -1,4 +1,6 @@
 <?php 
+
+$CFG->form_legend = 'Import Fiat Deposits';
 $upload = new Form('deposits',false,false,'form1');
 $upload->verify();
 
@@ -52,6 +54,54 @@ $upload->submitButton('Upload','Upload');
 $upload->display();
 
 
+
+
+$CFG->form_legend = 'Export Fiat Withdrawals';
+$download = new Form('withadrawals',false,false,'form1');
+$download->verify();
+
+if ($_REQUEST['withadrawals'] && !is_array($download->errors)) {
+	if ($download->info['currency'] > 0) {
+		$currency_info = DB::getRecord('currencies',$download->info['currency'],0,1,false,false,false,1);
+		if (!$currency_info) {
+			$download->errors[] = 'Invalid currency.';
+		}
+		else {
+			$sql = "SELECT * FROM requests WHERE currency = {$download->info['currency']} AND request_status = {$CFG->request_pending_id} AND request_type = {$CFG->request_withdrawal_id}";
+			$result = db_query_array($sql);
+			if ($result) {
+				$_SESSION['export_withdrawals'] = false;
+				
+				foreach ($result as $row) {
+					$sql = "SELECT id FROM bank_accounts WHERE account_number = {$row['account']} AND site_user = {$row['site_user']}";
+					$result1 = db_query_array($sql);
+
+					if (!$result) {
+						$download->errors[] = 'Account mismatch for request id '.$row['id'];
+						db_update('requests',$row['id'],array('request_status'=>$CFG->request_cancelled_id));
+						continue;
+					}
+					
+					$_SESSION['export_withdrawals'][] = array($row['account'],$currency_info['account_number'],$row['amount'],'1BTCXE ID: '.$row['id']);
+				}
+				
+				if ($_SESSION['export_withdrawals']) {
+					echo '<iframe src="custom/withdrawals_download.php?currency='.$currency_info['currency'].'" style="height:0;width:0;border:none;"></iframe>';
+				}
+			}
+		}
+	}
+}
+
+$download->show_errors();
+$download->show_messages();
+$download->selectInput('currency','Currency',1,false,false,'currencies',array('currency'));
+$download->submitButton('Download','Download Withdrawals CSV');
+$download->display();
+
+
+
+$CFG->form_legend = 'Account For Widtdrawals From Escrows';
 $withdraw = new Form('withdraw',false,false,'form1');
 $withdraw->verify();
 
