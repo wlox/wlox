@@ -12,7 +12,8 @@ $transactions = $_SESSION['export_withdrawals'];
 if ($transactions) {
 	$output = fopen('php://output', 'w');
 	foreach ($transactions as $transaction) {
-		fputcsv($output,$transaction);
+		fwrite($output,'"'.implode('","', str_replace('"','""',$transaction)).'"'."\r\n");
 	}
 }
+fclose($output);
 ?>
