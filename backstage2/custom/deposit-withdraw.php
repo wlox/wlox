@@ -82,7 +82,7 @@ if ($_REQUEST['withadrawals'] && !is_array($download->errors)) {
 						continue;
 					}
 					
-					$_SESSION['export_withdrawals'][] = array($row['account'],$currency_info['account_number'],$row['amount'],'1BTCXE ID: '.$row['id']);
+					$_SESSION['export_withdrawals'][] = array($currency_info['account_number'],$row['account'],$row['amount'],'1BTCXE ID: '.$row['id']);
 				}
 				
 				if ($_SESSION['export_withdrawals']) {
