@@ -17,8 +17,12 @@ elseif (!$_REQUEST['get10']) {
 	$limit = false;
 }
 
-if ($_REQUEST['last_price'])
+if ($_REQUEST['last_price']) {
 	API::add('Transactions','get',array(false,false,1,$currency1));
+	
+	if ($currency1)
+		API::add('User','getAvailable');
+}
 
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,1));
 API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,false,false,1));
@@ -32,8 +36,14 @@ if (!$notrades) {
 	$return['btc_traded'] = $query['Stats']['getBTCTraded']['results'][0];
 }
 
-if ($_REQUEST['last_price'])
+if ($_REQUEST['last_price']) {
 	$return['last_price'] = $query['Transactions']['get']['results'][0][0]['btc_price'];
 	$return['fa_symbol'] = $query['Transactions']['get']['results'][0][0]['fa_symbol'];
+	
+	if ($currency1) {
+		$return['available_fiat'] = number_format($query['User']['getAvailable']['results'][0][strtoupper($currency1)],2);
+		$return['available_btc'] = number_format($query['User']['getAvailable']['results'][0]['BTC'],8);
+	}
+}
 
 echo json_encode($return);

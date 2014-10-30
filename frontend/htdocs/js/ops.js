@@ -624,6 +624,9 @@ function updateTransactions() {
 					$('#sell_market_price').prop('readonly','');
 				else
 					$('#sell_market_price').prop('readonly','readonly');
+				
+				$('#buy_user_available').html(json_data.available_fiat);
+				$('#sell_user_available').html(json_data.available_btc);
 			});
 		}
 	},(!notrades ? 2000 : 5000));
