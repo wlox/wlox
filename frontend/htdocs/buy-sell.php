@@ -192,14 +192,14 @@ if ($ask_confirm && $_REQUEST['sell']) {
 		$notice .= '<div class="message-box-wrap">'.Lang::string('buy-notify-two-orders').'</div>';
 }
 
-$uniq_time = time();
-$_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
-if (count($_SESSION["buysell_uniq"]) > 3) {
-	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
-}
-
 $page_title = Lang::string('buy-sell');
 if (!$bypass) {
+	$uniq_time = time();
+	$_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+	if (count($_SESSION["buysell_uniq"]) > 3) {
+		unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+	}
+	
 	include 'includes/head.php';	
 ?>
 <div class="page_title">
