@@ -305,9 +305,11 @@ class Orders {
 		//$usd_field = ($type == $CFG->order_type_bid) ? 'usd_bid' : 'usd_ask';
 		$usd_field = 'usd_ask';
 		$conv_comp = ($type == $CFG->order_type_bid) ? '-' : '+';
+		$conv_comp1 = ($type == $CFG->order_type_ask) ? '-' : '+';
 		$order_asc = ($type == $CFG->order_type_ask) ? 'ASC' : 'DESC';
 		$usd_info = $CFG->currencies['USD'];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
+		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' (1/currencies.'.$usd_field.')' : ' ('.$currency_info[$usd_field].' / IF(orders.currency = '.$usd_info['id'].',1,currencies.'.$usd_field.'))';
 		
 		if ($executed_orders) {
 			$executed_sql = '';
@@ -330,7 +332,7 @@ class Orders {
 			}
 		}
 
-		$sql = "SELECT orders.id, IF(orders.market_price = 'Y',$price,".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee})))" : 'orders.btc_price').") AS fiat_price, orders.btc AS btc_outstanding, orders.site_user AS site_user, fee_schedule.fee AS fee, fee_schedule.fee1 AS fee1 ,site_users.btc AS btc_balance, (IFNULL((SELECT SUM(orders1.fiat + (orders1.fiat * (fee * 0.01))) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_bid} AND orders1.currency = orders.currency AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency != {$CFG->btc_currency_id} AND requests.currency = orders.currency AND requests.site_user = orders.site_user),0)) AS fiat_on_hold, (IFNULL((SELECT SUM(orders1.btc) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_ask} AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = {$CFG->btc_currency_id} AND requests.currency = orders.currency AND requests.site_user = orders.site_user),0)) AS btc_on_hold, orders.log_id AS log_id, orders.currency AS currency_id, currencies.currency AS currency_abbr, orders.btc_price AS orig_btc_price, (orders.btc_price * $conversion) AS real_market_price ".(($CFG->cross_currency_trades) ? ", IF(orders.currency = {$currency_info['id']},0,1 * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))) AS conversion_factor, IF(orders.currency = {$currency_info['id']},0,1 * $conversion) AS orig_conversion_factor, IF(orders.currency = {$currency_info['id']},site_users.{$currency},{$currency_cols}) AS fiat_balance" : ", site_users.{$currency} AS fiat_balance").", orders.stop_price AS stop_price
+		$sql = "SELECT orders.id, IF(orders.market_price = 'Y',$price,".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee})))" : 'orders.btc_price').") AS fiat_price, orders.btc AS btc_outstanding, orders.site_user AS site_user, fee_schedule.fee AS fee, fee_schedule.fee1 AS fee1 ,site_users.btc AS btc_balance, (IFNULL((SELECT SUM(orders1.fiat + (orders1.fiat * (fee * 0.01))) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_bid} AND orders1.currency = orders.currency AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency != {$CFG->btc_currency_id} AND requests.currency = orders.currency AND requests.site_user = orders.site_user),0)) AS fiat_on_hold, (IFNULL((SELECT SUM(orders1.btc) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_ask} AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = {$CFG->btc_currency_id} AND requests.currency = orders.currency AND requests.site_user = orders.site_user),0)) AS btc_on_hold, orders.log_id AS log_id, orders.currency AS currency_id, currencies.currency AS currency_abbr, IF(orders.market_price = 'Y',".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},$price,$price * ($conversion1 $conv_comp1 ($conversion1 * {$CFG->currency_conversion_fee})))" : $price).",orders.btc_price) AS orig_btc_price, (orders.btc_price * $conversion) AS real_market_price ".(($CFG->cross_currency_trades) ? ", IF(orders.currency = {$currency_info['id']},0,1 * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))) AS conversion_factor, IF(orders.currency = {$currency_info['id']},0,1 * $conversion) AS orig_conversion_factor, IF(orders.currency = {$currency_info['id']},site_users.{$currency},{$currency_cols}) AS fiat_balance" : ", site_users.{$currency} AS fiat_balance").", orders.stop_price AS stop_price
 				FROM orders
 				LEFT JOIN site_users ON (orders.site_user = site_users.id )
 				LEFT JOIN currencies ON (orders.currency = currencies.id)
@@ -625,7 +627,7 @@ class Orders {
 					$max_comp_amount = ((($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['orig_btc_price']) > ($comp_order['btc_outstanding'] + (($comp_order['fee'] * 0.01) * $comp_order['btc_outstanding']))) ? $comp_order['btc_outstanding'] : (($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['orig_btc_price']) - (($comp_order['fee'] * 0.01) * (($comp_order['fiat_balance'] - $comp_fiat_on_hold[$comp_order['site_user']]) / $comp_order['orig_btc_price']));
 					$this_funds_finished = ($max_amount < $amount);
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
-
+					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						$comp_fiat_on_hold[$comp_order['site_user']] = $comp_fiat_on_hold_prev[$comp_order['site_user']];
 						$i++;
