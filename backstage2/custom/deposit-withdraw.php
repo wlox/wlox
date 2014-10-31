@@ -82,7 +82,20 @@ if ($_REQUEST['withadrawals'] && !is_array($download->errors)) {
 						continue;
 					}
 					
-					$_SESSION['export_withdrawals'][] = array($currency_info['account_number'],$row['account'],$row['amount'],'1BTCXE ID: '.$row['id']);
+					$withdrawals[$row['account']]['escrow_account'] = $currency_info['account_number'];
+					$withdrawals[$row['account']]['amount'][] = $row['amount'];
+					$withdrawals[$row['account']]['id'][] = $row['id'];
+					$withdrawals[$row['account']]['date'][] = date('Y-m-d',strtotime($row['date']));
+ 				}
+
+				if ($withdrawals) {
+					foreach ($withdrawals as $account_num => $row) {
+						$narrative = array();
+						foreach ($row['id'] as $i => $val) {
+							$narrative[] = '#'.$val.' @'.$row['date'][$i];
+						}
+						$_SESSION['export_withdrawals'][] = array($row['escrow_account'],$account_num,array_sum($row['amount']),'1BTCXE: '.implode(', ',$narrative));
+					}
 				}
 				
 				if ($_SESSION['export_withdrawals']) {
