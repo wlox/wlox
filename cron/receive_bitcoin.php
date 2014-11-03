@@ -169,7 +169,7 @@ $reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals - $CFG-
 
 echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
-
+/*
 if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
 	$ch = curl_init($CFG->hv_addr);
 	curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
@@ -180,6 +180,8 @@ if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
 	curl_close($ch);
 	$havelock_warm_wallet = $result['address'];
 }
+*/
+$havelock_warm_wallet = $CFG->bitcoin_warm_wallet_address;
 
 if ($total_received > 0) {
 	if (!$status) {
