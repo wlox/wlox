@@ -775,6 +775,9 @@ class DB {
 	
 	function insert($table,$fields_array,$date_fields=false,$ignore_fields=false) {
 		global $CFG;
+		
+		if ($CFG->control_one_record)
+			$fields_array['id'] = 1;
 
 		if ($fields_array['cat_selects']) {
 			$cats_array = $fields_array['cat_selects'];

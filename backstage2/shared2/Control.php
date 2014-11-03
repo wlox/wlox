@@ -18,6 +18,12 @@ class Control {
 			
 
 		$page_info = ($is_tab) ? DB::getRecord('admin_tabs',$page_id,0,1) : DB::getRecord('admin_pages',$page_id,0,1);
+		
+		if ($page_info['one_record'] == 'Y' && !$editor_mode) {
+			$action = 'form';
+			$_REQUEST['id'] = 1;
+			$CFG->control_one_record = 1;
+		}
 
 		$controls = Control::getControls($page_id,$action,$is_tab);
 		$CFG->editor_page_id = $page_id;

@@ -30,6 +30,11 @@ if ($CFG->action == 'form') {
 			db_query($sql);
 		}
 	}
+	
+	if (!in_array('one_record',$table_fields)){
+		$sql = "ALTER TABLE admin_tabs ADD {$_REQUEST['table']}.one_record ENUM( 'Y', 'N' ) NOT NULL";
+		db_query($sql);
+	}
 
 	$form = new Form('tabs_form',false,false,false,$_REQUEST['table']);
 	$form->verify();
@@ -40,6 +45,7 @@ if ($CFG->action == 'form') {
 	$form->textInput('name','Name',true);
 	$form->textInput('url','Url');
 	$form->textInput('order','Order',false,'0');
+	$form->checkBox('one_record','Auto First Record?');
 	if ($_REQUEST['table'] == 'admin_tabs') {
 		$form->checkBox('hidden','Hidden?');
 		$form->checkBox('is_ctrl_panel','Is Control Panel?');
