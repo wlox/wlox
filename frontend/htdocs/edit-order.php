@@ -19,11 +19,13 @@ $bypass = $_REQUEST['bypass'];
 API::add('Orders','getRecord',array($order_id1));
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 API::add('User','getAvailable');
+API::add('Status','get');
 $query = API::send();
 
 $order_info = $query['Orders']['getRecord']['results'][0];
 $user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
+$status = $query['Status']['get']['results'][0];
 
 API::add('Currencies','getRecord',array(false,$order_info['currency']));
 $query = API::send();
@@ -89,6 +91,9 @@ else {
 	$sell_limit = ($sell_price1 > 0 && !$sell_market_price1) ? 1 : $_REQUEST['sell_limit'];
 	$sell_stop = ($sell_stop_price1 > 0);
 }
+
+if ($status['trading_status'] == 'suspended')
+	Errors::add(Lang::string('buy-trading-disabled'));
 
 if ($_REQUEST['buy']) {
 	$buy_market_price1 = ereg_replace("[^0-9]", "",$_REQUEST['buy_market_price']);

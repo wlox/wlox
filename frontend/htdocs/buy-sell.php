@@ -35,6 +35,7 @@ API::add('Orders','getCurrentAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array($currency_info['id']));
+API::add('Status','get');
 
 if ($_REQUEST['buy'] && !$_REQUEST['buy_market_price']) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
@@ -59,6 +60,7 @@ $self_limits = $query['Orders']['checkStopsOverBid']['results'][0][0]['price'];
 $self_orders_currency = $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'];
 $self_stops_currency = $query['Orders']['checkOutbidStops']['results'][0][0]['currency'];
 $self_limits_currency = $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'];
+$status = $query['Status']['get']['results'][0];
 $user_fee_bid = (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || $_REQUEST['buy_market_price'] || !$_REQUEST['buy_amount']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 $user_fee_ask = (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || $_REQUEST['sell_market_price'] || !$_REQUEST['sell_amount']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 
@@ -73,6 +75,9 @@ $sell_price1 = ($_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_RE
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
+
+if ($status['trading_status'] == 'suspended')
+	Errors::add(Lang::string('buy-trading-disabled'));
 
 if ($_REQUEST['buy']) {
 	$buy_market_price1 = preg_replace("/[^0-9]/", "",$_REQUEST['buy_market_price']);

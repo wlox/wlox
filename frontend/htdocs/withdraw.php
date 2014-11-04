@@ -48,6 +48,7 @@ if ($authcode1) {
 	}
 }
 
+API::add('Status','get');
 API::add('Requests','get',array(1,false,false,1));
 API::add('Requests','get',array(false,$page1,15,1));
 API::add('BankAccounts','get');
@@ -67,6 +68,7 @@ elseif ($bank_accounts) {
 
 $total = $query['Requests']['get']['results'][0];
 $requests = $query['Requests']['get']['results'][1];
+$status = $query['Status']['get']['results'][0];
 
 API::add('Transactions','pagination',array('withdraw.php',$page1,$total,15,5,$CFG->pagination_label));
 API::add('User','getAvailable');
@@ -93,6 +95,8 @@ else {
 $user_available = $query['User']['getAvailable']['results'][0];
 $pagination = $query['Transactions']['pagination']['results'][0];
 
+if ($status['withdrawals_status'] == 'suspended')
+	Errors::add(Lang::string('withdrawal-suspended'));
 
 if ($_REQUEST['bitcoins']) {
 	if (!($btc_amount1 > 0))
