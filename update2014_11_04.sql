@@ -12,5 +12,5 @@ INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `con
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (430, 'buy-trading-disabled', 'Trading ha sido suspendido temporalmente por motivos de mantenimiento. Se reanudará en breve.', 'Trading has been suspended temporarily for maintenance purposes. It will resume shortly.', '', 17),
 (431, 'withdrawal-suspended', 'Los retiros han sido suspendidos temporalmente por motivos de mantenimiento. Volverán a funcionar en breve.', 'Withdrawals are temporarily suspended for maintenance purposes. They will function again shortly.', '', 23);
-
+UPDATE `admin_tabs` SET `one_record` = 'Y' WHERE `admin_tabs`.`id` = 64;
 
