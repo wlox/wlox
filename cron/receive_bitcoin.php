@@ -169,6 +169,20 @@ $reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals - $CFG-
 
 echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
+/*
+if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
+	$ch = curl_init($CFG->hv_addr);
+	curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+	curl_setopt($ch,CURLOPT_POSTFIELDS,array('key'=>$CFG->hv_key));
+	curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
+	$result1 = curl_exec($ch);
+	$result = json_decode($result1,true);
+	curl_close($ch);
+	$havelock_warm_wallet = $result['address'];
+}
+*/
+$havelock_warm_wallet = $CFG->bitcoin_warm_wallet_address;
+
 if ($total_received > 0) {
 	if (!$status) {
 		echo 'Error: Could not get status.'.PHP_EOL;
@@ -180,10 +194,10 @@ if ($total_received > 0) {
 	$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
 	
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
-	$warm_wallet_a['address'] = $CFG->bitcoin_warm_wallet_address;
+	$warm_wallet_a['address'] = $havelock_warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
-	if ($reserve_surplus > $CFG->bitcoin_reserve_min) {
+	if ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
 		$bitcoin->settxfee(0.00);
 		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
@@ -208,9 +222,9 @@ if ($total_received > 0) {
 		}
 	}
 }
-elseif ($reserve_surplus > $CFG->bitcoin_reserve_min) {
+elseif ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
-	$warm_wallet_a['address'] = $CFG->bitcoin_warm_wallet_address;
+	$warm_wallet_a['address'] = $havelock_warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
 	$bitcoin->settxfee(0.00);
