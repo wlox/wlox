@@ -368,6 +368,7 @@ class Orders {
 		$bid = self::getCurrentBid($currency1);
 		$ask = self::getCurrentAsk($currency1);
 		$bid = ($bid > $ask) ? $ask : $bid;
+		$price = ($buy) ? $ask : $bid;
 		
 		if (!$external_transaction)
 			db_start_transaction();
@@ -380,9 +381,6 @@ class Orders {
 			$edit_currency = DB::getRecord('currencies',$orig_order['currency'],0,1);
 			$currency1 = strtolower($edit_currency['currency']);
 		}
-		
-		if ($market_price)
-			$price = ($buy) ? self::getCurrentAsk($currency1) : self::getCurrentBid($currency1);
 		
 		$currency_info = $CFG->currencies[strtoupper($currency1)];
 		$usd_info = $CFG->currencies['USD'];
@@ -399,6 +397,9 @@ class Orders {
 		
 		$user_fee = DB::getRecord('fee_schedule',$user_info['fee_schedule'],0,1);
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
+		
+		if ($status['trading_status'] == 'suspended')
+			return false;
 		
 		if (!($edit_id > 0))
 			$order_log_id = db_insert('order_log',array('date'=>date('Y-m-d H:i:s'),'order_type'=>(($buy) ? $CFG->order_type_bid : $CFG->order_type_ask),'site_user'=>$user_info['id'],'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'stop_price'=>$stop_price,'status'=>'ACTIVE'));
