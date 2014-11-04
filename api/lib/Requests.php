@@ -62,7 +62,12 @@ class Requests{
 		if (!$CFG->session_active)
 			return false;
 
+		$status = Status::get();
+		if ($status['withdrawals_status'] == 'suspended')
+			return false;
+		
 		$available = User::getAvailable();
+		
 		if ($is_btc) {
 			if (round($amount,8) > round($available['BTC'],8))
 				return false;

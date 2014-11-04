@@ -254,12 +254,12 @@ class User {
 			return false;
 		
 		$user = DB::getRecord('site_users',$id,0,1);
-		$new_id = self::getNewId();
-		$user['new_user'] = $new_id;
+		//$new_id = self::getNewId();
+		//$user['new_user'] = $new_id;
 		$user['new_password'] = self::randomPassword(12);
 		$pass1 = Encryption::hash($user['new_password']);
 
-		db_update('site_users',$id,array('user'=>$user['new_user'],'pass'=>$pass1,'no_logins'=>'Y'));
+		db_update('site_users',$id,array(/*'user'=>$user['new_user'],*/'pass'=>$pass1,'no_logins'=>'Y'));
 		
 		$email1 = SiteEmail::getRecord('forgot');
 		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
