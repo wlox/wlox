@@ -71,7 +71,7 @@ if ($result) {
 db_commit();
 
 // currency ledger
-if ((date('H') == 0 || date('H') == 12) && (date('i') >= 0 && date('i') < 5)) {
+if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	db_start_transaction();
 	// check total fiat needed for withdrawals
 	$sql = "SELECT currency, SUM(amount) AS amount FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency != {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} GROUP BY currency FOR UPDATE";
