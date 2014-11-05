@@ -77,6 +77,7 @@ if (!$bypass) {
 		<? Errors::display(); ?>
 		<div class="filters">
 			<input type="hidden" id="open_orders_user" value="1" />
+			<input type="hidden" id="uniq" value="<?= $_SESSION["openorders_uniq"] ?>" />
 			<form id="filters" method="GET" action="open-orders.php">
 				<ul class="list_empty">
 					<li>
