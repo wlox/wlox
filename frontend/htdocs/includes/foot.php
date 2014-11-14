@@ -88,24 +88,29 @@
 </div>
     
 <!-- ######### JS FILES ######### -->
-<!-- get jQuery from the google apis -->
 <script type="text/javascript" src="js/universal/jquery.js"></script>
 <script type="text/javascript" src="js/universal/jquery-ui-1.10.3.custom.min.js"></script>
 
 <!-- main js -->
 <script type="text/javascript" src="js/ops.js"></script>
 
+<? if ($CFG->self == 'index.php' || $CFG->self == 'order-book.php') { ?>
 <!-- flot -->
 <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
 <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>
 <script type="text/javascript" src="js/flot/jquery.flot.crosshairs.js"></script>
+<? } ?>
 
+<? if ($CFG->self == 'security.php') { ?>
 <!-- authy -->
 <script src="https://www.authy.com/form.authy.min.js" type="text/javascript"></script>
+<? } ?>
 
+<? if ($CFG->self == 'index.php') { ?>
 <!-- countdown -->
 <script type="text/javascript" src="js/countdown/jquery.countdown.js"></script>
 <? ($CFG->language == 'es') ? '<script type="text/javascript" src="js/countdown/jquery.countdown-es.js"></script>' : '' ?>
+<? } ?>
 
 <!-- main menu -->
 <script type="text/javascript" src="js/mainmenu/ddsmoothmenu.js"></script>
@@ -120,8 +125,9 @@
 
 <script type="text/javascript" src="js/mainmenu/scripts.js"></script>
 
-<!-- tabs script -->
-<script type="text/javascript" src="js/tabs/tabs.js"></script>
+<? if ($CFG->self == 'api-docs.php') { ?>
+<script type="text/javascript" src="js/prism.js"></script>
+<? } ?>
 
 <!-- scroll up -->
 <script type="text/javascript">
@@ -142,6 +148,7 @@
  
     });
 </script>
+
 
 <!-- jquery jcarousel -->
 <script type="text/javascript">
@@ -164,8 +171,6 @@
 	
 </script>
 
-<!-- accordion -->
-<script type="text/javascript" src="js/accordion/custom.js"></script>
 
 <!-- REVOLUTION SLIDER -->
 <script type="text/javascript">

@@ -64,6 +64,7 @@
     <link rel="stylesheet" href="js/sticky-menu/core.css">
     
 
+    <? if ($CFG->self == 'index.php' && !User::isLoggedIn()) { ?>
     <!-- REVOLUTION SLIDER -->
     <link rel="stylesheet" type="text/css" href="js/revolutionslider/css/fullwidth.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="js/revolutionslider/rs-plugin/css/settings.css" media="screen" />
@@ -71,25 +72,20 @@
     <!-- jquery jcarousel -->
     <link rel="stylesheet" type="text/css" href="js/jcarousel/skin.css" />
     <link rel="stylesheet" type="text/css" href="js/jcarousel/skin2.css" />
-	
-	<!-- faqs -->
-    <link rel="stylesheet" href="js/accordion/accordion.css" type="text/css" media="all">
+	<? } ?>
     
-    <!-- tabs css -->
-    <link rel="stylesheet" type="text/css" href="js/tabs/tabs.css" />
-    
-    <!-- testimonials -->
-    <link rel="stylesheet" href="js/testimonials/fadeeffect.css" type="text/css" media="all">
-    
-    <!-- testimonials -->
-    <link rel="stylesheet" href="js/testimonials/fadeeffect.css" type="text/css" media="all">
-    
+    <? if ($CFG->self == 'security.php') { ?>
     <!-- authy -->
     <link href="https://www.authy.com/form.authy.min.css" media="screen" rel="stylesheet" type="text/css">
+    <? } ?>
     
-    <!--  script type="text/javascript" src="../shared2/js/form.js"></script -->
+    <? if ($CFG->self == 'contact.php') { ?>
 	<script type="text/javascript" src="ckeditor/ckeditor.js"></script>
-
+	<? } ?>
+	
+	<? if ($CFG->self == 'api-docs.php') { ?>
+	<link rel="stylesheet" media="screen" href="css/prism.css" type="text/css" />
+	<? } ?>
 </head>
 
 <body>

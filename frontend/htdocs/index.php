@@ -168,9 +168,9 @@ if (!User::isLoggedIn()) {
 <? 
 }
 if ($stats['daily_change'] > 0) 
-	$arrow = '<i id="up_or_down" class="fa fa-caret-up" style="color:#60FF51;"></i> ';
+	$arrow = '<i id="up_or_down" class="fa fa-caret-up price-green"></i> ';
 elseif ($stats['daily_change'] < 0)
-	$arrow = '<i id="up_or_down" class="fa fa-caret-down" style="color:#FF5151;"></i> ';
+	$arrow = '<i id="up_or_down" class="fa fa-caret-down price-red"></i> ';
 else
 	$arrow = '<i id="up_or_down" class="fa fa-minus"></i> ';
 ?>
@@ -187,7 +187,7 @@ else
         <div class="mar_top3"></div>
         <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-last-price') ?></h6>
-        	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?></p>
+        	<p class="stat1 <?= ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red' ?>"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?><small id="stats_last_price_curr"><?= (strtolower($query['Transactions']['get']['results'][0][0]['currency']) == $currency1) ? false : ((strtolower($query['Transactions']['get']['results'][0][0]['currency1']) == $currency1) ? false : ' ('.$query['Transactions']['get']['results'][0][0]['currency1'].')') ?></small></p>
         </div>
         <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-daily-change') ?></h6>
@@ -261,7 +261,7 @@ else
 					<tr id="order_'.$transaction['id'].'">
 						<td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'.strtotime($transaction['date']).'" /></td>
 						<td>'.number_format($transaction['btc'],8).' BTC</td>
-						<td>'.$currency_info['fa_symbol'].number_format($transaction['btc_price'],2).'</td>
+						<td>'.$currency_info['fa_symbol'].number_format($transaction['btc_price'],2).((strtolower($transaction['currency']) == $currency1) ? false : ((strtolower($transaction['currency1']) == $currency1) ? false : ' ('.$transaction['currency1'].')')).'</td>
 					</tr>';
 						}
 					}

@@ -279,10 +279,16 @@ function updateTransactions() {
 						if (i == 0) {
 							current_price = parseFloat(this.btc_price.replace(',',''));
 							if (current_price > 0) {
+								if (this.maker_type == 'sell')
+									$('#stats_last_price').parents('.stat1').removeClass('price-red').addClass('price-green');
+								else
+									$('#stats_last_price').parents('.stat1').removeClass('price-green').addClass('price-red');
+								
 								var open_price = parseFloat($('#stats_open').html().replace(',',''));
 								var change_perc = formatCurrency(current_price - open_price);
 								var change_abs = Math.abs(change_perc);
 								$('#stats_last_price').html(formatCurrency(current_price));
+								$('#stats_last_price_curr').html((((this.currency).toLowerCase() == currency) ? false : (((this.currency1).toLowerCase() == currency) ? false : ' ('+this.currency1+')')));
 								$('#stats_daily_change_abs').html(change_abs);
 								$('#stats_daily_change_perc').html(formatCurrency((change_abs/current_price) * 100));
 								
@@ -302,7 +308,7 @@ function updateTransactions() {
 						if (this.btc_price > current_max)
 							$('#stats_max').html(formatCurrency(this.btc_price));
 						
-						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+'</td></tr>').insertAfter(('#transactions_list tr:first'));
+						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+(((this.currency).toLowerCase() == currency) ? false : (((this.currency1).toLowerCase() == currency) ? false : ' ('+this.currency1+')'))+'</td></tr>').insertAfter(('#transactions_list tr:first'));
 						timeSince($(elem).find('.time_since'));
 						$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 						$('#stats_traded').html(formatCurrency(json_data.btc_traded));
@@ -580,7 +586,17 @@ function updateTransactions() {
 				}
 				
 				if (parseFloat(json_data.last_price) && $('#last_price').length > 0) {
-					$('#last_price').val($('<div/>').html(json_data.fa_symbol + formatCurrency(json_data.last_price)).text());
+					var lp_prev = $('#last_price').val();
+					var lp_now = $('<div/>').html(json_data.fa_symbol + formatCurrency(json_data.last_price) + json_data.last_price_curr).text();
+					$('#last_price').val(lp_now);
+					
+					if (json_data.last_trans_color == 'price-green')
+						$('#last_price').removeClass('price-red').addClass(json_data.last_trans_color);
+					else
+						$('#last_price').removeClass('price-green').addClass(json_data.last_trans_color);
+					
+					if (lp_prev != lp_now) 
+						$('#last_price').effect("highlight",{color:"#A2EEEE"},1000);
 				}
 				
 				var current_price = ($('#asks_list .order_price').length > 0) ? parseFloat($('#asks_list .order_price:first').html().replace(',','')) : 0;

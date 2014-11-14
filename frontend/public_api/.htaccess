@@ -1,0 +1,2 @@
+RewriteEngine on
+RewriteRule ^([a-z/-]*)$ index.php?endpoint=$1&%{QUERY_STRING} [L,QSA]
