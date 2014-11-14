@@ -51,8 +51,8 @@ class User {
 		if ($result) {
 			foreach ($result as $row) {
 				if ($row['type'] == $CFG->order_type_bid) {
-					$on_hold[$row['currency']]['order'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
-					$on_hold[$row['currency']]['total'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
+					$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
 				}
 				else {
 					$on_hold['BTC']['order'] += floatval($row['btc_amount']);
@@ -78,7 +78,7 @@ class User {
 				if (User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'] == 0)
 					continue;
 	
-				$available[$currency['currency']] = User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'];
+				$available[$currency['currency']] = round(User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'],2,PHP_ROUND_HALF_UP);
 			}
 		}
 		return $available;
@@ -111,7 +111,7 @@ class User {
 		if (!$CFG->session_active)
 			return false;
 	
-		$sql = "SELECT SUM(transactions.btc * transactions.btc_price * currencies.usd_ask) AS volume FROM transactions
+		$sql = "SELECT ROUND(SUM(transactions.btc * transactions.btc_price * currencies.usd_ask),2) AS volume FROM transactions
 				LEFT JOIN currencies ON (currencies.id = transactions.currency)
 				WHERE (site_user = ".User::$info['id']." OR site_user1 = ".User::$info['id'].")
 				AND transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
