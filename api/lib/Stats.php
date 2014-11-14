@@ -50,24 +50,26 @@ class Stats {
 		$sql = "SELECT * FROM current_stats WHERE id = 1";
 		$result1 = db_query_array($sql);
 
-		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS btc_price, IF(transactions.transaction_type = {$CFG->transactions_buy_id},'BUY','SELL') AS last_transaction_type, IF(transactions.currency != $currency_id AND transactions.currency1 != $currency_id,currencies1.currency,'{$c_info['currency']}') AS last_transaction_currency FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 		$result2 = db_query_array($sql);
 
-		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date < CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date < CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.date DESC LIMIT 0,1";
 		$result3 = db_query_array($sql);
 		
 		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 		$result4 = db_query_array($sql);
 		
-		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS max FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.btc_price DESC LIMIT 0,1";
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS max FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.btc_price DESC LIMIT 0,1";
 		$result5 = db_query_array($sql);
 		
-		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND(IF(transactions.currency = $currency_id,transactions.btc_price,IF(transactions.transaction_type1 = {$CFG->transactions_sell_id},IF(transactions.orig_btc_price <= transactions.ask_at_transaction,transactions.orig_btc_price * $conversion1,transactions.ask_at_transaction * $conversion),IF(transactions.orig_btc_price >= transactions.bid_at_transaction,transactions.orig_btc_price * $conversion1,transactions.bid_at_transaction * $conversion))),2)" : 'transactions.btc_price')." AS min FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.btc_price ASC LIMIT 0,1";
+		$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS min FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.btc_price ASC LIMIT 0,1";
 		$result6 = db_query_array($sql);
 
 		$stats['bid'] = $bid;
 		$stats['ask'] = $ask;
 		$stats['last_price'] = ($result2[0]['btc_price']) ? $result2[0]['btc_price'] : $ask;
+		$stats['last_transaction_type'] = $result2[0]['last_transaction_type'];
+		$stats['last_transaction_currency'] = $result2[0]['last_transaction_currency'];
 		$stats['daily_change'] = ($result3[0]['btc_price'] > 0 && $result2[0]['btc_price'] > 0) ? $result2[0]['btc_price'] - $result3[0]['btc_price'] : '0';
 		$stats['daily_change_percent'] = ($stats['last_price'] > 0) ? ($stats['daily_change']/$stats['last_price']) * 100 : 0;
 		$stats['max'] = ($result5[0]['max'] > 0) ? $result5[0]['max'] : $result2[0]['btc_price'];
@@ -83,7 +85,7 @@ class Stats {
 	function getBTCTraded() {
 		global $CFG;
 		
-		$sql = "SELECT SUM(btc) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
+		$sql = "SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 		return db_query_array($sql);
 	}
 }
