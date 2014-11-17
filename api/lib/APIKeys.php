@@ -41,6 +41,7 @@ class APIKeys {
 		
 		$sql = 'SELECT id FROM api_keys WHERE api_keys.key = \''.$key.'\'';
 		$exists = db_query_array($sql);
+		return array($exists,$sql);
 		if ($exists)
 			return false;
 		
