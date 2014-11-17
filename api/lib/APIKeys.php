@@ -31,7 +31,7 @@ class APIKeys {
 	
 	function add() {
 		global $CFG;
-		
+		return array($CFG->session_active,$CFG->session_locked,$CFG->token_verified);
 		if (!$CFG->session_active || $CFG->session_locked || !$CFG->token_verified)
 			return false;
 		
@@ -41,7 +41,6 @@ class APIKeys {
 		
 		$sql = 'SELECT id FROM api_keys WHERE api_keys.key = \''.$key.'\'';
 		$exists = db_query_array($sql);
-		return array($exists,$sql);
 		if ($exists)
 			return false;
 		
