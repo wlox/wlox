@@ -31,7 +31,7 @@ class APIKeys {
 	
 	function add() {
 		global $CFG;
-		return array($CFG->session_active,$CFG->session_locked,$CFG->token_verified);
+		return array('asdfsadf',$CFG->session_active,$CFG->session_locked,$CFG->token_verified);
 		if (!$CFG->session_active || $CFG->session_locked || !$CFG->token_verified)
 			return false;
 		
