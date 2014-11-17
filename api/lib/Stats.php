@@ -84,7 +84,7 @@ class Stats {
 	
 	function getBTCTraded() {
 		global $CFG;
-		return 'habob';
+		
 		$sql = "SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 		return db_query_array($sql);
 	}
