@@ -10,5 +10,9 @@ INSERT INTO `content` (`id`, `url`, `title_en`, `title_es`, `content_en`, `conte
 
 ALTER TABLE `order_log` ADD INDEX ( `site_user` ) ;
 
+INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
+(434, 'api-access', 'Acceso al API', 'API Access', '', 402);
+
+
 
 
