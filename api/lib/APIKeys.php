@@ -1,6 +1,7 @@
 <?php 
 class APIKeys {
 	function get() {
+		return 'asdf';
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked)
@@ -30,7 +31,6 @@ class APIKeys {
 	}
 	
 	function add() {
-		return 'asdf';
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked || !$CFG->token_verified)
