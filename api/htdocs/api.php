@@ -70,6 +70,7 @@ if ($api_key1 && $api_signature1) {
 			}
 			else {
 				$CFG->session_active = true;
+				$CFG->session_api = true;
 			}
 		}
 		else
