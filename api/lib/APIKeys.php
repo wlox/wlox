@@ -1,7 +1,6 @@
 <?php 
 class APIKeys {
 	function get() {
-		return 'asdf';
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked)
