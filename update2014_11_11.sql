@@ -13,6 +13,10 @@ ALTER TABLE `order_log` ADD INDEX ( `site_user` ) ;
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (434, 'api-access', 'Acceso al API', 'API Access', '', 402);
 
+INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
+(435, 'api-go-to-docs', 'Para documentación acerca del uso de este API, por favor acceder a <u><a href="api-docs.php">la documentación del API</a></u>.', 'For documentation on how to use this API, please see the <u><a href="api-docs.php">API documentation</a></u>.', '', 402);
+
+
 
 
 
