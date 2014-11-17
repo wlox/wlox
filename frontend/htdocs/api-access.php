@@ -111,6 +111,11 @@ include 'includes/head.php';
             if ($info_message) {
 				echo '<div class="text dotted"><p>'.$info_message.'</p></div><div class="clear"></div><div class="mar_top1"></div>';
 			} 
+			else {
+			?>
+			<div class="info"><div class="message-box-wrap"><?= Lang::string('api-go-to-docs') ?></div></div>
+			<?
+			}
             ?>
             <? if ($no_2fa) { ?>
 			<div class="content1">

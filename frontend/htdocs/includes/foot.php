@@ -28,6 +28,7 @@
                 <li><a href="news.php"><?= Lang::string('news') ?></a></li>
                 <li><a href="contact.php"><?= Lang::string('contact') ?></a></li>
                 <li><a href="terms.php"><?= Lang::string('terms') ?></a></li>
+                <li><a href="api-docs.php"><?= Lang::string('api-docs') ?></a></li>
             </ul>
          </div>
          <div class="one_fifth">
