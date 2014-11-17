@@ -30,6 +30,7 @@ class APIKeys {
 	}
 	
 	function add() {
+		return 'asdf';
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked || !$CFG->token_verified)
