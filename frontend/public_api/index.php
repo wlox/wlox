@@ -72,7 +72,7 @@ elseif ($endpoint == 'historical-prices') {
 		// timeframe values: 1mon, 3mon, 6mon, ytd, 1year
 		$timeframe_values = array('1mon','3mon','6mon','ytd','1year');
 		$currency1 = (!$currency1) ? 'usd' : strtolower($currency1);
-		$timeframe1 = (!empty($_REQUEST['timeframe'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_REQUEST['timeframe']) : false;
+		$timeframe1 = preg_replace("/[^0-9a-zA-Z]/","",$_REQUEST['timeframe']);
 		$timeframe1 = (!$timeframe1 || !in_array($timeframe1,$timeframe_values)) ? '1mon' : $timeframe1;
 		
 		API::add('Stats','getHistorical',array(strtolower($timeframe1),$currency1,1));
