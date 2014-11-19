@@ -116,7 +116,7 @@ $code['api_sign_java'] = '/* Java Example */
 /* Dependent on Apache Commons Codec to encode in base64. */
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 
 /* we add our public key and nonce to whatever parameters we are sending */
 Map<String, String> params = new HashMap<String, String>();
@@ -135,7 +135,6 @@ String hash = Hex.encodeHexString(sha256_HMAC.doFinal(message.getBytes()));
 
 /* add signature to request parameters */
 params.put("signature", hash);
-		
 ';
 
 $code['api_url'] = 'https://1btcxe.com/api';
