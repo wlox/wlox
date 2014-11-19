@@ -7,12 +7,8 @@ include 'cfg.php';
 /* should run at the very start of every day */
 
 // compile historical data
-$sql = 'SELECT id FROM historical_data WHERE `date` = "'.date('Y-m-d',strtotime('-1 day')).'" LIMIT 0,1';
-$result = db_query_array($sql);
-if (!$result) {
-	$sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtotime('-1 day')))."',(transactions.btc_price * currencies.usd_ask) AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE transactions.date <= (CURDATE() - INTERVAL 1 DAY) ORDER BY transactions.date DESC LIMIT 0,1) ";
-	$result = db_query($sql);
-}
+$sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtotime('-1 day')))."',(transactions.btc_price * currencies.usd_ask) AS btc_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) WHERE transactions.date <= (CURDATE() - INTERVAL 1 DAY) ORDER BY transactions.date DESC LIMIT 0,1) ";
+$result = db_query($sql);
 
 // get total of each currency
 $currencies = Currencies::get();
