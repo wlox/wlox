@@ -1136,6 +1136,14 @@ $(document).ready(function() {
 		return true;
 	});
 	
+	var first_text = $('input:text').first();
+	if (first_text.length > 0) {
+		if ($(first_text).val() == '0')
+			$(first_text).val('').focus();
+		else if (!($(first_text).val().length > 0))
+			$(first_text).focus();
+	}
+	
 	filtersUpdate();
 	paginationUpdate();
 	switchBuyCurrency();

@@ -34,10 +34,15 @@ if ($endpoint == 'stats') {
 		
 		API::add('Stats','getCurrent',array(false,$currency1));
 		$query = API::send();
-		$return['stats'] = $query['Stats']['getCurrent']['results'][0];
-		$return['stats']['request_currency'] = strtoupper($currency1);
-		$return['stats']['daily_change'] = round($return['stats']['daily_change'],2,PHP_ROUND_HALF_UP);
-		$return['stats']['daily_change_percent'] = round($return['stats']['daily_change_percent'],2,PHP_ROUND_HALF_UP);
+		
+		if (is_array($query['Stats']['getCurrent']['results'][0])) {
+			$return['stats'] = $query['Stats']['getCurrent']['results'][0];
+			$return['stats']['request_currency'] = strtoupper($currency1);
+			$return['stats']['daily_change'] = round($return['stats']['daily_change'],2,PHP_ROUND_HALF_UP);
+			$return['stats']['daily_change_percent'] = round($return['stats']['daily_change_percent'],2,PHP_ROUND_HALF_UP);
+		}
+		else
+			$return['stats'] = array();
 	}
 }
 elseif ($endpoint == 'historical-prices') {
@@ -50,8 +55,13 @@ elseif ($endpoint == 'historical-prices') {
 		
 		API::add('Stats','getHistorical',array(strtolower($timeframe1),$currency1,1));
 		$query = API::send();
-		$return['historical-prices'] = $query['Stats']['getHistorical']['results'][0];
-		$return['historical-prices']['request_currency'] = strtoupper($currency1);
+		
+		if (is_array($query['Stats']['getHistorical']['results'][0])) {
+			$return['historical-prices'] = $query['Stats']['getHistorical']['results'][0];
+			$return['historical-prices']['request_currency'] = strtoupper($currency1);
+		}
+		else
+			$return['historical-prices'] = array();
 	}
 }
 elseif ($endpoint == 'order-book') {
@@ -63,8 +73,8 @@ elseif ($endpoint == 'order-book') {
 		$query = API::send();
 		
 		$return['order-book']['request_currency'] = strtoupper($currency1);
-		$return['order-book']['bid'] = $query['Orders']['get']['results'][0];
-		$return['order-book']['ask'] =  $query['Orders']['get']['results'][1];
+		$return['order-book']['bid'] = ($query['Orders']['get']['results'][0]) ? $query['Orders']['get']['results'][0] : array();
+		$return['order-book']['ask'] = ($query['Orders']['get']['results'][1]) ? $query['Orders']['get']['results'][1] : array();
 	}
 }
 elseif ($endpoint == 'transactions') {
@@ -75,7 +85,7 @@ elseif ($endpoint == 'transactions') {
 		
 		API::add('Transactions','get',array(false,false,$limit1,strtolower($currency1),false,false,false,false,false,1));
 		$query = API::send();
-		$return['transactions'] = $query['Transactions']['get']['results'][0];
+		$return['transactions'] = ($query['Transactions']['get']['results'][0]) ? $query['Transactions']['get']['results'][0] : array();
 		$return['transactions']['request_currency'] = (!$currency1) ? 'ORIGINAL' : strtoupper($currency1);
 	}
 }
@@ -94,8 +104,8 @@ elseif ($endpoint == 'balances-and-info') {
 				$query = API::send($nonce1);
 				
 				if (!$query['error']) {
-					$return['balances-and-info']['on_hold'] = $query['User']['getOnHold']['results'][0];
-					$return['balances-and-info']['available'] = $query['User']['getAvailable']['results'][0];
+					$return['balances-and-info']['on_hold'] = ($query['User']['getOnHold']['results'][0]) ? $query['User']['getOnHold']['results'][0] : array();
+					$return['balances-and-info']['available'] = ($query['User']['getAvailable']['results'][0]) ? $query['User']['getAvailable']['results'][0] : array();
 					$return['balances-and-info']['usd_volume'] = $query['User']['getVolume']['results'][0];
 					$return['balances-and-info']['fee_bracket']['maker'] = $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 					$return['balances-and-info']['fee_bracket']['taker'] = $query['FeeSchedule']['getRecord']['results'][0]['fee'];
@@ -126,8 +136,9 @@ elseif ($endpoint == 'open-orders') {
 				$query = API::send($nonce1);
 				
 				if (!$query['error']) {
-					$return['open-orders']['bid'] = $query['Orders']['get']['results'][0];
-					$return['open-orders']['ask'] = $query['Orders']['get']['results'][1];
+					$return['order-book']['bid'] = ($query['Orders']['get']['results'][0]) ? $query['Orders']['get']['results'][0] : array();
+					$return['order-book']['ask'] = ($query['Orders']['get']['results'][1]) ? $query['Orders']['get']['results'][1] : array();
+					$return['order-book']['request_currency'] = strtoupper($currency1);
 				}
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -149,7 +160,7 @@ elseif ($endpoint == 'user-transactions') {
 				// type can be 'buy' or 'sell'
 				$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
 				$limit1 = (!$limit1) ? 10 : $limit1;
-				$type1 = preg_replace("/[^a-zA-Z]/","",$_REQUEST['type']);
+				$type1 = preg_replace("/[^a-zA-Z]/","",$_REQUEST['side']);
 				
 				API::add('Transactions','get',array(false,false,$limit1,$currency1,1,false,strtolower($type1),false,false,1));
 				API::apiKey($api_key1);
@@ -158,7 +169,7 @@ elseif ($endpoint == 'user-transactions') {
 				$query = API::send($nonce1);
 				
 				if (!$query['error'])
-					$return['user-transactions'] = $query['Transactions']['get']['results'][0];
+					$return['user-transactions'] = ($query['Transactions']['get']['results'][0]) ? $query['Transactions']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 			}
@@ -185,7 +196,7 @@ elseif ($endpoint == 'btc-deposit-address/get') {
 				$query = API::send($nonce1);
 				
 				if (!$query['error'])
-					$return['btc-deposit-address-get'] = $query['BitcoinAddresses']['get']['results'][0];
+					$return['btc-deposit-address-get'] = ($query['BitcoinAddresses']['get']['results'][0]) ? $query['BitcoinAddresses']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 			}
@@ -255,7 +266,7 @@ elseif ($endpoint == 'deposits/get') {
 					$query = API::send($nonce1);
 					
 					if (!$query['error'])
-						$return['deposits'] = $query['Requests']['get']['results'][0];
+						$return['deposits'] = ($query['Requests']['get']['results'][0]) ? $query['Requests']['get']['results'][0] : array();
 					else
 						$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 				}
@@ -288,7 +299,7 @@ elseif ($endpoint == 'withdrawals/get') {
 				$query = API::send($nonce1);
 					
 				if (!$query['error'])
-					$return['withdrawals'] = $query['Requests']['get']['results'][0];
+					$return['withdrawals'] = ($query['Requests']['get']['results'][0]) ? $query['Requests']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 			}
@@ -463,11 +474,7 @@ elseif ($endpoint == 'orders/new') {
 								$result['order_info']['oco'] = true;
 						}
 						
-						if (count($orders) > 1)
-							$return['orders-new'][] = $result;
-						else
-							$return['orders-new'] = $result;
-						
+						$return['orders-new'][] = ($result) ? $result : array();
 						$i++;
 					}
 				}
@@ -648,11 +655,7 @@ elseif ($endpoint == 'orders/edit') {
 								$result['order_info']['oco'] = true;
 						}
 							
-						if (count($orders) > 1)
-							$return['orders-edit'][] = $result;
-						else
-							$return['orders-edit'] = $result;
-					
+						$return['orders-edit'][] = ($result) ? $result : array();
 						$i++;
 					}
 				}
@@ -715,11 +718,7 @@ elseif ($endpoint == 'orders/cancel') {
 								continue;
 							}
 							
-							if (count($orders) > 1)
-								$return['orders-cancel'][] = $result;
-							else
-								$return['orders-cancel'] = $result;
-							
+							$return['orders-cancel'][] = ($result) ? $result : array();
 							$i++;
 						}
 					}
@@ -779,11 +778,7 @@ elseif ($endpoint == 'orders/status') {
 							continue;
 						}
 						
-						if (count($orders) > 1)
-							$return['orders-status'][] = $result;
-						else
-							$return['orders-status'] = $result;
-						
+						$return['orders-status'][] = ($result) ? $result : array();
 						$i++;
 					}
 				}
@@ -877,7 +872,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						API::apiUpdateNonce();
 						$query = API::send($nonce1);
 	
-						$return['withdraw'] = $query['Requests']['insert']['results'][0];
+						$return['withdraw'] = ($query['Requests']['insert']['results'][0]) ? $query['Requests']['insert']['results'][0] : array();
 					}
 				}
 			}
