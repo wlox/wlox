@@ -40,6 +40,7 @@ if ($endpoint == 'stats') {
 			$return['stats']['request_currency'] = strtoupper($currency1);
 			$return['stats']['daily_change'] = round($return['stats']['daily_change'],2,PHP_ROUND_HALF_UP);
 			$return['stats']['daily_change_percent'] = round($return['stats']['daily_change_percent'],2,PHP_ROUND_HALF_UP);
+			$return['stats']['total_btc_traded'] = ($return['stats']['total_btc_traded']) ? $return['stats']['total_btc_traded'] : 0;
 		}
 		else
 			$return['stats'] = array();
@@ -106,10 +107,10 @@ elseif ($endpoint == 'balances-and-info') {
 				if (!$query['error']) {
 					$return['balances-and-info']['on_hold'] = ($query['User']['getOnHold']['results'][0]) ? $query['User']['getOnHold']['results'][0] : array();
 					$return['balances-and-info']['available'] = ($query['User']['getAvailable']['results'][0]) ? $query['User']['getAvailable']['results'][0] : array();
-					$return['balances-and-info']['usd_volume'] = $query['User']['getVolume']['results'][0];
-					$return['balances-and-info']['fee_bracket']['maker'] = $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
-					$return['balances-and-info']['fee_bracket']['taker'] = $query['FeeSchedule']['getRecord']['results'][0]['fee'];
-					$return['balances-and-info']['global_btc_volume'] = $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'];
+					$return['balances-and-info']['usd_volume'] = ($query['User']['getVolume']['results'][0]) ? $query['User']['getVolume']['results'][0] : 0;
+					$return['balances-and-info']['fee_bracket']['maker'] = ($query['FeeSchedule']['getRecord']['results'][0]['fee1']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee1'] : 0;
+					$return['balances-and-info']['fee_bracket']['taker'] = ($query['FeeSchedule']['getRecord']['results'][0]['fee']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : 0;
+					$return['balances-and-info']['global_btc_volume'] = ($query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'] > 0) ? $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'] : 0;
 				}
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -136,9 +137,9 @@ elseif ($endpoint == 'open-orders') {
 				$query = API::send($nonce1);
 				
 				if (!$query['error']) {
-					$return['order-book']['bid'] = ($query['Orders']['get']['results'][0]) ? $query['Orders']['get']['results'][0] : array();
-					$return['order-book']['ask'] = ($query['Orders']['get']['results'][1]) ? $query['Orders']['get']['results'][1] : array();
-					$return['order-book']['request_currency'] = strtoupper($currency1);
+					$return['open-orders']['bid'] = ($query['Orders']['get']['results'][0]) ? $query['Orders']['get']['results'][0] : array();
+					$return['open-orders']['ask'] = ($query['Orders']['get']['results'][1]) ? $query['Orders']['get']['results'][1] : array();
+					$return['open-orders']['request_currency'] = (!$currency1) ? 'ORIGINAL' : strtoupper($currency1);
 				}
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
