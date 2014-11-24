@@ -65,7 +65,7 @@ class Transactions {
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
 		if (!$count && $dont_paginate)
-			$sql .= " ORDER BY transactions.date DESC ";
+			$sql .= " ORDER BY transactions.date DESC, transactions.id DESC ";
 		
 		$result = db_query_array($sql);
 		if (!$count)
