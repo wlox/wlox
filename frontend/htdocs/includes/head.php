@@ -208,6 +208,7 @@
                             <li><a href="bank-accounts.php"><?= Lang::string('bank-accounts') ?></a></li>
 							<li><a href="bitcoin-addresses.php"><?= Lang::string('bitcoin-addresses') ?></a></li>
 							<li><a href="history.php"><?= Lang::string('history') ?></a></li>
+							<li><a href="api-access.php"><?= Lang::string('api-access') ?></a></li>
                             <li><a href="logout.php?log_out=1"><?= Lang::string('log-out') ?></a></li>
                         </ul>
                     </li>

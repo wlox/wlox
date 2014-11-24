@@ -69,7 +69,7 @@ include 'includes/head.php';
 					<li>
 						<label for="last_price"><?= Lang::string('home-stats-last-price') ?></label>
 						<input type="text" id="last_price" class="<?= $last_trans_color ?>" value="<?= $last_transaction['fa_symbol'].number_format($last_transaction['btc_price'],2).$last_trans_currency ?>" disabled="disabled" />
-						<a href="" title="<?= Lang::string('order-book-last-price-explain') ?>"><i class="fa fa-question-circle"></i></a>
+						<a target="_blank" href="https://support.1btcxe.com/support/solutions/articles/1000146628" title="<?= Lang::string('order-book-last-price-explain') ?>"><i class="fa fa-question-circle"></i></a>
 					</li>
 				</ul>
 			</form>

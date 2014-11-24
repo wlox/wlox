@@ -272,6 +272,7 @@ function updateTransactions() {
 			$.getJSON("includes/ajax.trades.php?currency="+currency+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '&last_price=1')+((get_10) ? '&get10=1' : ''),function(json_data) {
 				if (!notrades && json_data.transactions[0] != null) {
 					var i = 0;
+					var insert_elem = ('#transactions_list tr:first');
 					$.each(json_data.transactions[0],function(i) {
 						if ($('#order_'+this.id).length > 0)
 							return true;
