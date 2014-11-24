@@ -308,7 +308,9 @@ function updateTransactions() {
 						if (this.btc_price > current_max)
 							$('#stats_max').html(formatCurrency(this.btc_price));
 						
-						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+(((this.currency).toLowerCase() == currency) ? false : (((this.currency1).toLowerCase() == currency) ? false : ' ('+this.currency1+')'))+'</td></tr>').insertAfter(('#transactions_list tr:first'));
+						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+(((this.currency).toLowerCase() == currency) ? '' : (((this.currency1).toLowerCase() == currency) ? '' : ' ('+this.currency1+')'))+'</td></tr>').insertAfter(insert_elem);
+						insert_elem = elem;
+						
 						timeSince($(elem).find('.time_since'));
 						$(elem).children('td').effect("highlight",{color:"#A2EEEE"},2000);
 						$('#stats_traded').html(formatCurrency(json_data.btc_traded));
@@ -628,7 +630,7 @@ function updateTransactions() {
 }
 
 function formatCurrency(amount) {
-	return parseFloat(amount).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+	return parseFloat(amount).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function updateTransactionsList() {

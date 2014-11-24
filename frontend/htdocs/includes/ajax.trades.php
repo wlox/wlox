@@ -33,7 +33,7 @@ $return['bids'][] = $query['Orders']['get']['results'][0];
 
 if (!$notrades) {
 	$return['transactions'][] = $query['Transactions']['get']['results'][0];
-	$return['btc_traded'] = $query['Stats']['getBTCTraded']['results'][0];
+	$return['btc_traded'] = $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'];
 }
 
 if ($_REQUEST['last_price']) {
