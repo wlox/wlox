@@ -1028,13 +1028,13 @@ function expireSession() {
 }
 
 function sortTable(elem_selector,col_num,desc){
-	var rows = $(elem_selector+' tr').get();
+	var rows = $(elem_selector+' tr:not(:first)').get();
 	rows.sort(function(a, b) {
 		if ($(a).children('th').length > 0)
 			return -1;
 
-		var A = parseFloat($(a).children('td').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
-		var B = parseFloat($(b).children('td').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
+		var A = parseFloat($(a).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
+		var B = parseFloat($(b).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
 		A = (isNaN(A)) ? 0 : A;
 		B = (isNaN(B)) ? 0 : B;
 		
