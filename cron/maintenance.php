@@ -7,7 +7,7 @@ $CFG->session_active = 1;
 $CFG->in_cron = 1;
 
 // get 24 hour BTC volume
-$sql = "SELECT IFNULL(SUM(btc),0) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(NOW(), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
+$sql = "SELECT IFNULL(SUM(btc),0) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
 $result = db_query_array($sql);
 $total_btc_traded = ($result[0]['total_btc_traded']) ? $result[0]['total_btc_traded'] : '0';
 
@@ -126,5 +126,7 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	db_query($sql);
 	db_commit();
 }
+
+db_update('status',1,array('cron_maintenance'=>date('Y-m-d H:i:s')));
 
 echo 'done'.PHP_EOL;

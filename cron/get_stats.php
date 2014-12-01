@@ -58,6 +58,7 @@ if ($CFG->currencies) {
 	}
 }
 
+db_update('status',1,array('cron_get_stats'=>date('Y-m-d H:i:s')));
 echo 'done'.PHP_EOL;
 
 

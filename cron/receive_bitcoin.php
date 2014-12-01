@@ -123,6 +123,15 @@ foreach ($transactions as $t_id) {
 						$unlink = unlink($transactions_dir.$t_id);
 					}
 					
+					$info = DB::getRecord('site_users',$user_id);
+					if ($info['notify_deposit_btc'] == 'Y') {
+					    $info['amount'] = $detail['amount'];
+					    $info['currency'] = 'BTC';
+					    $CFG->language = $info['last_lang'];
+					    $email = SiteEmail::getRecord('new-deposit');
+					    Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+					}
+					
 					if (!$unlink)
 						echo 'Error: Could not delete transaction file.'.PHP_EOL;
 					else
@@ -239,3 +248,7 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min) {
 }
 
 db_commit();
+
+db_update('status',1,array('cron_receive_bitcoin'=>date('Y-m-d H:i:s')));
+
+echo 'done'.PHP_EOL;
