@@ -147,13 +147,13 @@ Content-Transfer-Encoding: quoted-printable
 		$mail->CharSet = 'UTF-8';
 		$mail->SMTPDebug = 0;
 		$mail->Debugoutput = 'html';
-		$mail->Host = 'smtp.zoho.com';
-		$mail->Port = 465;
-		$mail->SMTPSecure = 'ssl';
+		$mail->Host = $CFG->email_smtp_host;
+		$mail->Port = $CFG->email_smtp_port;
+		$mail->SMTPSecure = $CFG->email_smtp_security;
 		$mail->SMTPAuth = true;
-		$mail->Username = "notifications@1btcxe.com";
-		$mail->Password = "7GrbK88N";
-		$mail->setFrom("notifications@1btcxe.com",$from_name);
+		$mail->Username = $CFG->email_smtp_username;
+		$mail->Password = $CFG->email_smtp_password;
+		$mail->setFrom($from,$from_name);
 		$mail->addReplyTo($from);
 		
 		if (is_array($recipients)) {
