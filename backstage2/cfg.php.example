@@ -67,6 +67,15 @@ $CFG->withdraw_fiat_desc = 1;
 $CFG->withdraw_btc_desc = 2;
 $CFG->default_fee_schedule_id = 1;
 
+/* Emails */
+$CFG->support_email = '';
+$CFG->email_smtp_host = '';
+$CFG->email_smtp_port = 465;
+$CFG->email_smtp_security = 'ssl';
+$CFG->email_smtp_username = "";
+$CFG->email_smtp_password = "";
+$CFG->email_smtp_send_from = "";
+
 /* authy */
 $CFG->authy_api_key = '';
 
