@@ -26,7 +26,7 @@ if (is_array($CFG->temp_files)) {
 
 			if ($result[0]['currency'] == $data[6]) {
 				$insert_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$result[0]['site_user'],'currency'=>$result[0]['currency_id'],'amount'=>$data[8],'description'=>$CFG->deposit_fiat_desc,'request_type'=>$CFG->request_deposit_id,'request_status'=>$CFG->request_completed_id,'account'=>$data[2],'crypto_id'=>$data[0]));
-				db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>4,'site_user'=>$result[0]['site_user'],'request_id'=>$insert_id));
+				db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>4,'site_user'=>$result[0]['site_user'],'request_id'=>$insert_id,'balance_before'=>$result[0]['cur_balance'],'balance_after'=>($result[0]['cur_balance'] + $data[8])));
 				db_update('site_users',$result[0]['site_user'],array(strtolower($data[6])=>($result[0]['cur_balance'] + $data[8])));
 
 				if ($result[0]['notify_deposit_bank'] == 'Y') {
