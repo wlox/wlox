@@ -296,6 +296,8 @@ class User {
 			$info['confirm_withdrawal_email_bank'] = 'Y';
 			$info['notify_deposit_btc'] = 'Y';
 			$info['notify_deposit_bank'] = 'Y';
+			$info['notify_withdraw_btc'] = 'Y';
+			$info['notify_withdraw_bank'] = 'Y';
 			$info['notify_login'] = 'Y';
 			$info['no_logins'] = 'Y';
 			$info['fee_schedule'] = $result[0]['id'];
@@ -430,7 +432,7 @@ class User {
 		return db_update('site_users',User::$info['id'],$update);
 	}
 	
-	function updateSettings($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1) {
+	function updateSettings($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1) {
 		global $CFG;
 		
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -442,9 +444,11 @@ class User {
 		$confirm_withdrawal_email_bank2 = ($confirm_withdrawal_email_bank1) ? 'Y' : 'N';
 		$notify_deposit_btc2 = ($notify_deposit_btc1) ? 'Y' : 'N';
 		$notify_deposit_bank2 = ($notify_deposit_bank1) ? 'Y' : 'N';
+		$notify_withdraw_btc2 = ($notify_withdraw_btc1) ? 'Y' : 'N';
+		$notify_withdraw_bank2 = ($notify_withdraw_bank1) ? 'Y' : 'N';
 		$notify_login2 = ($notify_login1) ? 'Y' : 'N';
 			
-		return db_update('site_users',User::$info['id'],array('confirm_withdrawal_2fa_btc'=>$confirm_withdrawal_2fa_btc2,'confirm_withdrawal_email_btc'=>$confirm_withdrawal_email_btc2,'confirm_withdrawal_2fa_bank'=>$confirm_withdrawal_2fa_bank2,'confirm_withdrawal_email_bank'=>$confirm_withdrawal_email_bank2,'notify_deposit_btc'=>$notify_deposit_btc2,'notify_deposit_bank'=>$notify_deposit_bank2,'notify_login'=>$notify_login2));
+		return db_update('site_users',User::$info['id'],array('confirm_withdrawal_2fa_btc'=>$confirm_withdrawal_2fa_btc2,'confirm_withdrawal_email_btc'=>$confirm_withdrawal_email_btc2,'confirm_withdrawal_2fa_bank'=>$confirm_withdrawal_2fa_bank2,'confirm_withdrawal_email_bank'=>$confirm_withdrawal_email_bank2,'notify_deposit_btc'=>$notify_deposit_btc2,'notify_deposit_bank'=>$notify_deposit_bank2,'notify_withdraw_btc'=>$notify_withdraw_btc2,'notify_withdraw_bank'=>$notify_withdraw_bank2,'notify_login'=>$notify_login2));
 	}
 	
 	function deactivateAccount() {
