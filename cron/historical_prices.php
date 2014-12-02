@@ -2,6 +2,10 @@
 <?php
 include 'cfg.php';
 
+// WARNING
+// This file is only to be run to pull price data from other exchanges before the exchange has it's own operations!
+// Once the exchange is operating, it will generate it's own price data
+
 echo "Beginning Historical Data processing...".PHP_EOL;
 
 // QUANDL HISTORICAL DATA

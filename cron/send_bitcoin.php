@@ -125,4 +125,7 @@ if ($response && $users && !$bitcoin->error) {
 if (!$pending) db_update('status',1,array('deficit_btc'=>'0'));
 
 db_commit();
+
+db_update('status',1,array('cron_send_bitcoin'=>date('Y-m-d H:i:s')));
+
 echo 'done'.PHP_EOL;
