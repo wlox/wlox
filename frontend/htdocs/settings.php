@@ -140,6 +140,8 @@ if (!$_REQUEST['prefs']) {
 	$confirm_withdrawal_email_bank1 = User::$info['confirm_withdrawal_email_bank'];
 	$notify_deposit_btc1 = User::$info['notify_deposit_btc'];
 	$notify_deposit_bank1 = User::$info['notify_deposit_bank'];
+	$notify_withdraw_btc1 = User::$info['notify_withdraw_btc'];
+	$notify_withdraw_bank1 = User::$info['notify_withdraw_bank'];
 	$notify_login1 = User::$info['notify_login'];
 }
 else {
@@ -149,6 +151,8 @@ else {
 	$confirm_withdrawal_email_bank1 = $_REQUEST['confirm_withdrawal_email_bank'];
 	$notify_deposit_btc1 = $_REQUEST['notify_deposit_btc'];
 	$notify_deposit_bank1 = $_REQUEST['notify_deposit_bank'];
+	$notify_withdraw_btc1 = $_REQUEST['notify_withdraw_btc'];
+	$notify_withdraw_bank1 = $_REQUEST['notify_withdraw_bank'];
 	$notify_login1 = $_REQUEST['notify_login'];
 }
 
@@ -156,7 +160,7 @@ if ($_REQUEST['prefs']) {
 	if (!$no_token && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
-		API::add('User','updateSettings',array($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1));
+		API::add('User','updateSettings',array($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1));
 		$query = API::send();
 			
 		if ($query['error'] == 'security-com-error')
@@ -399,6 +403,16 @@ include 'includes/head.php';
 						<div class="param lessbottom marginleft">
 							<input class="checkbox" name="notify_deposit_bank" id="notify_deposit_bank" type="checkbox" value="Y" <?= ($notify_deposit_bank1 == 'Y') ? 'checked="checked"' : '' ?> />
 							<label for="notify_deposit_bank"><?= Lang::string('settings-notify-deposit-bank') ?></label>
+							<div class="clear"></div>
+						</div>
+						<div class="param lessbottom marginleft">
+							<input class="checkbox" name="notify_withdraw_btc" id="notify_withdraw_btc" type="checkbox" value="Y" <?= ($notify_withdraw_btc1 == 'Y') ? 'checked="checked"' : '' ?> />
+							<label for="notify_withdraw_btc"><?= Lang::string('settings-notify-withdraw-btc') ?></label>
+							<div class="clear"></div>
+						</div>
+						<div class="param lessbottom marginleft">
+							<input class="checkbox" name="notify_withdraw_bank" id="notify_withdraw_bank" type="checkbox" value="Y" <?= ($notify_withdraw_bank1 == 'Y') ? 'checked="checked"' : '' ?> />
+							<label for="notify_withdraw_bank"><?= Lang::string('settings-notify-withdraw-bank') ?></label>
 							<div class="clear"></div>
 						</div>
 						<div class="param lessbottom marginleft">
