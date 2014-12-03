@@ -161,6 +161,16 @@ class Requests{
 			return false;
 		
 		if ($request_id > 0) {
+		    if (User::$info['notify_withdraw_bank'] == 'Y') {
+		        $currency_info = DB::getRecord('currencies',$request['currency'],0,1);
+		        $info['amount'] = $request['amount'];
+		        $info['currency'] = $currency_info['currency'];
+		        $info['first_name'] = User::$info['first_name'];
+		        $info['last_name'] = User::$info['last_name'];
+		        $info['id'] = $request_id;
+		        $email = SiteEmail::getRecord('new-withdrawal');
+		        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($request['amount'],2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+		    }
 			return db_update('requests',$request_id,array('request_status'=>$CFG->request_pending_id));
 		}
 	}
