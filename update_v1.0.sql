@@ -60,4 +60,4 @@ UPDATE `admin_controls` SET `id` = 263,`page_id` = 91,`tab_id` = 0,`action` = ''
 
 
 
-UPDATE `1btcxe`.`status` SET `db_version` = '1' WHERE `status`.`id` =1;
+UPDATE`status` SET `db_version` = '1' WHERE `status`.`id` =1;
