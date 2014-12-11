@@ -82,8 +82,8 @@ foreach ($transactions as $t_id) {
 	if (!$transaction['details'])
 		continue;
 	
-	$raw = $bitcoin->decoderawtransaction($bitcoin->getrawtransaction($t_id));
-	$sender_address = $raw['vout'][1]['scriptPubKey']['addresses'][0];
+	//$raw = $bitcoin->decoderawtransaction($bitcoin->getrawtransaction($t_id));
+	//$sender_address = $raw['vout'][1]['scriptPubKey']['addresses'][0];
 	
 	$send = false;
 	$pending = false;
@@ -107,8 +107,8 @@ foreach ($transactions as $t_id) {
 			
 			if ((in_array($user_id,$trusted) && $transaction['confirmations'] < 1) || $transaction['confirmations'] < 3) {
 				if (!($request_id > 0)) {
-					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$sender_address));
-					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$sender_address));
+					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
+					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
 				}
 				
 				echo 'Transaction pending.'.PHP_EOL;
@@ -116,8 +116,8 @@ foreach ($transactions as $t_id) {
 			}
 			else {
 				if (!($request_id > 0)) {
-					$updated = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$sender_address));
-					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$updated,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$sender_address));
+					$updated = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
+					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$updated,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
 				}
 				else
 					$updated = db_update('requests',$request_id,array('request_status'=>$CFG->request_completed_id));
