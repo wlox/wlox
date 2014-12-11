@@ -11,6 +11,8 @@ db_start_transaction();
 
 $total_received = 0;
 $bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+$bitcoin->settxfee($CFG->bitcoin_sending_fee);
+
 $transactions = scandir($transactions_dir);
 if (!$transactions) {
 	db_commit();

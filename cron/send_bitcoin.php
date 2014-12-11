@@ -10,6 +10,7 @@ $bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bit
 $status = DB::getRecord('status',1,0,1,false,false,false,1);
 $available = $status['hot_wallet_btc'];
 $deficit = $status['deficit_btc'];
+$bitcoin->settxfee($CFG->bitcoin_sending_fee);
 
 $sql = "SELECT id, btc FROM site_users FOR UPDATE";
 $result = db_query_array($sql);
