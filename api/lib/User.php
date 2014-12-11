@@ -261,6 +261,9 @@ class User {
 
 		db_update('site_users',$id,array(/*'user'=>$user['new_user'],*/'pass'=>$pass1,'no_logins'=>'Y'));
 		
+		$sql = "DELETE FROM sessions WHERE user_id = $id";
+		db_query($sql);
+		
 		$email1 = SiteEmail::getRecord('forgot');
 		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
 	}
@@ -427,8 +430,15 @@ class User {
 
 		if (($update['pass'] && strlen($update['pass']) < 8) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
+		
+		if ($CFG->session_id) {
+		    $sql = "DELETE FROM sessions WHERE user_id = ".User::$info['id']." AND session_id != {$CFG->session_id}";
+		    db_query($sql);
+		}
 
-		$update['pass'] = Encryption::hash($update['pass']);
+		if ($update['pass'])
+			$update['pass'] = Encryption::hash($update['pass']);
+		
 		return db_update('site_users',User::$info['id'],$update);
 	}
 	
@@ -506,7 +516,10 @@ class User {
 		if (!($CFG->session_locked || $CFG->session_active))
 			return false;
 		
-		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request))));
+		$sql = "DELETE FROM change_settings WHERE site_user = ".User::$info['id'];
+		db_query($sql);
+		
+		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request)),'site_user'=>User::$info['id']));
 		if ($request_id > 0) {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
