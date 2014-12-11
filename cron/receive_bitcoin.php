@@ -11,6 +11,8 @@ db_start_transaction();
 
 $total_received = 0;
 $bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
+$bitcoin->settxfee($CFG->bitcoin_sending_fee);
+
 $transactions = scandir($transactions_dir);
 if (!$transactions) {
 	db_commit();
@@ -57,6 +59,15 @@ if ($result) {
 	}
 }
 
+$sql = "SELECT id FROM site_users WHERE trusted = 'Y' ";
+$result = db_query_array($sql);
+$trusted = array();
+if ($result) {
+	foreach ($result as $row) {
+		$trusted[] = $row['id'];
+	}
+}
+
 $status = DB::getRecord('status',1,0,1,false,false,false,1);
 
 foreach ($transactions as $t_id) {
@@ -71,8 +82,8 @@ foreach ($transactions as $t_id) {
 	if (!$transaction['details'])
 		continue;
 	
-	$raw = $bitcoin->decoderawtransaction($bitcoin->getrawtransaction($t_id));
-	$sender_address = $raw['vout'][1]['scriptPubKey']['addresses'][0];
+	//$raw = $bitcoin->decoderawtransaction($bitcoin->getrawtransaction($t_id));
+	//$sender_address = $raw['vout'][1]['scriptPubKey']['addresses'][0];
 	
 	$send = false;
 	$pending = false;
@@ -94,10 +105,10 @@ foreach ($transactions as $t_id) {
 				break;
 			}
 			
-			if ($transaction['confirmations'] < 3) {
+			if ((in_array($user_id,$trusted) && $transaction['confirmations'] < 1) || $transaction['confirmations'] < 3) {
 				if (!($request_id > 0)) {
-					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$sender_address));
-					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$sender_address));
+					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
+					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
 				}
 				
 				echo 'Transaction pending.'.PHP_EOL;
@@ -105,8 +116,8 @@ foreach ($transactions as $t_id) {
 			}
 			else {
 				if (!($request_id > 0)) {
-					$updated = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$sender_address));
-					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$updated,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$sender_address));
+					$updated = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
+					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$updated,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
 				}
 				else
 					$updated = db_update('requests',$request_id,array('request_status'=>$CFG->request_completed_id));
@@ -127,7 +138,7 @@ foreach ($transactions as $t_id) {
 					if ($info['notify_deposit_btc'] == 'Y') {
 					    $info['amount'] = $detail['amount'];
 					    $info['currency'] = 'BTC';
-					    $CFG->language = $info['last_lang'];
+					    $CFG->language = ($info['last_lang']) ? $info['last_lang'] : 'en';
 					    $email = SiteEmail::getRecord('new-deposit');
 					    Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 					}
@@ -207,7 +218,6 @@ if ($total_received > 0) {
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
 	if ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
-		$bitcoin->settxfee(0.00);
 		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
 		$transferred = 0;
