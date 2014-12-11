@@ -640,7 +640,7 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					if (round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) >= $price && round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) < $price && !$market_price) {
+					if (round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) >= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) < $price && !$market_price) {
 						$hidden_executions[] = $comp_order;
 						continue;
 					}
