@@ -25,23 +25,22 @@ function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
 		}
 	}
 	
-	if (!$CFG->dont_select_db) {
-		if (! mysql_select_db ( $dbname )) {
-			if ($DB_DEBUG) {
-				echo "<h2>Can't select database $dbname</h2>";
-				echo "<p><b>MySQL Error</b>: ", mysql_error ();
-			} else {
-				echo "<h2>Database error encountered</h2>";
-				db_error_mail ( "$_SERVER[HTTP_HOST] DB Select Failed", "Page: $_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" );
-			}
-			
-			if ($DB_DIE_ON_FAIL) {
-				echo "<p>This script cannot continue, terminating.";
-				echo "<a href=\"./\">Click here</a> to return to the homepage.";
-				die ();
-			}
+	if (! mysql_select_db ( $dbname )) {
+		if ($DB_DEBUG) {
+			echo "<h2>Can't select database $dbname</h2>";
+			echo "<p><b>MySQL Error</b>: ", mysql_error ();
+		} else {
+			echo "<h2>Database error encountered</h2>";
+			db_error_mail ( "$_SERVER[HTTP_HOST] DB Select Failed", "Page: $_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" );
+		}
+		
+		if ($DB_DIE_ON_FAIL) {
+			echo "<p>This script cannot continue, terminating.";
+			echo "<a href=\"./\">Click here</a> to return to the homepage.";
+			die ();
 		}
 	}
+	
 	mysql_set_charset('utf8');
 	return $dbh;
 }
@@ -59,10 +58,6 @@ function db_disconnect() {
 
 function db_query($query, $debug = false, $die_on_debug = true, $silent = false, $unbuffered = false) {
 	global $DB_DIE_ON_FAIL, $DB_DEBUG, $CFG;
-
-	if ($CFG->in_testing) {
-		$time = microtime ( 1 );
-	}
 	
 	if ($debug) {
 		echo "<pre>" . htmlspecialchars ( $query ) . "</pre>";
