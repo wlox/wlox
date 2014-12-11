@@ -32,7 +32,7 @@ if (is_array($CFG->temp_files)) {
 				if ($result[0]['notify_deposit_bank'] == 'Y') {
 				    $result[0]['amount'] = number_format($data[8],2);
 				    $result[0]['id'] = $insert_id;
-				    $CFG->language = $result[0]['last_lang'];
+				    $CFG->language = ($result[0]['last_lang']) ? $result[0]['last_lang'] : 'en';
 				    $email = SiteEmail::getRecord('new-deposit');
 				    Email::send($CFG->form_email,$result[0]['email'],str_replace('[amount]',number_format($data[8],2),str_replace('[currency]',$result[0]['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$result[0]);
 				}
