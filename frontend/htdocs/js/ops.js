@@ -629,8 +629,11 @@ function updateTransactions() {
 	},(!notrades ? 2000 : 5000));
 }
 
-function formatCurrency(amount) {
-	return parseFloat(amount).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function formatCurrency(amount,is_btc) {
+	if (!is_btc)
+		return parseFloat(amount).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	else
+		return parseFloat(amount).toFixed(8).toString();
 }
 
 function updateTransactionsList() {
@@ -746,6 +749,10 @@ function switchBuyCurrency() {
 function calculateBuy() {
 	$('#buy_amount,#buy_price,#buy_stop_price,#sell_amount,#sell_price,#sell_stop_price').bind("keyup change", function(){
 		calculateBuyPrice();
+	});
+	
+	$('#btc_amount,#fiat_amount').bind("keyup change", function(){
+		calculateWithdrawal();
 	});
 	
 	$('#buy_amount,#buy_price,#sell_amount,#sell_price,#fiat_amount,#btc_amount,#buy_stop_price,#sell_stop_price').bind("keypress", function(e){
@@ -1009,9 +1016,22 @@ function switchAccount1() {
 				$('.currency_label').html(json_data.currency);
 				$('.currency_char').html(json_data.currency_char);
 				$('#user_available').html(json_data.available);
+				calculateWithdrawal();
 			});
 		}
 	});
+}
+
+function calculateWithdrawal() {
+	var btc_amount = ($('#btc_amount').val()) ? parseFloat($('#btc_amount').val().replace(',','')) : 0;
+	var btc_fee = ($('#withdraw_btc_network_fee').html()) ? parseFloat($('#withdraw_btc_network_fee').html().replace(',','')) : 0;
+	var btc_total = (btc_amount > 0) ? btc_amount - btc_fee : 0;
+	var fiat_amount = ($('#fiat_amount').val()) ? parseFloat($('#fiat_amount').val().replace(',','')) : 0;
+	var fiat_fee = ($('#withdraw_fiat_fee').html()) ? parseFloat($('#withdraw_fiat_fee').html().replace(',','')) : 0;
+	var fiat_total = (fiat_amount > 0) ? fiat_amount - fiat_fee : 0;
+	
+	$('#withdraw_btc_total').html(formatCurrency(btc_total,1));
+	$('#withdraw_fiat_total').html(formatCurrency(fiat_total));
 }
 
 function expireSession() {

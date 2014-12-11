@@ -131,10 +131,22 @@ if ($_REQUEST['buy']) {
 		$operations = $query['Orders']['executeOrder']['results'][0];
 		
 		if ($operations['edit_order'] > 0) {
+		    $uniq_time = time();
+		    $_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["editorder_uniq"]) > 3) {
+		    	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+		    }
+		    
 			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'edit_order'=>1));
 			exit;
 		}
 		else {
+		    $uniq_time = time();
+		    $_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["editorder_uniq"]) > 3) {
+		    	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+		    }
+		    
 			Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
 			exit;
 		}
@@ -175,24 +187,36 @@ if ($_REQUEST['sell']) {
 		$operations = $query['Orders']['executeOrder']['results'][0];
 		
 		if ($operations['edit_order'] > 0) {
+		    $uniq_time = time();
+		    $_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["editorder_uniq"]) > 3) {
+		    	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+		    }
+		    
 			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'edit_order'=>1));
 			exit;
 		}
 		else {
+		    $uniq_time = time();
+		    $_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["editorder_uniq"]) > 3) {
+		    	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+		    }
+		    
 			Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
 			exit;
 		}
 	}
 }
 
-$uniq_time = time();
-$_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
-if (count($_SESSION["editorder_uniq"]) > 3) {
-	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
-}
-
 $page_title = Lang::string('edit-order');
 if (!$bypass) {
+    $uniq_time = time();
+    $_SESSION["editorder_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+    if (count($_SESSION["editorder_uniq"]) > 3) {
+    	unset($_SESSION["editorder_uniq"][min(array_keys($_SESSION["editorder_uniq"]))]);
+    }
+    
 	include 'includes/head.php';
 ?>
 <div class="page_title">

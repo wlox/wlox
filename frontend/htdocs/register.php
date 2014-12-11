@@ -20,11 +20,8 @@ if ($_REQUEST['register'] && $_SESSION["register_uniq"] != $_REQUEST['register']
 if ($_REQUEST['register'] && !$register->info['terms'])
 	$register->errors[] = Lang::string('settings-terms-error');
 
-if ($_REQUEST['register'] && (is_array($register->errors) || $email_exists)) {
+if ($_REQUEST['register'] && (is_array($register->errors))) {
 	$errors = array();
-	
-	if ($email_exists)
-		$errors[] = $email_exists;
 	
 	if ($register->errors) {
 		foreach ($register->errors as $key => $error) {
@@ -46,6 +43,7 @@ elseif ($_REQUEST['register'] && !is_array($register->errors)) {
 	API::add('User','registerNew',array($register->info));
 	$query = API::send();
 	
+	$_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 	Link::redirect('login.php?message=registered');
 }
 

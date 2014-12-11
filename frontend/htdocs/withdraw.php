@@ -11,8 +11,10 @@ elseif (!User::isLoggedIn())
 $page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
 $btc_address1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['btc_address']);
 $btc_amount1 = ($_REQUEST['btc_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['btc_amount']) : 0;
+$btc_total1 = ($_REQUEST['btc_amount'] > 0) ? $btc_amount1 - $CFG->bitcoin_sending_fee : 0;
 $account1 = ereg_replace("[^0-9]", "",$_REQUEST['account']);
 $fiat_amount1 = ($_REQUEST['fiat_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['fiat_amount']) : 0;
+$fiat_total1 = ($_REQUEST['btc_amount'] > 0) ? $fiat_amount1 - $CFG->fiat_withdraw_fee : 0;
 $token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
 $authcode1 = $_REQUEST['authcode'];
 
@@ -252,6 +254,19 @@ if (!$_REQUEST['bypass']) {
 								<div class="clear"></div>
 							</div>
 							<div class="spacer"></div>
+							<div class="calc">
+								<div class="label"><?= Lang::string('withdraw-network-fee') ?> <a title="<?= Lang::string('withdraw-network-fee-explain') ?>" href="javascript:return false;"><i class="fa fa-question-circle"></i></a></div>
+								<div class="value"><span id="withdraw_btc_network_fee"><?= $CFG->bitcoin_sending_fee ?></span> BTC</div>
+								<div class="clear"></div>
+							</div>
+							<div class="calc bigger">
+								<div class="label">
+									<span id="withdraw_btc_total_label"><?= Lang::string('withdraw-btc-total') ?></span>
+								</div>
+								<div class="value"><span id="withdraw_btc_total"><?= number_format($btc_total1,8) ?></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<div class="spacer"></div>
 							<input type="hidden" name="bitcoins" value="1" />
@@ -295,6 +310,17 @@ if (!$_REQUEST['bypass']) {
 								<label for="fiat_amount"><?= Lang::string('withdraw-amount') ?></label>
 								<input type="text" id="fiat_amount" name="fiat_amount" value="<?= number_format($fiat_amount1,2) ?>" />
 								<div class="qualify"><span class="currency_label"><?= $currency_info['currency'] ?></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="spacer"></div>
+							<div class="calc">
+								<div class="label"><?= str_replace('[currency]','<span class="currency_label">'.$currency_info['currency'].'</span>',Lang::string('buy-fee')) ?> <a title="<?= Lang::string('account-view-fee-schedule') ?>" href="fee-schedule.php"><i class="fa fa-question-circle"></i></a></div>
+								<div class="value"><span class="currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="withdraw_fiat_fee"><?= number_format($CFG->fiat_withdraw_fee,2) ?></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="calc bigger">
+								<div class="label"><?= str_replace('[currency]','<span class="currency_label">'.$currency_info['currency'].'</span>',Lang::string('withdraw-total')) ?></div>
+								<div class="value"><span class="currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="withdraw_fiat_total"><?= number_format($fiat_total1,2) ?></span></div>
 								<div class="clear"></div>
 							</div>
 							<div class="spacer"></div>
@@ -364,6 +390,7 @@ if (!$_REQUEST['bypass']) {
         				<th><?= Lang::string('deposit-date') ?></th>
         				<th><?= Lang::string('deposit-description') ?></th>
         				<th><?= Lang::string('deposit-amount') ?></th>
+        				<th><?= Lang::string('withdraw-net-amount') ?></th>
         				<th><?= Lang::string('deposit-status') ?></th>
         			</tr>
         			<? 
@@ -376,6 +403,7 @@ if (!$_REQUEST['bypass']) {
 						<td><input type="hidden" class="localdate" value="'.(strtotime($request['date'])/* + $CFG->timezone_offset*/).'" /></td>
 						<td>'.$request['description'].'</td>
 						<td>'.(($request['fa_symbol'] == 'BTC') ? number_format($request['amount'],8).' '.$request['fa_symbol'] : $request['fa_symbol'].number_format($request['amount'],2)).'</td>
+    					<td>'.(($request['fa_symbol'] == 'BTC') ? number_format((($request['net_amount'] > 0) ? $request['net_amount'] : ($request['amount'] - $request['fee'])),8).' '.$request['fa_symbol'] : $request['fa_symbol'].number_format((($request['net_amount'] > 0) ? $request['net_amount'] : ($request['amount'] - $request['fee'])),2)).'</td>
 						<td>'.$request['status'].'</td>
 					</tr>';
 						}

@@ -15,16 +15,22 @@ if ($_REQUEST['submitted']) {
 		Errors::add($CFG->login_empty_pass);
 	}
 	
+	if ($_SESSION["register_uniq"] != $_REQUEST['uniq'])
+		Errors::add('Page expired.');
+	
 	if (!is_array(Errors::$errors)) {
 		$login = User::logIn($user1,$pass1);
 		if ($login && !$login['error']) {
 			if ($login['message'] == 'awaiting-token') {
+			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('verify-token.php');
 			}
 			elseif ($login['message'] == 'logged-in' && $login['no_logins'] == 'Y') {
+			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('first_login.php');
 			}
 			elseif ($login['message'] == 'logged-in') {
+			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('account.php');
 			}
 		}
@@ -37,6 +43,7 @@ if ($_REQUEST['submitted']) {
 if ($_REQUEST['message'] == 'registered')
 	Messages::add(Lang::string('register-success'));
 
+$_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -85,6 +92,7 @@ include 'includes/head.php';
 		    		</div>
 	    		</div>
 	    		<input type="hidden" name="submitted" value="1" />
+	    		<input type="hidden" name="uniq" value="<?= $_SESSION["register_uniq"] ?>" />
 	    		<input type="submit" name="submit" value="<?= Lang::string('home-login') ?>" class="but_user" />
 	    	</div>
     	</form>

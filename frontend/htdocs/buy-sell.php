@@ -120,10 +120,20 @@ if ($_REQUEST['buy']) {
 			$operations = $query['Orders']['executeOrder']['results'][0];
 
 			if ($operations['new_order'] > 0) {
+			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    if (count($_SESSION["buysell_uniq"]) > 3) {
+			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+			    }
+			    
 				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
 				exit;
 			}
 			else {
+			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    if (count($_SESSION["buysell_uniq"]) > 3) {
+			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+			    }
+			    
 				Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
 				exit;
 			}
@@ -173,10 +183,20 @@ if ($_REQUEST['sell']) {
 			$operations = $query['Orders']['executeOrder']['results'][0];
 
 			if ($operations['new_order'] > 0) {
+			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    if (count($_SESSION["buysell_uniq"]) > 3) {
+			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+			    }
+			    
 				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
 				exit;
 			}
 			else {
+			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    if (count($_SESSION["buysell_uniq"]) > 3) {
+			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+			    }
+			    
 				Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
 				exit;
 			}

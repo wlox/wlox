@@ -51,4 +51,8 @@ $CFG->currencies = $query['Currencies']['get']['results'][0];
 $CFG->orders_under_market_percent = 20;
 $CFG->orders_min_usd = 5;
 
+/* Network Fee */
+$CFG->bitcoin_sending_fee = 0.0001;
+$CFG->fiat_withdraw_fee = 0;
+
 ?>
