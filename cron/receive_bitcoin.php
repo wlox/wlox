@@ -129,7 +129,7 @@ foreach ($transactions as $t_id) {
 					if ($info['notify_deposit_btc'] == 'Y') {
 					    $info['amount'] = $detail['amount'];
 					    $info['currency'] = 'BTC';
-					    $CFG->language = $info['last_lang'];
+					    $CFG->language = ($info['last_lang']) ? $info['last_lang'] : 'en';
 					    $email = SiteEmail::getRecord('new-deposit');
 					    Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 					}
