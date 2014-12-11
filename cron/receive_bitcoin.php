@@ -59,6 +59,15 @@ if ($result) {
 	}
 }
 
+$sql = "SELECT id FROM site_users WHERE trusted = 'Y' ";
+$result = db_query_array($sql);
+$trusted = array();
+if ($result) {
+	foreach ($result as $row) {
+		$trusted[] = $row['id'];
+	}
+}
+
 $status = DB::getRecord('status',1,0,1,false,false,false,1);
 
 foreach ($transactions as $t_id) {
@@ -96,7 +105,7 @@ foreach ($transactions as $t_id) {
 				break;
 			}
 			
-			if ($transaction['confirmations'] < 3) {
+			if ((in_array($user_id,$trusted) && $transaction['confirmations'] < 1) || $transaction['confirmations'] < 3) {
 				if (!($request_id > 0)) {
 					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$sender_address));
 					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$sender_address));
