@@ -17,6 +17,7 @@ $api_key1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
 $api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']);
 $CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
 $CFG->client_ip = preg_replace("/[^0-9\.]/","",$_POST['ip']);
+$CFG->session_id = $session_id1;
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = json_decode($_POST['commands'],true);
