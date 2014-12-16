@@ -206,8 +206,15 @@
                     <li><a href="buy-sell.php" <?= ($CFG->self == 'buy-sell.php') ? 'class="active"' : '' ?>><?= Lang::string('buy-sell') ?></a></li>
                     <li><a href="deposit.php" <?= ($CFG->self == 'deposit.php') ? 'class="active"' : '' ?>><?= Lang::string('deposit') ?></a></li>
                     <li><a href="withdraw.php" <?= ($CFG->self == 'withdraw.php') ? 'class="active"' : '' ?>><?= Lang::string('withdraw') ?></a></li>
+                    <li style="display:none;"><a href="help.php"><?= Lang::string('help') ?></a></li>
+	                <li style="display:none;"><a href="contact.php"><?= Lang::string('contact') ?></a></li>
+	                <? if (!User::isLoggedIn()) { ?>
+	                <li style="display:none;"><a href="login.php"><?= Lang::string('home-login') ?></a></li>
+	                <li style="display:none;"><a href="register.php"><?= Lang::string('home-register') ?></a></li>
+	                <? } else { ?>
+	                <li style="display:none;"><a href="logout.php?log_out=1"><?= Lang::string('log-out') ?></a></li>
+	                <? } ?>
                     <? } ?>
-                </ul>
                 
             </div>
             
