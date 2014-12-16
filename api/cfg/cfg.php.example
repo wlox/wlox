@@ -82,5 +82,8 @@ $CFG->bitcoin_protocol = 'http';
 $CFG->quandl_api_key = '';
 $CFG->authy_api_key = '';
 
+/* Withdraw Fees */
+$CFG->bitcoin_sending_fee = 0.0001;
+$CFG->fiat_withdraw_fee = 0;
 
 ?>
