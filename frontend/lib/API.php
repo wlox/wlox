@@ -45,7 +45,7 @@ class API{
 		$commands['request_id'] = API::$request_id;
 		$commands['ip'] = self::getUserIp();
 
-		if (User::isLoggedIn()) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
+		if ($_SESSION['session_key']) openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
 		$commands['signature'] = bin2hex($signature);
 		
 		if (API::$api_key) {

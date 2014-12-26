@@ -27,36 +27,14 @@ class User {
 		}
 	}
 	
-	function verifyLogin($recursion=0) {
+	function verifyLogin($query) {
 		global $CFG;
 
 		if (!($_SESSION['session_id']) > 0)
 			return false;
 		
-		$commands['session_id'] = $_SESSION['session_id'];
-		$commands['nonce'] = $_SESSION['nonce'];
-		$commands['commands'] = json_encode($commands);
-		
-		openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
-		$commands['signature'] = bin2hex($signature);
-		
-		$ch = curl_init($CFG->auth_verify_login_url);
-		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($ch,CURLOPT_POSTFIELDS,$commands);
-		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
-		curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-		$result1 = curl_exec($ch);
-		$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		$error = curl_error($ch);
-		$result = json_decode($result1,true);
-		curl_close($ch);
-
-		if ((!($http_status > 0) || !$result1) && $recursion < 3) {
-			$recursion++;
-			return self::verifyLogin($recursion);
-		}
-		elseif ((!($http_status > 0) || !$result1) || $result['error']) {
+		$result = $query['User']['verifyLogin']['results'][0];
+		if ($result['error'] || $query['error'] || !$result) {
 			Errors::add($CFG->login_invalid);
 			session_destroy();
 			$_SESSION = array();
@@ -70,7 +48,7 @@ class User {
 		else {
 			self::$info = $result['info'];
 			self::$logged_in = true;
-			self::updateNonce();
+			//self::updateNonce();
 			return true;
 		}
 	}

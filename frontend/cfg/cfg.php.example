@@ -17,13 +17,14 @@ require_once ($CFG->libdir."autoload.php");
 session_start();
 session_regenerate_id();
 
-User::verifyLogIn();
-User::logOut($_REQUEST['log_out']);
-
 API::add('Settings','getAll');
 API::add('Lang','getTable');
 API::add('Currencies','get');
+API::add('User','verifyLogin');
 $query = API::send();
+
+User::verifyLogIn($query);
+User::logOut($_REQUEST['log_out']);
 
 /* Settings */
 Settings::assign($query['Settings']['getAll']['results'][0]);
