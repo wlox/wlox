@@ -120,7 +120,7 @@ if ($_REQUEST['buy']) {
 			$operations = $query['Orders']['executeOrder']['results'][0];
 
 			if ($operations['new_order'] > 0) {
-			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
 			    if (count($_SESSION["buysell_uniq"]) > 3) {
 			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
 			    }
@@ -129,7 +129,7 @@ if ($_REQUEST['buy']) {
 				exit;
 			}
 			else {
-			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
 			    if (count($_SESSION["buysell_uniq"]) > 3) {
 			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
 			    }
@@ -183,7 +183,7 @@ if ($_REQUEST['sell']) {
 			$operations = $query['Orders']['executeOrder']['results'][0];
 
 			if ($operations['new_order'] > 0) {
-			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
 			    if (count($_SESSION["buysell_uniq"]) > 3) {
 			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
 			    }
@@ -192,7 +192,7 @@ if ($_REQUEST['sell']) {
 				exit;
 			}
 			else {
-			    $_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
 			    if (count($_SESSION["buysell_uniq"]) > 3) {
 			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
 			    }
@@ -219,8 +219,7 @@ if ($ask_confirm && $_REQUEST['sell']) {
 
 $page_title = Lang::string('buy-sell');
 if (!$bypass) {
-	$uniq_time = time();
-	$_SESSION["buysell_uniq"][$uniq_time] = md5(uniqid(mt_rand(),true));
+	$_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
 	if (count($_SESSION["buysell_uniq"]) > 3) {
 		unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
 	}
@@ -324,7 +323,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />
-							<input type="hidden" name="uniq" value="<?= $_SESSION["buysell_uniq"][$uniq_time] ?>" />
+							<input type="hidden" name="uniq" value="<?= end($_SESSION["buysell_uniq"]) ?>" />
 							<input type="submit" name="submit" value="<?= Lang::string('buy-bitcoins') ?>" class="but_user" />
 						</div>
 					</form>
@@ -412,7 +411,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="sell" value="1" />
-							<input type="hidden" name="uniq" value="<?= $_SESSION["buysell_uniq"][$uniq_time] ?>" />
+							<input type="hidden" name="uniq" value="<?= end($_SESSION["buysell_uniq"]) ?>" />
 							<input type="submit" name="submit" value="<?= Lang::string('sell-bitcoins') ?>" class="but_user" />
 						</div>
 					</form>
@@ -498,7 +497,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="buy" value="1" />
-							<input type="hidden" name="uniq" value="<?= $_SESSION["buysell_uniq"][$uniq_time] ?>" />
+							<input type="hidden" name="uniq" value="<?= end($_SESSION["buysell_uniq"]) ?>" />
 						</div>
 						<ul class="list_empty">
 							<li style="margin-bottom:0;"><input type="submit" name="submit" value="<?= Lang::string('confirm-buy') ?>" class="but_user" /></li>
@@ -572,7 +571,7 @@ if (!$bypass) {
 								<div class="clear"></div>
 							</div>
 							<input type="hidden" name="sell" value="1" />
-							<input type="hidden" name="uniq" value="<?= $_SESSION["buysell_uniq"][$uniq_time] ?>" />
+							<input type="hidden" name="uniq" value="<?= end($_SESSION["buysell_uniq"]) ?>" />
 						</div>
 						<ul class="list_empty">
 							<li style="margin-bottom:0;"><input type="submit" name="submit" value="<?= Lang::string('confirm-sale') ?>" class="but_user" /></li>
