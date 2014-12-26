@@ -18,6 +18,68 @@ class User {
 		return $result[0];
 	}
 	
+	function verifyLogin() {
+		global $CFG;
+		
+		if (!($CFG->session_id > 0))
+			return false;
+		
+		if (!User::$info) {
+			return array('error'=>'session-not-found');
+		}
+		
+		if (User::$info['awaiting'] == 'Y') {
+			return array('message'=>'awaiting-token');
+		}
+		
+		$return_values = array(
+		'first_name',
+		'last_name',
+		'fee_schedule',
+		'tel',
+		'country',
+		'country_code',
+		'verified_google',
+		'verified_authy',
+		'using_sms',
+		'confirm_withdrawal_email_btc',
+		'confirm_withdrawal_2fa_btc',
+		'confirm_withdrawal_2fa_bank',
+		'confirm_withdrawal_email_bank',
+		'notify_deposit_btc',
+		'notify_deposit_bank',
+		'notify_withdraw_btc',
+		'notify_withdraw_bank',
+		'no_logins',
+		'notify_login',
+		'deactivated',
+		'locked',
+		'default_currency');
+		
+		$return = array();
+		foreach (User::$info as $key => $value) {
+			if (in_array($key,$return_values))
+				$return[$key] = $value;
+		}
+		
+		if ($return['country_code'] > 0) {
+			$s = strlen($return['country_code']);
+			$return['country_code'] = str_repeat('x',$s);
+		}
+		
+		if ($return['tel'] > 0) {
+			$s = strlen($return['tel']) - 2;
+			$return['tel'] = str_repeat('x',$s).substr($return['tel'], -2);
+		}
+		
+		if ($result['default_currency'] > 0) {
+			$currency = DB::getRecord('currencies',$result['default_currency'],0,1);
+			$return['default_currency_abbr'] = $currency['currency'];
+		}
+		
+		return array('message'=>'logged-in','info'=>$return);
+	}
+	
 	function logOut($session_id=false) {
 		if (!($session_id > 0))
 			return false;
