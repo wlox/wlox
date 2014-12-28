@@ -24,17 +24,14 @@ $commands = json_decode($_POST['commands'],true);
 
 // authenticate session
 if ($session_id1) {
-	//db_start_transaction();
-	$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce <= '.($nonce1 + 5).' AND sessions.nonce >= '.($nonce1 - 5));
-	//db_commit();
-	//$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' ');
-	if ($result) {
+	$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+	if ($result && $result[0]['nonce'] >= ($nonce1 + 5) && $result[0]['nonce'] <= ($nonce1 - 5)) {
+		$return['error'] = 'invalid-nonce';
+	}
+	elseif ($result) {
 		if (openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 			User::setInfo($result[0]);
 			$update_nonce = true;
-			
-			if (User::$info['last_lang'] != $CFG->language)
-				db_update('site_users',User::$info['id'],array('last_lang'=>$CFG->language));
 			
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
 				$return['error'] = 'account-locked-or-deactivated';
@@ -159,4 +156,3 @@ if ($update_nonce)
 if (is_array($return))
 	echo json_encode($return);
 
-//db_commit();
