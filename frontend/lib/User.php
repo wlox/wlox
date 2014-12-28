@@ -8,7 +8,7 @@ class User {
 		
 		$ch = curl_init($CFG->auth_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass));
+		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass,'lang'=>$CFG->language));
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
