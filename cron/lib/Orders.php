@@ -1,6 +1,6 @@
 <?php
 class Orders {
-	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false,$public_api_open_orders=false,$public_api_order_book) {
+	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false,$public_api_open_orders=false,$public_api_order_book=false) {
 		global $CFG;
 		
 		if ($user && !(User::$info['id'] > 0))
@@ -263,7 +263,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	private function triggerStops($max_price,$min_price,$currency,$maker_is_sell=false,$abs_bid=false,$abs_ask=false,$currency_max,$currency_min) {
+	private function triggerStops($max_price,$min_price,$currency,$maker_is_sell=false,$abs_bid=false,$abs_ask=false,$currency_max=false,$currency_min=false) {
 		global $CFG;
 		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
