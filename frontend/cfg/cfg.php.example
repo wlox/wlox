@@ -40,6 +40,8 @@ $CFG->pass_regex = '/[\p{L}!@#$%&*?+-_.=| ]{8,}/';
 $lang = ereg_replace("[^a-z]", "",$_REQUEST['lang']);
 if ($lang)  {
 	$_SESSION['language'] = $lang;
+	if (User::isLoggedIn())
+		API::add('User','setLang',array($lang));
 }
 $CFG->language = ($lang) ? $lang : ereg_replace("[^a-z]", "",$_SESSION['language']);
 $CFG->language = (empty($CFG->language)) ? 'en' : $CFG->language;
