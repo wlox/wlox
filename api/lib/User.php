@@ -634,6 +634,14 @@ class User {
 		$sql = "SELECT * FROM iso_countries ORDER BY name ASC";
 		return db_query_array($sql);
 	}
+	
+	function setLang($lang) {
+		if (!$lang)
+			return false;
+		
+		$lang = preg_replace("/[^a-z]/", "",$lang);
+		return db_update('site_users',User::$info['id'],array('last_lang'=>$lang));
+	}
 }
 
 ?>
