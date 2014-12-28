@@ -12,8 +12,12 @@ if (!$session_id1) {
 	exit;
 }
 
-$result = db_query_array('SELECT sessions.session_key AS session_key, site_users.authy_id AS authy_id, site_users.id AS user_id, site_users.google_2fa_code AS google_2fa_code  FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1.' AND sessions.nonce = '.$nonce1);
-if (!$result) {
+$result = db_query_array('SELECT sessions.nonce AS nonce, sessions.session_key AS session_key, site_users.authy_id AS authy_id, site_users.id AS user_id, site_users.google_2fa_code AS google_2fa_code  FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+if ($result && $result[0]['nonce'] >= ($nonce1 + 5) && $result[0]['nonce'] <= ($nonce1 - 5)) {
+	echo json_encode(array('error'=>'invalid-nonce'));
+	exit;
+}
+elseif (!$result) {
 	echo json_encode(array('error'=>'session-not-found'));
 	exit;
 }
