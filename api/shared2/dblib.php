@@ -120,6 +120,10 @@ function db_query_array($query, $key = '', $first_record = false, $unbuffered = 
 	global $CFG, $DB_DEBUG;
 	
 	$result = db_query ( $query, false, true, false, $unbuffered );
+	
+	if (!is_resource($result))
+		return false;
+	
 	$amt = db_num_rows ( $result );
 	
 	if ($amt > 100000) {
