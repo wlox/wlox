@@ -70,13 +70,13 @@ class Orders {
 			$sql .= " AND orders.currency = {$currency_info['id']} ";
 		
 		if (!$user && !$public_api_order_book)
-			$sql .= ' GROUP BY fiat_price ';
+			$sql .= ' GROUP BY CONCAT( orders.btc_price, "-", orders.currency) ';
 		
 		if ($public_api_open_orders)
 			$sql .= ' GROUP BY order_log.id ';
 		
 		if ($public_api_order_book)
-			$sql .= ' GROUP BY btc_price ';
+			$sql .= ' GROUP BY CONCAT( orders.btc_price, "-", orders.currency ) ';
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
