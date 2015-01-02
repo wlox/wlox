@@ -45,6 +45,12 @@ The API server source is provided in the repository [wlox/wlox-api](http://githu
 
 The /htdocs folder of wlox-api is intended to be the server's web directory.
 
+The API server in order to utilize GPG email encryption functionality must have a functional copy of GPG. There is a nice guide on getting most of this setup here:
+http://www.brandonchecketts.com/archives/gnupg-encryption-with-php-on-ubuntu-with-pecl
+
+On top of this you need to generate your key which will be used by the server, to do this use the command **gpg --gen-key** and then **gpg --fingerprint** to get the fingerprint of the key you generated which will be needed by the CFG file.
+Ensure that the user for your web server has access to the GNUPG folder. For example if you are using NGINX the user www-data needs access to **/home/myuser/.gnupg**
+
 When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example to cfg/cfg.php. This file tells the API server where it can find all the other components of the app. The following parameters can be configured:
 
 - **$CFG->dbhost:** The IP or host name of your database server.
@@ -63,7 +69,8 @@ When this is ready, we must set up cfg.php file by renaming cfg/cfg.php.example 
 - **$CFG->bitcoin_protocol:** The protocol for the bitcoind server (*http* by default).
 - **$CFG->bitcoin_authorize_min:** Bitcoin withdrawals over this amount will need to be authorized by you in the backend.
 - **$CFG->authy_api_key:** By default, WLOX uses Authy for two-factor authentication. This value is the API key that will be used by Authy to make requests. You can sign up for an API key at authy.com (see more about this process below).
-
+- **$CFG->GPGDir:** The directory for your GPG keyrings.
+- **$CFG->signkey:** The fingerprint of the signing key for the exchange, no spaces.
 
 3. Setting up the Auth Server
 -------------------
