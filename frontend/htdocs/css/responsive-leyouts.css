@@ -85,7 +85,6 @@ ul.post_meta_links {
 	width: 747px;
 	margin: auto auto auto auto;
 }
-
 .tci_list_left li {
 	margin: 7px 0px 0px 0px;
 	font-size: 12px;
@@ -439,6 +438,31 @@ a.show_hide{
 	width: 360px;
 	margin: -35px 45px 10px 0px;
 	float: left;
+}
+
+.fullwidthbanner-container {display:none;}
+#header.sticky {height:160px !important;}
+#header:not(.sticky) {height:249px !important;}
+.sticky #trueHeader #logo{
+	display:none;
+}
+.sticky #access .menu select{
+	margin: -35px 25px 10px 0px !important;
+}
+.sticky #access .menu .stickylogo {
+	display:inline-block;
+	float: left;
+    margin: -30px 6px 0 0;
+}
+.sticky .last {
+	margin-bottom:0 !important;
+	height:0;
+}
+.mobilebanner{
+	display:block;
+}
+a.button_slider {
+	margin: 0 0 15px 10px;
 }
 
 .container {

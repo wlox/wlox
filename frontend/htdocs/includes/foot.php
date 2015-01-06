@@ -95,7 +95,7 @@
 <!-- main js -->
 <script type="text/javascript" src="js/ops.js?v=20150129"></script>
 
-<? if ($CFG->self == 'index.php' || $CFG->self == 'order-book.php') { ?>
+<? if ($CFG->self == 'index.php' || $CFG->self == 'order-book.php' || $CFG->self == 'btc_to_currency.php') { ?>
 <!-- flot -->
 <script type="text/javascript" src="js/flot/jquery.flot.js"></script>
 <script type="text/javascript" src="js/flot/jquery.flot.time.js"></script>

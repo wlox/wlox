@@ -1153,7 +1153,9 @@ $(document).ready(function() {
 	}
 	
 	$('#language_selector').bind("keyup change", function(){
-		window.location.href = 'index.php?lang='+$(this).val();
+		var lang = $(this).val();
+		var url = $('#url_'+'index_php'+'_'+lang).val();
+		window.location.href = url;
 	});
 	
 	$('#currency_selector').bind("keyup change", function(){

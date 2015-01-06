@@ -36,7 +36,8 @@
     <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
     
     <!-- responsive devices styles -->
-	<link rel="stylesheet" media="screen" href="css/responsive-leyouts.css" type="text/css" />
+
+	<link rel="stylesheet" media="screen" href="css/responsive-leyouts.css?v=20141230" type="text/css" />
     
 <!-- just remove the below comments witch color skin you want to use -->
     <!--<link rel="stylesheet" href="css/colors/lightblue.css" />-->
@@ -150,6 +151,8 @@
                 	<select id="language_selector" class="lang">
                 		<option value="en" <?= ($CFG->language == 'en') ? 'selected="selected"' : '' ?>>English</option>
                 		<option value="es" <?= ($CFG->language == 'es') ? 'selected="selected"' : '' ?>>Español</option>
+                		<option value="ru" <?= ($CFG->language == 'ru') ? 'selected="selected"' : '' ?>>русский</option>
+                		<option value="zh" <?= ($CFG->language == 'zh') ? 'selected="selected"' : '' ?>>中文</option>
                 	</select>
                 </li>
             </ul>
@@ -197,7 +200,10 @@
                         	<li><a href="withdrawing-account.php"><?= Lang::string('withdrawing-account') ?></a></li>
                         </ul>
                     </li>
+
                     <li><a href="fee-schedule.php" <?= ($CFG->self == 'fee-schedule.php') ? 'class="active"' : '' ?>><?= Lang::string('fee-schedule') ?></a></li>
+                    <li style="display:none;"><a href="login.php"><?= Lang::string('home-login') ?></a></li>
+	                <li style="display:none;"><a href="register.php"><?= Lang::string('home-register') ?></a></li>
                     <? } else { ?>
                     <li><a href="account.php" <?= ($CFG->self == 'account.php' || $CFG->self == 'open-orders.php' || $CFG->self == 'transactions.php' || $CFG->self == 'security.php' || $CFG->self == 'settings.php' || $CFG->self == 'bank-accounts.php' || $CFG->self == 'bitcoin-addresses.php' || $CFG->self == 'history.php' || $CFG->self == 'api-access.php') ? 'class="active"' : '' ?>><?= Lang::string('account') ?> <i class="fa fa-angle-down"></i></a>
                         <ul>
@@ -217,14 +223,9 @@
                     <li><a href="withdraw.php" <?= ($CFG->self == 'withdraw.php') ? 'class="active"' : '' ?>><?= Lang::string('withdraw') ?></a></li>
                     <li style="display:none;"><a href="help.php"><?= Lang::string('help') ?></a></li>
 	                <li style="display:none;"><a href="contact.php"><?= Lang::string('contact') ?></a></li>
-	                <? if (!User::isLoggedIn()) { ?>
-	                <li style="display:none;"><a href="login.php"><?= Lang::string('home-login') ?></a></li>
-	                <li style="display:none;"><a href="register.php"><?= Lang::string('home-register') ?></a></li>
-	                <? } else { ?>
 	                <li style="display:none;"><a href="logout.php?log_out=1"><?= Lang::string('log-out') ?></a></li>
 	                <? } ?>
-                    <? } ?>
-                
+                </ul>
             </div>
             
         </nav><!-- end nav menu -->
