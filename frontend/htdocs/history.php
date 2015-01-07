@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,15 +8,15 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$page1 = preg_replace("/[^0-9]/", "",$_REQUEST['page']);
-$bypass = $_REQUEST['bypass'];
+$page1 = (!empty($_REQUEST['page'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['page']) : false;
+$bypass = !empty($_REQUEST['bypass']);
 
 API::add('History','get',array(1,$page1));
 $query = API::send();
 $total = $query['History']['get']['results'][0];
 
 API::add('History','get',array(false,$page1,30));
-API::add('Transactions','pagination',array('history.php',$page1,$total,30,5,$CFG->pagination_label));
+API::add('Transactions','pagination',array('history.php',$page1,$total,30,5,false));
 $query = API::send();
 
 $history = $query['History']['get']['results'][0];

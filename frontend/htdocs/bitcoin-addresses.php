@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -16,13 +16,13 @@ $bitcoin_addresses = $query['BitcoinAddresses']['get']['results'][0];
 $content = $query['Content']['getRecord']['results'][0];
 $page_title = Lang::string('bitcoin-addresses');
 
-if ($_REQUEST['action'] == 'add') {
+if (!empty($_REQUEST['action']) && $_REQUEST['action'] == 'add') {
 	if (strtotime($bitcoin_addresses[0]['date']) >= strtotime('-1 day'))
 		Errors::add(Lang::string('bitcoin-addresses-too-soon'));
 	
 	if (!is_array(Errors::$errors)) {
 		API::add('BitcoinAddresses','getNew');
-		API::add('BitcoinAddresses','get',array(false,false,30,User::$info['id']));
+		API::add('BitcoinAddresses','get',array(false,false,30,1));
 		$query = API::send();
 		$bitcoin_addresses = $query['BitcoinAddresses']['get']['results'][0];
 		

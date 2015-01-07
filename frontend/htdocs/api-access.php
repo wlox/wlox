@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -7,6 +7,9 @@ elseif (User::$awaiting_token)
 	Link::redirect('verify-token.php');
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
+
+$request_2fa = false;
+$no_2fa = false;
 
 if (!(User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')) {
 	$no_2fa = true;
@@ -18,13 +21,16 @@ if (!$request_2fa && !$no_2fa) {
 	$api_keys = $query['APIKeys']['get']['results'][0];
 }
 
-$token1 = preg_replace("/[^0-9]/", "",$_REQUEST['token']);
-$permissions = (is_array($_REQUEST['permissions'])) ? $_REQUEST['permissions'] : unserialize($_REQUEST['permissions']);
-$remove_id1 = preg_replace("/[^0-9]/", "",$_REQUEST['remove_id']);
+$token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
+$remove_id1 = (!empty($_REQUEST['remove_id'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['remove_id']) : false;
+if (!empty($_REQUEST['permissions']))
+	$permissions = (is_array($_REQUEST['permissions'])) ? $_REQUEST['permissions'] : unserialize($_REQUEST['permissions']);
+else
+	$permissions = false;
 
-if (($_REQUEST['action'] == 'edit' || $_REQUEST['action'] == 'add' || $_REQUEST['action'] == 'delete')) {
+if (!empty($_REQUEST['action']) && ($_REQUEST['action'] == 'edit' || $_REQUEST['action'] == 'add' || $_REQUEST['action'] == 'delete')) {
 	if (!$token1) {
-		if ($_REQUEST['request_2fa']) {
+		if (!empty($_REQUEST['request_2fa'])) {
 			if (!($token1 > 0)) {
 				$no_token = true;
 				$request_2fa = true;
@@ -33,7 +39,7 @@ if (($_REQUEST['action'] == 'edit' || $_REQUEST['action'] == 'add' || $_REQUEST[
 		}
 	
 		if (User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y') {
-			if ($_REQUEST['send_sms'] || User::$info['using_sms'] == 'Y') {
+			if (!empty($_REQUEST['send_sms']) || User::$info['using_sms'] == 'Y') {
 				if (User::sendSMS()) {
 					$sent_sms = true;
 					Messages::add(Lang::string('withdraw-sms-sent'));
@@ -52,14 +58,16 @@ if (($_REQUEST['action'] == 'edit' || $_REQUEST['action'] == 'add' || $_REQUEST[
 			API::add('APIKeys','delete',array($remove_id1));
 		$query = API::send();
 		
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
-		
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+			
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+			
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}
 		
 		if ($_REQUEST['action'] == 'delete' && !$query['APIKeys']['delete']['results'][0])
 			Link::redirect('api-access.php?error=delete');
@@ -84,11 +92,11 @@ if (($_REQUEST['action'] == 'edit' || $_REQUEST['action'] == 'add' || $_REQUEST[
 	}
 }
 
-if ($_REQUEST['message'] == 'edit')
+if (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'edit')
 	Messages::add(Lang::string('api-edit-message'));
-elseif ($_REQUEST['message'] == 'delete')
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'delete')
 	Messages::add(Lang::string('api-delete-message'));
-elseif ($_REQUEST['error'] == 'delete')
+elseif (!empty($_REQUEST['error']) && $_REQUEST['error'] == 'delete')
 	Errors::add(Lang::string('api-delete-error'));
 
 $page_title = Lang::string('api-access-setup');
@@ -108,7 +116,7 @@ include 'includes/head.php';
 			<? 
             Errors::display(); 
             Messages::display();
-            if ($info_message) {
+            if (!empty($info_message)) {
 				echo '<div class="text dotted"><p>'.$info_message.'</p></div><div class="clear"></div><div class="mar_top1"></div>';
 			} 
 			else {

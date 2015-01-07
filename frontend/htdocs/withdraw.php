@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,18 +8,20 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
-$btc_address1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['btc_address']);
-$btc_amount1 = ($_REQUEST['btc_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['btc_amount']) : 0;
-$btc_total1 = ($_REQUEST['btc_amount'] > 0) ? $btc_amount1 - $CFG->bitcoin_sending_fee : 0;
-$account1 = ereg_replace("[^0-9]", "",$_REQUEST['account']);
-$fiat_amount1 = ($_REQUEST['fiat_amount'] > 0) ? ereg_replace("[^0-9.]", "",$_REQUEST['fiat_amount']) : 0;
-$fiat_total1 = ($_REQUEST['btc_amount'] > 0) ? $fiat_amount1 - $CFG->fiat_withdraw_fee : 0;
-$token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
-$authcode1 = $_REQUEST['authcode'];
+$page1 = (!empty($_REQUEST['page'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['page']) : false;
+$btc_address1 = (!empty($_REQUEST['btc_address'])) ?  preg_replace("/[^\da-z]/i", "",$_REQUEST['btc_address']) : false;
+$btc_amount1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['btc_amount']) : 0;
+$btc_total1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? $btc_amount1 - $CFG->bitcoin_sending_fee : 0;
+$account1 = (!empty($_REQUEST['account'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['account']) : false;
+$fiat_amount1 = (!empty($_REQUEST['fiat_amount']) && $_REQUEST['fiat_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['fiat_amount']) : 0;
+$fiat_total1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? $fiat_amount1 - $CFG->fiat_withdraw_fee : 0;
+$token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
+$authcode1 = !empty($_REQUEST['authcode']);
+$request_2fa = false;
+$no_token = false;
 
-if (($_REQUEST['bitcoins'] || $_REQUEST['fiat']) && !$token1) {
-	if ($_REQUEST['request_2fa']) {
+if ((!empty($_REQUEST['bitcoins']) || !empty($_REQUEST['fiat'])) && !$token1) {
+	if (!empty($_REQUEST['request_2fa'])) {
 		if (!($token1 > 0)) {
 			$no_token = true;
 			$request_2fa = true;
@@ -28,7 +30,7 @@ if (($_REQUEST['bitcoins'] || $_REQUEST['fiat']) && !$token1) {
 	}
 
 	if ((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y') && ((User::$info['confirm_withdrawal_2fa_btc'] == 'Y' && $_REQUEST['bitcoins']) || (User::$info['confirm_withdrawal_2fa_bank'] == 'Y' && $_REQUEST['fiat']))) {
-		if ($_REQUEST['send_sms'] || User::$info['using_sms'] == 'Y') {
+		if (!empty($_REQUEST['send_sms']) || User::$info['using_sms'] == 'Y') {
 			if (User::sendSMS()) {
 				$sent_sms = true;
 				Messages::add(Lang::string('withdraw-sms-sent'));
@@ -72,7 +74,7 @@ $total = $query['Requests']['get']['results'][0];
 $requests = $query['Requests']['get']['results'][1];
 $status = $query['Status']['get']['results'][0];
 
-API::add('Transactions','pagination',array('withdraw.php',$page1,$total,15,5,$CFG->pagination_label));
+API::add('Transactions','pagination',array('withdraw.php',$page1,$total,15,5,false));
 API::add('User','getAvailable');
 if ($bank_account) {
 	if (is_numeric($bank_account['currency'])) {
@@ -100,7 +102,7 @@ $pagination = $query['Transactions']['pagination']['results'][0];
 if ($status['withdrawals_status'] == 'suspended')
 	Errors::add(Lang::string('withdrawal-suspended'));
 
-if ($_REQUEST['bitcoins']) {
+if (!empty($_REQUEST['bitcoins'])) {
 	if (!($btc_amount1 > 0))
 		Errors::add(Lang::string('withdraw-amount-zero'));
 	if ($btc_amount1 > $user_available['BTC'])
@@ -149,7 +151,7 @@ if ($_REQUEST['bitcoins']) {
 		$request_2fa = false;
 	}
 }
-elseif ($_REQUEST['fiat']) {
+elseif (!empty($_REQUEST['fiat'])) {
 	if (!($account1 > 0))
 		Errors::add(Lang::string('withdraw-no-account'));
 	if (!is_array($bank_account))
@@ -199,17 +201,19 @@ elseif ($_REQUEST['fiat']) {
 	}
 }
 
-if ($_REQUEST['message'] == 'withdraw-2fa-success')
-	Messages::add(Lang::string('withdraw-2fa-success'));
-elseif ($_REQUEST['message'] == 'withdraw-success')
-	Messages::add(Lang::string('withdraw-success'));
-elseif ($_REQUEST['notice'] == 'email')
-	$notice = Lang::string('withdraw-email-notice');
+if (!empty($_REQUEST['message'])) {
+	if ($_REQUEST['message'] == 'withdraw-2fa-success')
+		Messages::add(Lang::string('withdraw-2fa-success'));
+	elseif ($_REQUEST['message'] == 'withdraw-success')
+		Messages::add(Lang::string('withdraw-success'));
+}
 
+if (!empty($_REQUEST['notice']) && $_REQUEST['notice'] == 'email')
+	$notice = Lang::string('withdraw-email-notice');
 
 $page_title = Lang::string('withdraw');
 
-if (!$_REQUEST['bypass']) {
+if (empty($_REQUEST['bypass'])) {
 	include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -223,7 +227,7 @@ if (!$_REQUEST['bypass']) {
 	<div class="content_right">
 		<? Errors::display(); ?>
 		<? Messages::display(); ?>
-		<?= ($notice) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
+		<?= (!empty($notice)) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
 		<div class="testimonials-4">
 			<? if (!$request_2fa) { ?>
 			<div class="one_half">
@@ -396,9 +400,8 @@ if (!$_REQUEST['bypass']) {
         			<? 
         			if ($requests) {
 						foreach ($requests as $request) {
-							$class = ($request['request_status'] == $CFG->request_awaiting_id) ? 'class="waiting"' : '';
 							echo '
-					<tr '.$class.'>
+					<tr>
 						<td>'.$request['id'].'</td>
 						<td><input type="hidden" class="localdate" value="'.(strtotime($request['date'])/* + $CFG->timezone_offset*/).'" /></td>
 						<td>'.$request['description'].'</td>

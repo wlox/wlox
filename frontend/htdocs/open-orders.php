@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,7 +8,7 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$delete_id1 = ereg_replace("[^0-9]", "",$_REQUEST['delete_id']);
+$delete_id1 = (!empty($_REQUEST['delete_id'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['delete_id']) : false;
 if ($delete_id1 > 0 && $_SESSION["openorders_uniq"] == $_REQUEST['uniq']) {
 	API::add('Orders','getRecord',array($delete_id1));
 	$query = API::send();
@@ -28,11 +28,11 @@ if ($delete_id1 > 0 && $_SESSION["openorders_uniq"] == $_REQUEST['uniq']) {
 	}
 }
 
-$currency1 = ($_REQUEST['currency'] != 'All') ? $_REQUEST['currency'] : false;
-$order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
-$trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
-$id1 = ereg_replace("[^0-9]", "",$_REQUEST['id']);
-$bypass = $_REQUEST['bypass'];
+$currency1 = (!empty($_REQUEST['currency']) && array_key_exists(strtoupper($_REQUEST['currency']),$CFG->currencies)) ? $_REQUEST['currency'] : false;
+$order_by1 = (!empty($_REQUEST['order_by'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['order_by']) : false;
+$trans_realized1 = (!empty($_REQUEST['transactions'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['transactions']) : false;
+$id1 = (!empty($_REQUEST['id'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['id']) : false;
+$bypass = (!empty($_REQUEST['bypass']));
 
 API::add('Orders','get',array(false,false,false,$currency1,1,false,1,$order_by1,false,1));
 API::add('Orders','get',array(false,false,false,$currency1,1,false,false,$order_by1,1,1));
@@ -40,21 +40,21 @@ $query = API::send();
 
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
-$currency_info = $CFG->currencies[strtoupper($currency1)];
+$currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : false;
 
-if ($_REQUEST['new_order'] && !$trans_realized1)
+if (!empty($_REQUEST['new_order']) && !$trans_realized1)
 	Messages::add(Lang::string('transactions-orders-new-message'));
-if ($_REQUEST['edit_order'] && !$trans_realized1)
+if (!empty($_REQUEST['edit_order']) && !$trans_realized1)
 	Messages::add(Lang::string('transactions-orders-edit-message'));
-elseif ($_REQUEST['new_order'] && $trans_realized1 > 0)
+elseif (!empty($_REQUEST['new_order']) && $trans_realized1 > 0)
 	Messages::add(str_replace('[transactions]',$trans_realized1,Lang::string('transactions-orders-done-message')));
-elseif ($_REQUEST['edit_order'] && $trans_realized1 > 0)
+elseif (!empty($_REQUEST['edit_order']) && $trans_realized1 > 0)
 	Messages::add(str_replace('[transactions]',$trans_realized1,Lang::string('transactions-orders-done-edit-message')));
-elseif ($_REQUEST['message'] == 'order-doesnt-exist')
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'order-doesnt-exist')
 	Errors::add(Lang::string('orders-order-doesnt-exist'));
-elseif ($_REQUEST['message'] == 'not-your-order')
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'not-your-order')
 	Errors::add(Lang::string('orders-not-yours'));
-elseif ($_REQUEST['message'] == 'order-cancelled')
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'order-cancelled')
 	Messages::add(Lang::string('orders-order-cancelled'));
 
 $page_title = Lang::string('open-orders');

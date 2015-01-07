@@ -1,10 +1,10 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-if ($_REQUEST['currency'])
-	$_SESSION['currency'] = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
-elseif (!$_SESSION['currency'])
-	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
+if (!empty($_REQUEST['currency']))
+	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
+elseif (empty($_SESSION['currency']))
+	$_SESSION['currency'] = 'usd';
 
 $page_title = Lang::string('home-title');
 $currency1 = $_SESSION['currency'];

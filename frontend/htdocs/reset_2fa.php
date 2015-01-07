@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 API::add('Content','getRecord',array('reset-2fa'));
 $query = API::send();

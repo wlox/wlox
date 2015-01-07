@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (!$_REQUEST['log_out'])
 	Link::redirect('index.php');

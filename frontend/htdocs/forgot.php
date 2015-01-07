@@ -1,6 +1,6 @@
 <?php
 
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 $page_title = Lang::string('login-forgot');
 $email1 = ereg_replace("[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]", "",$_REQUEST['forgot']['email']);
@@ -17,7 +17,7 @@ if ($_REQUEST['forgot'] && $email1 && $_SESSION["forgot_uniq"] == $_REQUEST['uni
 		Messages::add(Lang::string('login-password-sent-message'));
 	}
 	else {
-		Errors::add(Lang::string($CFG->capcha_error));
+		Errors::add(Lang::string('login-capcha-error'));
 	}
 }
 

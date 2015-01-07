@@ -1,14 +1,14 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-if ($_REQUEST['contact']) {
+if (!empty($_REQUEST['contact'])) {
 	$_REQUEST['contact']['first_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['first_name']);
 	$_REQUEST['contact']['last_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['last_name']);
 	$_REQUEST['contact']['company'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['company']);
 	$_REQUEST['contact']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['contact']['email']);
 	$_REQUEST['contact']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']);
 	$_REQUEST['contact']['subject'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['subject']);
-	$_REQUEST['is_caco'] = (!$_REQUEST['is_caco']) ? array('contact'=>1) : $_REQUEST['is_caco'];
+	$_REQUEST['is_caco'] = (empty($_REQUEST['is_caco'])) ? array('contact'=>1) : $_REQUEST['is_caco'];
 }
 
 API::add('Content','getRecord',array('contact'));
@@ -24,10 +24,10 @@ $countries = $query['User']['getCountries']['results'][0];
 $contact = new Form('contact',false,false,'form2');
 $contact->verify();
 
-if ($_REQUEST['contact'] && $_SESSION["contact_uniq"] != $_REQUEST['contact']['uniq'])
+if (!empty($_REQUEST['contact']) && $_SESSION["contact_uniq"] != $_REQUEST['contact']['uniq'])
 	$contact->errors[] = 'Page expired.';
 
-if ($_REQUEST['contact'] && is_array($contact->errors)) {
+if (!empty($_REQUEST['contact']) && is_array($contact->errors)) {
 	$errors = array();
 	foreach ($contact->errors as $key => $error) {
 		if (stristr($error,'login-required-error')) {
@@ -42,7 +42,7 @@ if ($_REQUEST['contact'] && is_array($contact->errors)) {
 	}
 	Errors::$errors = $errors;
 }
-elseif ($_REQUEST['contact'] && !is_array($contact->errors)) {
+elseif (!empty($_REQUEST['contact']) && !is_array($contact->errors)) {
 	API::add('SiteEmail','contactForm',array($contact->info));
 	$query = API::send();
 	

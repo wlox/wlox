@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 $currency1 = preg_replace("/[^a-zA-Z]/", "",$_REQUEST['currency']);
 

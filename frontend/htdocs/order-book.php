@@ -1,13 +1,13 @@
 <?php
 
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 $page_title = Lang::string('order-book');
 
-if ($_REQUEST['currency'])
-	$_SESSION['currency'] = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
-elseif (!$_SESSION['currency'])
-	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
+if (!empty($_REQUEST['currency']))
+	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
+elseif (empty($_SESSION['currency']))
+	$_SESSION['currency'] = 'usd';
 	
 $currency1 = $_SESSION['currency'];
 $currency_symbol = strtoupper($currency1);

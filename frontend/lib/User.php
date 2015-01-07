@@ -3,7 +3,7 @@ class User {
 	private static $logged_in;
 	public static $awaiting_token, $info;
 	
-	function logIn($user,$pass) {
+	static function logIn($user,$pass) {
 		global $CFG;
 		
 		$ch = curl_init($CFG->auth_login_url);
@@ -16,7 +16,6 @@ class User {
 		curl_close($ch);
 		
 		if (!$result || $result['error']) {
-			Errors::add($CFG->login_invalid);
 			return false;
 		}
 		elseif ($result['message']) {
@@ -27,15 +26,16 @@ class User {
 		}
 	}
 	
-	function verifyLogin($query) {
+	static function verifyLogin($query) {
 		global $CFG;
 
-		if (!($_SESSION['session_id']) > 0)
+		if (empty($_SESSION['session_id']))
 			return false;
 		
-		$result = $query['User']['verifyLogin']['results'][0];
-		if ($result['error'] || $query['error'] || !$result) {
-			Errors::add($CFG->login_invalid);
+		if (isset($query['User']['verifyLogin']['results'][0]))
+			$result = $query['User']['verifyLogin']['results'][0];
+
+		if (!empty($result['error']) || !empty($query['error']) || !isset($result)) {
 			session_destroy();
 			$_SESSION = array();
 			return false;
@@ -53,7 +53,7 @@ class User {
 		}
 	}
 	
-	function verifyToken($token,$dont_ask=false) {
+	static function verifyToken($token,$dont_ask=false) {
 		global $CFG;
 		
 		if (!self::$awaiting_token)
@@ -98,11 +98,11 @@ class User {
 		}
 	}
 	
-	function isLoggedIn() {
+	static function isLoggedIn() {
 		return self::$logged_in;
 	}
 	
-	function logOut($logout) {
+	static function logOut($logout) {
 		if ($logout) {
 			API::add('User','logOut',array($_SESSION['session_id']));
 			API::send();
@@ -115,7 +115,7 @@ class User {
 		}
 	}
 	
-	function updateNonce() {
+	static function updateNonce() {
 		if (!self::$logged_in)
 			return false;
 		
@@ -123,7 +123,7 @@ class User {
 		return true;
 	}
 	
-	function sendSMS($authy_id=false) {
+	static function sendSMS($authy_id=false) {
 		global $CFG;
 		
 		API::add('User','sendSMS',array($authy_id));

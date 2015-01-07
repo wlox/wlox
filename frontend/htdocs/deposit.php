@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,7 +8,7 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
+$page1 = (!empty($_REQUEST['page'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['page']) : false;
 
 API::add('BankAccounts','get');
 API::add('BitcoinAddresses','get',array(false,false,1,1));
@@ -27,7 +27,7 @@ $requests = $query['Requests']['get']['results'][1];
 $bank_instructions = ($bank_account) ? $query['Content']['getRecord']['results'][0] : $query['Content']['getRecord']['results'][1];
 
 API::add('Currencies','getRecord',array($bank_account['currency']));
-API::add('Transactions','pagination',array('deposit.php',$page1,$total,15,5,$CFG->pagination_label));
+API::add('Transactions','pagination',array('deposit.php',$page1,$total,15,5,false));
 $query = API::send();
 
 $bank_account_currency = $query['Currencies']['getRecord']['results'][0];
@@ -36,7 +36,7 @@ $pagination = $query['Transactions']['pagination']['results'][0];
 $page_title = Lang::string('deposit');
 
 
-if (!$_REQUEST['bypass']) {
+if (empty($_REQUEST['bypass'])) {
 	include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -153,7 +153,7 @@ if (!$_REQUEST['bypass']) {
         		</table>
 			</div>
 			<?= $pagination ?>
-<? if (!$_REQUEST['bypass']) { ?>
+<? if (empty($_REQUEST['bypass'])) { ?>
 		</div>
 		<div class="mar_top5"></div>
 	</div>

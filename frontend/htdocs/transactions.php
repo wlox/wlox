@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,21 +8,21 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$currency1 = ereg_replace("[^a-z]", "",$_REQUEST['currency']);
-$order_by1 = ereg_replace("[^a-z]", "",$_REQUEST['order_by']);
-$order_desc1 = ereg_replace("[^0-9]", "",$_REQUEST['order_desc']);
-$start_date1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['startdate']);
-$type1 = ereg_replace("[^0-9]", "",$_REQUEST['type']);
-$page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
-$trans_realized1 = ereg_replace("[^0-9]", "",$_REQUEST['transactions']);
-$bypass = $_REQUEST['bypass'];
+$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['currency']) : false;
+$order_by1 = (!empty($_REQUEST['order_by'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['order_by']) : false;
+$order_desc1 = (!empty($_REQUEST['order_desc'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['order_desc']) : false;
+$start_date1 = false;
+$type1 = (!empty($_REQUEST['type'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['type']) : false;
+$page1 = (!empty($_REQUEST['page'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['page']) : false;
+$trans_realized1 = (!empty($_REQUEST['transactions'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['transactions']) : false;
+$bypass = !empty($_REQUEST['bypass']);
 
 API::add('Transactions','get',array(1,$page1,30,$currency1,1,$start_date1,$type1,$order_by1,$order_desc1));
 $query = API::send();
 $total = $query['Transactions']['get']['results'][0];
 
 API::add('Transactions','get',array(false,$page1,30,$currency1,1,$start_date1,$type1,$order_by1,$order_desc1));
-API::add('Transactions','pagination',array('transactions.php',$page1,$total,30,5,$CFG->pagination_label));
+API::add('Transactions','pagination',array('transactions.php',$page1,$total,30,5,false));
 API::add('Transactions','getTypes');
 $query = API::send();
 
@@ -30,7 +30,7 @@ $transactions = $query['Transactions']['get']['results'][0];
 $pagination = $query['Transactions']['pagination']['results'][0];
 $transaction_types = $query['Transactions']['getTypes']['results'][0];
 
-$currency_info = $CFG->currencies[strtoupper($currency1)];
+$currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : array();
 
 if ($trans_realized1 > 0)
 	Messages::add(str_replace('[transactions]',$trans_realized1,Lang::string('transactions-done-message')));

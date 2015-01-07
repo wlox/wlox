@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 $currency1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['currency']);
 

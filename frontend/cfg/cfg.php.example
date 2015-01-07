@@ -1,61 +1,9 @@
 <?php
-class object {
-}
 
+class object {}
 $CFG = new object ( );
-
-$CFG->dirroot = "";
-$CFG->libdir = "../lib/";
-$CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
-$CFG->api_url = '';
-$CFG->auth_login_url = '';
-$CFG->auth_verify_login_url = '';
-$CFG->auth_verify_token_url = '';
-
-require_once ($CFG->libdir."autoload.php");
-
-session_start();
-session_regenerate_id();
-
-API::add('Settings','getAll');
-API::add('Lang','getTable');
-API::add('Currencies','get');
-API::add('User','verifyLogin');
-$query = API::send();
-
-User::verifyLogIn($query);
-User::logOut($_REQUEST['log_out']);
-
-/* Settings */
-Settings::assign($query['Settings']['getAll']['results'][0]);
-
-/* Timezone */
-date_default_timezone_set($CFG->default_timezone);
-$dtz = new DateTimeZone($CFG->default_timezone);
-$dtz1 = new DateTime('now', $dtz);
-$CFG->timezone_offset = $dtz->getOffset($dtz1);
-$CFG->pass_regex = '/[\p{L}!@#$%&*?+-_.=| ]{8,}/';
-
-/* Language */
-$lang = ereg_replace("[^a-z]", "",$_REQUEST['lang']);
-if ($lang)  {
-	$_SESSION['language'] = $lang;
-	if (User::isLoggedIn())
-		API::add('User','setLang',array($lang));
-}
-$CFG->language = ($lang) ? $lang : ereg_replace("[^a-z]", "",$_SESSION['language']);
-$CFG->language = (empty($CFG->language)) ? 'en' : $CFG->language;
-$CFG->lang_table = $query['Lang']['getTable']['results'][0];
-
-/* Currencies */
-$CFG->currencies = $query['Currencies']['get']['results'][0];
-
-/* Orders */
-$CFG->orders_under_market_percent = 20;
-$CFG->orders_min_usd = 5;
-
-/* Network Fee */
-$CFG->bitcoin_sending_fee = 0.0001;
-$CFG->fiat_withdraw_fee = 0;
+$CFG->api_url = 'http://your.api.server/api.php';
+$CFG->auth_login_url = 'http://your.auth.server/login.php';
+$CFG->auth_verify_token_url = 'http://your.auth.server/verify_token.php';
 
 ?>

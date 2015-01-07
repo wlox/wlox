@@ -1,15 +1,15 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-$page1 = ereg_replace("[^0-9]", "",$_REQUEST['page']);
-$bypass = $_REQUEST['bypass'];
+$page1 = (!empty($_REQUEST['page'])) ? ereg_replace("[^0-9]", "",$_REQUEST['page']) : false;
+$bypass = !empty($_REQUEST['bypass']);
 
 API::add('News','get',array(1));
 $query = API::send();
 $total = $query['News']['get']['results'][0];
 
 API::add('News','get',array(false,$page1,10));
-API::add('Transactions','pagination',array('news.php',$page1,$total,10,5,$CFG->pagination_label));
+API::add('Transactions','pagination',array('news.php',$page1,$total,10,5,false));
 $query = API::send();
 
 $news = $query['News']['get']['results'][0];

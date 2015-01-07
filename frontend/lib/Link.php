@@ -1,6 +1,6 @@
 <?php
 class Link {
-	function redirect($url,$variables=false,$inside_iframe=false) {
+	public static function redirect($url,$variables=false,$inside_iframe=false) {
 		if ($variables) {
 			$vars = http_build_query($variables);
 			$vars = (!$vars) ? $vars : '?'.$vars;

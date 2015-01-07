@@ -1,10 +1,10 @@
 <?php
 chdir('..');
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-$timeframe1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['timeframe']);
-$currency1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['currency']);
-$action1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['action']);
+$timeframe1 = (!empty($_REQUEST['timeframe'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['timeframe']) : false;
+$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['currency']) : false;
+$action1 = (!empty($_REQUEST['action'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['action']) : false;
 
 if (!$action1) {
 	API::add('Stats','getHistorical',array($timeframe1,$currency1));
@@ -27,15 +27,15 @@ elseif ($action1 == 'orders') {
 	
 	if ($bids) {
 		foreach ($bids as $bid) {
-			$min_bid = (!$min_bid || $bid['btc_price'] < $min_bid) ? $bid['btc_price'] : $min_bid;
-			$max_bid = (!$max_bid || $bid['btc_price'] > $max_bid) ? $bid['btc_price'] : $max_bid;
+			$min_bid = (empty($min_bid) || $bid['btc_price'] < $min_bid) ? $bid['btc_price'] : $min_bid;
+			$max_bid = (empty($max_bid) || $bid['btc_price'] > $max_bid) ? $bid['btc_price'] : $max_bid;
 		}
 	
 	}
 	if ($asks) {
 		foreach ($asks as $ask) {
-			$min_ask = (!$min_ask || $ask['btc_price'] < $min_ask) ? $ask['btc_price'] : $min_ask;
-			$max_ask = (!$max_ask || $ask['btc_price'] > $max_ask) ? $ask['btc_price'] : $max_ask;
+			$min_ask = (empty($min_ask) || $ask['btc_price'] < $min_ask) ? $ask['btc_price'] : $min_ask;
+			$max_ask = (empty($max_ask) || $ask['btc_price'] > $max_ask) ? $ask['btc_price'] : $max_ask;
 		}
 	}
 	

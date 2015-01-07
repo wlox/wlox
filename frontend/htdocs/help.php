@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$awaiting_token)
 	Link::redirect('verify-token.php');

@@ -1,9 +1,9 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-if ($_REQUEST['currency'])
+if (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = strtolower(ereg_replace("[^a-zA-Z]", "",$_REQUEST['currency']));
-elseif (!$_SESSION['currency'])
+elseif (empty($_SESSION['currency']))
 	$_SESSION['currency'] = 'usd';
 
 $currency1 = $_SESSION['currency'];
@@ -42,7 +42,7 @@ include 'includes/head.php';
 								<? 
 								if ($CFG->currencies) {
 									foreach ($CFG->currencies as $currency) {
-										echo '<option '.(strtolower($currency['currency']) == $currency1 || (!$currency1 && $currency['currency'] == 'USD') ? 'selected="selected"' : '' ).' name="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
+										echo '<option '.(strtolower($currency['currency']) == $currency1 || (empty($currency1) && $currency['currency'] == 'USD') ? 'selected="selected"' : '' ).' name="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}
 								?>
@@ -54,6 +54,8 @@ include 'includes/head.php';
 				</tr>
 				<? 
 				if ($fee_schedule) {
+					$last_fee1 = false;
+					$last_btc = false;
 					foreach ($fee_schedule as $fee) {
 						$symbol = ($fee['to_usd'] > 0) ? '<' : '>';
 						$from = ($fee['to_usd'] > 0) ? number_format($fee['to_usd'],0) : number_format($fee['from_usd'],0);

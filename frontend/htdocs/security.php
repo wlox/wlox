@@ -1,5 +1,5 @@
 <?php
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y')
 	Link::redirect('settings.php');
@@ -8,28 +8,33 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$authcode1 = $_REQUEST['authcode'];
-if ($authcode1 && !$_REQUEST['step']) {
+$step1 = false;
+$step2 = false;
+$step3 = false;
+$step4 = false;
+
+$authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
+if ($authcode1 && empty($_REQUEST['step'])) {
 	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
 	$query = API::send();
 	$response = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
 	if ($response) {
-		if ($response['authy'])
+		if (!empty($response['authy']))
 			$step1 = true;
-		elseif ($response['google'])
+		elseif (!empty($response['google']))
 			$step3 = true;
 	}
 	else
 		Errors::add(Lang::string('settings-request-expired'));
 }
 
-$cell1 = ereg_replace("[^0-9]", "",$_REQUEST['cell']);
-$country_code1 = ereg_replace("[^0-9]", "",$_REQUEST['country_code']);
-$token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
-$remove = $_REQUEST['remove'];
+$cell1 = (!empty($_REQUEST['cell'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['cell']) : false;
+$country_code1 = (!empty($_REQUEST['country_code'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['country_code']) : false;
+$token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
+$remove = !empty($_REQUEST['remove']);
 
 if ($remove) {
-	if (!$_REQUEST['submitted'] || $_REQUEST['method'] == 'sms') {
+	if (empty($_REQUEST['submitted']) || (!empty($_REQUEST['method']) && $_REQUEST['method'] == 'sms')) {
 		if (User::$info['using_sms'] == 'Y') {
 			if (User::sendSMS()) {
 				$sent_sms = true;
@@ -65,7 +70,7 @@ if ($remove) {
 	}
 }
 
-if ($_REQUEST['step'] == 1) {
+if (!empty($_REQUEST['step']) && $_REQUEST['step'] == 1) {
 	if (!($cell1 > 0) && $_REQUEST['method'] != 'google')
 		Errors::add(Lang::string('security-no-cell'));
 	if (!($country_code1 > 0) && $_REQUEST['method'] != 'google')
@@ -118,7 +123,7 @@ if ($_REQUEST['step'] == 1) {
 		}
 	}
 }
-elseif ($_REQUEST['step'] == 2) {
+elseif (!empty($_REQUEST['step']) && $_REQUEST['step'] == 2) {
 	if (!($token1 > 0))
 		Errors::add(Lang::string('security-no-token'));
 	
@@ -128,15 +133,17 @@ elseif ($_REQUEST['step'] == 2) {
 		API::add('User','verifiedAuthy');
 		$query = API::send();
 	
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
-	
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
 		
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
-	
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+			
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
+		}
+		
 		if (!is_array(Errors::$errors)) {
 			Messages::add(Lang::string('security-success-message'));
 			
@@ -148,7 +155,7 @@ elseif ($_REQUEST['step'] == 2) {
 	else
 		$step1 = true;
 }
-elseif ($_REQUEST['step'] == 3) {
+elseif (!empty($_REQUEST['step']) && $_REQUEST['step'] == 3) {
 	if (!($token1 > 0))
 		Errors::add(Lang::string('security-no-token'));
 
@@ -176,9 +183,9 @@ elseif ($_REQUEST['step'] == 3) {
 		$step3 = true;
 }
 
-if ($_REQUEST['notice'] == 'email')
+if (!empty($_REQUEST['notice']) && $_REQUEST['notice'] == 'email')
 	$notice = Lang::string('settings-change-notice');
-elseif ($_REQUEST['message'] == 'security-disabled-message')
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'security-disabled-message')
 	Messages::add(Lang::string('security-disabled-message'));
 
 if (User::$info['verified_authy'] == 'Y' || $step2)
@@ -196,7 +203,7 @@ else
 
 $query = API::send();
 $content = $query['Content']['getRecord']['results'][0];
-$secret = $query['User']['getGoogleSecret']['results'][0];
+$secret = (!empty($query['User']['getGoogleSecret'])) ? $query['User']['getGoogleSecret']['results'][0] : false;
 $page_title = Lang::string('security');
 
 include 'includes/head.php';
@@ -345,7 +352,7 @@ include 'includes/head.php';
 	            </div>
             </form>
 		<? } else { ?>
-			<?= ($notice) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
+			<?= (!empty($notice)) ? '<div class="notice"><div class="message-box-wrap">'.$notice.'</div></div>' : '' ?>
 			<? Errors::display(); ?>
 			<? Messages::display(); ?>
 			<h2><?= $content['title'] ?></h2>

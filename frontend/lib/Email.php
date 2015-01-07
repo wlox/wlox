@@ -1,9 +1,9 @@
 <?php
 class Email {	
-	function verifyAddress($email) {
-		$exp = "^[a-z\'0-9]+([._-][a-z\'0-9]+)*@([a-z0-9]+([._-][a-z0-9]+))+$";
-   		if(eregi($exp,$email)){
-			return checkdnsrr(array_pop(explode("@",$email)),"MX");
+	public static function verifyAddress($email) {
+   		if(preg_match("/[0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/",$email)){
+   			$email_parts = explode("@",$email);
+			return checkdnsrr(array_pop($email_parts),"MX");
    		}
    		else
    			return false;
