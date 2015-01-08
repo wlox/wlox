@@ -62,6 +62,7 @@ class API{
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
+		echo $result1;
 		$result = json_decode($result1,true);
 		curl_close($ch);
 		
