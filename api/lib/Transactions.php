@@ -1,6 +1,6 @@
 <?php
 class Transactions {
-	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false,$public_api_all=false) {
+	public static function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$type=false,$order_by=false,$order_desc=false,$public_api_all=false,$dont_paginate=false) {
 		global $CFG;
 		
 		if ($user && !(User::$info['id'] > 0))
@@ -19,7 +19,7 @@ class Transactions {
 		$order_desc = ($order_desc) ? 'ASC' : 'DESC';
 		$user = ($user) ? User::$info['id'] : false;
 		$usd_info = $CFG->currencies['USD'];
-		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
 		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
 		
@@ -41,7 +41,7 @@ class Transactions {
 		elseif ($public_api_all && !$user)
 			$sql = "SELECT transactions.id AS id, transactions.date AS date, transactions.btc AS btc, transactions.btc_price AS price, transactions.orig_btc_price AS price1, ROUND((transactions.btc_price * transactions.btc),2) AS amount, ROUND((transactions.orig_btc_price * transactions.btc),2) AS amount1, currencies.currency AS currency, currencies1.currency AS currency1 ";
 		else
-			$sql = "SELECT COUNT(transactions.id) AS total FROM transactions ";
+			$sql = "SELECT COUNT(transactions.id) AS total ";
 			
 		$sql .= " 
 		FROM transactions
@@ -74,12 +74,12 @@ class Transactions {
 			return $result[0]['total'];
 	}
 	
-	function getTypes() {
+	public static function getTypes() {
 		$sql = "SELECT * FROM transaction_types ORDER BY id ASC ";
 		return db_query_array($sql);
 	}
 	
-	function pagination($link_url,$page,$total_rows,$rows_per_page=0,$max_pages=0,$pagination_label=false,$target_elem=false) {
+	public static function pagination($link_url,$page,$total_rows,$rows_per_page=0,$max_pages=0,$pagination_label=false,$target_elem=false) {
 		global $CFG;
 	
 		$link_url = preg_replace("/[^a-zA-Z\.]/", "",$link_url);
@@ -89,6 +89,8 @@ class Transactions {
 		$max_pages = preg_replace("/[^0-9]/", "",$max_pages);
 		$pagination_label = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$pagination_label);
 		$target_elem = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$target_elem);
+		$first_page = false;
+		$last_page = false;
 		
 		$page = ($page > 0) ? $page : 1;
 		if (!($rows_per_page > 0))
@@ -107,10 +109,14 @@ class Transactions {
 				if ($alpha < $p_deviation) $beta = $beta + ($p_deviation - $alpha);
 				if ($beta < $p_deviation) $alpha = $alpha + ($p_deviation - $beta);
 			}
+			
+			$first_text = DB::getRecord('lang',0,'first-page',0,'key');
+			$last_text = DB::getRecord('lang',0,'last-page',0,'key');
+			
 			if ($page != 1)
-				$first_page = '<a href="'.$link_url.'?'.(http_build_query(array('page'=>1))).'">'.$CFG->first_page_text.'</a>';
+				$first_page = '<a href="'.$link_url.'?'.(http_build_query(array('page'=>1))).'">'.$first_text[$CFG->lang_table_key].'</a>';
 			if ($page != $num_pages)
-				$last_page = ' &nbsp;<a href="'.$link_url.'?'.(http_build_query(array('page'=>$num_pages))).'">'.$CFG->last_page_text.'</a>';
+				$last_page = ' &nbsp;<a href="'.$link_url.'?'.(http_build_query(array('page'=>$num_pages))).'">'.$last_text[$CFG->lang_table_key].'</a>';
 	
 			$pagination = '<div class="pagination"><div style="float:left;">'.$first_page;
 			foreach ($page_array as $p) {
@@ -135,7 +141,7 @@ class Transactions {
 		}
 	}
 	
-	function getList($currency=false,$notrades=false,$limit_7=false) {
+	public static function getList($currency=false,$notrades=false,$limit_7=false) {
 		global $CFG;
 		
 		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -158,7 +164,7 @@ class Transactions {
 		return db_query_array($sql);
 	}
 
-	function getHistory($currency=false,$type=false) {
+	public static function getHistory($currency=false,$type=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)

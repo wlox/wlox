@@ -1,6 +1,6 @@
 <?php
 class Orders {
-	function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false,$public_api_open_orders=false,$public_api_order_book=false) {
+	public static function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false,$public_api_open_orders=false,$public_api_order_book=false) {
 		global $CFG;
 		
 		if ($user && !(User::$info['id'] > 0))
@@ -17,7 +17,7 @@ class Orders {
 		$order_arr = array('date'=>'orders.date','btc'=>'orders.btc','btcprice'=>'btc_price','fiat'=>'usd_amount');
 		$order_by = ($order_by1) ? $order_arr[$order_by1] : 'btc_price';
 		$order_desc = ($order_desc && ($order_by1 != 'date' && $order_by1 != 'fiat')) ? 'ASC' : 'DESC';
-		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$usd_info = $CFG->currencies['USD'];
 		$user = ($user) ? User::$info['id'] : false;
 		$type = ($show_bids) ? $CFG->order_type_bid : $CFG->order_type_ask;
@@ -93,7 +93,7 @@ class Orders {
 		
 	}
 	
-	function getRecord($order_id,$order_log_id=false) {
+	public static function getRecord($order_id,$order_log_id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -120,7 +120,7 @@ class Orders {
 		return $result[0];
 	}
 	
-	function getCurrentBid($currency,$currency_id=false,$absolute=false) {
+	public static function getCurrentBid($currency,$currency_id=false,$absolute=false) {
 		global $CFG;
 
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -158,7 +158,7 @@ class Orders {
 		return $result[0]['fiat_price'];
 	}
 	
-	function getCurrentAsk($currency,$currency_id=false,$absolute=false) {
+	public static function getCurrentAsk($currency,$currency_id=false,$absolute=false) {
 		global $CFG;
 
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -196,7 +196,7 @@ class Orders {
 		return $result[0]['fiat_price'];
 	}
 	
-	function checkOutbidSelf($price,$currency,$find_bids=false) {
+	public static function checkOutbidSelf($price,$currency,$find_bids=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -221,7 +221,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	function checkOutbidStops($price,$currency) {
+	public static function checkOutbidStops($price,$currency) {
 		global $CFG;
 	
 		if (!$CFG->session_active)
@@ -242,7 +242,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	function checkStopsOverBid($stop_price,$currency) {
+	public static function checkStopsOverBid($stop_price,$currency) {
 		global $CFG;
 	
 		if (!$CFG->session_active)
@@ -263,7 +263,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	private function triggerStops($max_price,$min_price,$currency,$maker_is_sell=false,$abs_bid=false,$abs_ask=false,$currency_max=false,$currency_min=false) {
+	private static function triggerStops($max_price,$min_price,$currency,$maker_is_sell=false,$abs_bid=false,$abs_ask=false,$currency_max=false,$currency_min=false) {
 		global $CFG;
 		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -277,6 +277,7 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' (1/currencies.usd_ask)' : ' (IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
 		
+		$currency_max_str = '';
 		if ($currency_max) {
 			$currency_max_str = '(CASE orders.currency ';
 			foreach ($currency_max as $curr_id => $price) {
@@ -285,6 +286,7 @@ class Orders {
 			$currency_max_str .= ' END)';
 		}
 		
+		$currency_min_str = '';
 		if ($currency_min) {
 			$currency_min_str = '(CASE orders.currency ';
 			foreach ($currency_min as $curr_id => $price) {
@@ -326,7 +328,7 @@ class Orders {
 		return db_query($sql);
 	}
 	
-	function getCompatible($type,$price,$currency,$for_update=false,$market_price=false,$executed_orders=false,$compare_with_conv_fees=false) {
+	public static function getCompatible($type,$price,$currency,$for_update=false,$market_price=false,$executed_orders=false,$compare_with_conv_fees=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -349,9 +351,10 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
 		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' (1/currencies.'.$usd_field.')' : ' ('.$currency_info[$usd_field].' / IF(orders.currency = '.$usd_info['id'].',1,currencies.'.$usd_field.'))';
+		$executed_sql = '';
+		$currency_cols = '';
 		
 		if ($executed_orders) {
-			$executed_sql = '';
 			foreach ($executed_orders as $executed_id) {
 				$executed_sql .= ' AND orders.id != '.$executed_id.' '; 
 			}
@@ -361,7 +364,7 @@ class Orders {
 			$sql = "DESCRIBE site_users";
 			$result = db_query_array($sql);
 			if ($result) {
-				$currency_cols = 'CASE currencies.currency ';
+				$currency_cols .= 'CASE currencies.currency ';
 				foreach ($result as $row) {
 					if (array_key_exists(strtoupper($row['Field']),$CFG->currencies) && $row['Field'] != 'BTC') {
 						$currency_cols .= " WHEN '".strtoupper($row['Field'])."' THEN site_users.".$row['Field'].' ';
@@ -389,7 +392,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	function executeOrder($buy,$price,$amount,$currency1,$fee,$market_price,$edit_id=0,$this_user_id=0,$external_transaction=false,$stop_price=false,$use_maker_fee=false,$verbose=false) {
+	public static function executeOrder($buy,$price,$amount,$currency1,$fee,$market_price,$edit_id=0,$this_user_id=0,$external_transaction=false,$stop_price=false,$use_maker_fee=false,$verbose=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -430,10 +433,37 @@ class Orders {
 		$user_info = DB::getRecord('site_users',$this_user_id,0,1,false,false,false,1);
 		$this_btc_balance = $user_info['btc'];
 		$this_fiat_balance = $user_info[strtolower($currency1)];
-		$on_hold = User::getOnHold(1,$user_info['id']);
-		$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
-		$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - (($amount * $orig_order['btc_price']) + (($amount * $orig_order['btc_price']) * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
 		
+		$comp_btc_balance = false;
+		$comp_btc_on_hold = false;
+		$comp_btc_on_hold_prev = false;
+		$comp_fiat_balance = false;
+		$comp_fiat_on_hold = false;
+		$comp_fiat_on_hold_prev = false;
+		$currency_max = false;
+		$currency_max_str = false;
+		$currency_min = false;
+		$currency_min_str = false;
+		$compatible = false;
+		$trans_total = 0;
+		$this_funds_finished = false;
+		$hidden_executions = false;
+		$max_price = 0;
+		$min_price = 0;
+		$executed_orders = array();
+		$executed_prices = array();
+		
+		$on_hold = User::getOnHold(1,$user_info['id']);
+		if (!empty($on_hold['BTC']['total']))
+			$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
+		else
+			$this_btc_on_hold = 0;
+		
+		if (!empty($on_hold[strtoupper($currency1)]['total']))
+			$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - (($amount * $orig_order['btc_price']) + (($amount * $orig_order['btc_price']) * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
+		else 
+			$this_fiat_on_hold = 0;
+			
 		$user_fee = DB::getRecord('fee_schedule',$user_info['fee_schedule'],0,1);
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
 		
@@ -457,20 +487,15 @@ class Orders {
 				$no_compatible = (!$compatible);
 				$compatible = (is_array($compatible)) ? new ArrayIterator($compatible) : false;
 				$compatible[] = array('continue'=>1);
-				$trans_total = 0;
 				//$btc_commision = 0;
-				//$fiat_commision = 0;
-				$max_price = 0;
-				$min_price = 0;
-				$executed_orders = array();
-				$executed_prices = array();
+				$fiat_commision = false;
 				$c = count($compatible);
 				$i = 1;
 			}
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					if (round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) <= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) > $price && !$market_price) {
+					if (!empty($comp_order['real_market_price']) && round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) <= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) > $price && !$market_price) {
 						$hidden_executions[] = $comp_order;
 						continue;
 					}
@@ -491,7 +516,7 @@ class Orders {
 						}
 					}
 					
-					if ($comp_order['site_user'] == $user_info['id'] || $comp_order['continue']) {
+					if (!empty($comp_order['continue']) || $comp_order['site_user'] == $user_info['id']) {
 						$i++;
 						continue;
 					}
@@ -531,8 +556,17 @@ class Orders {
 					$comp_btc_balance[$comp_order['site_user']] = $comp_order['btc_balance'] - $trans_amount;
 					$comp_fiat_balance[$comp_order['site_user']] = $comp_order['fiat_balance'] + ($comp_order['orig_btc_price'] * $comp_order_trans_amount_net);
 					//$btc_commision += $this_fee;
-					$fiat_commision[strtolower($currency_info['currency'])] += $this_fee * $comp_order['fiat_price'];
-					$fiat_commision[strtolower($comp_order['currency_abbr'])] += $comp_order_fee * $comp_order['orig_btc_price'];
+					
+					if (!empty($fiat_commision[strtolower($currency_info['currency'])]))
+						$fiat_commision[strtolower($currency_info['currency'])] += $this_fee * $comp_order['fiat_price'];
+					else
+						$fiat_commision[strtolower($currency_info['currency'])] = $this_fee * $comp_order['fiat_price'];
+					
+					if (!empty($fiat_commision[strtolower($comp_order['currency_abbr'])]))
+						$fiat_commision[strtolower($comp_order['currency_abbr'])] += $comp_order_fee * $comp_order['orig_btc_price'];
+					else
+						$fiat_commision[strtolower($comp_order['currency_abbr'])] = $comp_order_fee * $comp_order['orig_btc_price'];
+					
 					$this_prev_btc = $this_btc_balance;
 					$this_prev_fiat = $this_fiat_balance;
 					$this_btc_balance += $trans_amount;
@@ -627,20 +661,15 @@ class Orders {
 				$no_compatible = (!$compatible);
 				$compatible = (is_array($compatible)) ? new ArrayIterator($compatible) : false;
 				$compatible[] = array('continue'=>1);
-				$trans_total = 0;
 				//$btc_commision = 0;
-				//$fiat_commision = 0;
-				$max_price = 0;
-				$min_price = 0;
-				$executed_orders = array();
-				$executed_prices = array();
+				$fiat_commision = false;
 				$c = count($compatible);
 				$i = 1;
 			}
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					if (round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) >= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) < $price && !$market_price) {
+					if (!empty($comp_order['real_market_price']) && round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) >= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) < $price && !$market_price) {
 						$hidden_executions[] = $comp_order;
 						continue;
 					}
@@ -661,11 +690,11 @@ class Orders {
 						}
 					}
 					
-					if ($comp_order['site_user'] == $user_info['id'] || $comp_order['continue']) {
+					if (!empty($comp_order['continue']) || $comp_order['site_user'] == $user_info['id']) {
 						$i++;
 						continue;
 					}
-
+					
 					if (is_array($comp_btc_balance)) $comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					if (is_array($comp_fiat_balance)) $comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_fiat_on_hold_prev[$comp_order['site_user']] = $comp_fiat_on_hold[$comp_order['site_user']];
@@ -701,8 +730,18 @@ class Orders {
 					$comp_btc_balance[$comp_order['site_user']] = $comp_order['btc_balance'] + $trans_amount;
 					$comp_fiat_balance[$comp_order['site_user']] = $comp_order['fiat_balance'] - ($comp_order['orig_btc_price'] * $comp_order_trans_amount_net);
 					//$btc_commision += $comp_order_fee;
-					$fiat_commision[strtolower($currency_info['currency'])] += $this_fee * $comp_order['fiat_price'];
-					$fiat_commision[strtolower($comp_order['currency_abbr'])] += $comp_order_fee * $comp_order['orig_btc_price'];
+					
+					if (!empty($fiat_commision[strtolower($currency_info['currency'])]))
+						$fiat_commision[strtolower($currency_info['currency'])] += $this_fee * $comp_order['fiat_price'];
+					else
+						$fiat_commision[strtolower($currency_info['currency'])] = $this_fee * $comp_order['fiat_price'];
+						
+					if (!empty($fiat_commision[strtolower($comp_order['currency_abbr'])]))
+						$fiat_commision[strtolower($comp_order['currency_abbr'])] += $comp_order_fee * $comp_order['orig_btc_price'];
+					else
+						$fiat_commision[strtolower($comp_order['currency_abbr'])] = $comp_order_fee * $comp_order['orig_btc_price'];
+						
+					
 					$this_prev_btc = $this_btc_balance;
 					$this_prev_fiat = $this_fiat_balance;
 					$this_btc_balance -= $trans_amount;
@@ -821,6 +860,7 @@ class Orders {
 		if ($min_price > 0 && strtolower($currency1) == 'usd')
 			db_update('currencies',$CFG->btc_currency_id,array('usd_bid'=>$min_price));
 		
+		$order_info = false;
 		if ($verbose) {
 			if ($executed_prices) {
 				foreach ($executed_prices as $exec) {
@@ -837,7 +877,7 @@ class Orders {
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
 	}
 	
-	private function cancelOrder($order_id=false,$outstanding_btc=false,$site_user=false) {
+	private static function cancelOrder($order_id=false,$outstanding_btc=false,$site_user=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -853,7 +893,7 @@ class Orders {
 		Email::send($CFG->form_email,$user_info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user_info);
 	}
 	
-	private function setStatus($order_id,$status,$order_log_id=false,$btc_remaining=false) {
+	private static function setStatus($order_id,$status,$order_log_id=false,$btc_remaining=false) {
 		global $CFG;
 		
 		if (!($order_id > 0) && !($order_log_id > 0))
@@ -863,12 +903,13 @@ class Orders {
 		db_query($sql);
 	}
 	
-	function getStatus($order_log_id=false,$user=false) {
+	public static function getStatus($order_log_id=false,$user=false) {
 		global $CFG;
 		
 		if ($user && !$CFG->session_active)
 			return false;
 		
+		$user_id = false;
 		if ($user)
 			$user_id = User::$info['id'];
 		
@@ -901,7 +942,7 @@ class Orders {
 			return $result;
 	}
 	
-	function delete($id) {
+	public static function delete($id) {
 		global $CFG;
 		
 		$id = preg_replace("/[^0-9]/", "",$id);
@@ -921,7 +962,7 @@ class Orders {
 		return self::getStatus($del_order['log_id']);
 	}
 	
-	function deleteAll() {
+	public static function deleteAll() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -957,7 +998,7 @@ class Orders {
 		return $orders_info;
 	}
 	
-	function getBidList($currency=false,$notrades=false,$limit_7=false,$user=false) {
+	public static function getBidList($currency=false,$notrades=false,$limit_7=false,$user=false) {
 		global $CFG;
 		
 		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -984,7 +1025,7 @@ class Orders {
 		return db_query_array($sql);
 	}
 	
-	function getAskList($currency=false,$notrades=false,$limit_7=false,$user=false) {
+	public static function getAskList($currency=false,$notrades=false,$limit_7=false,$user=false) {
 		global $CFG;
 	
 		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);

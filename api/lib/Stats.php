@@ -1,6 +1,6 @@
 <?php
 class Stats {
-	function getHistorical($timeframe='1year',$currency='usd',$public_api=false) {
+	public static function getHistorical($timeframe='1year',$currency='usd',$public_api=false) {
 		global $CFG;
 		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -26,7 +26,7 @@ class Stats {
 		return db_query_array($sql);
 	}
 	
-	function getCurrent($currency_id,$currency_abbr=false) {
+	public static function getCurrent($currency_id,$currency_abbr=false) {
 		global $CFG;
 		
 		$usd_info = $CFG->currencies['USD'];
@@ -82,7 +82,7 @@ class Stats {
 		return $stats;
 	}
 	
-	function getBTCTraded() {
+	public static function getBTCTraded() {
 		global $CFG;
 		
 		$sql = "SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ORDER BY `date` DESC LIMIT 0,1";
