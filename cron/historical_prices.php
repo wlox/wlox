@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-include 'cfg.php';
+include 'common.php';
 
 // WARNING
 // This file is only to be run to pull price data from other exchanges before the exchange has it's own operations!
@@ -10,7 +10,7 @@ echo "Beginning Historical Data processing...".PHP_EOL;
 
 // QUANDL HISTORICAL DATA
 $currency = 'USD';
-$exchange = 'BITSTAMP';
+$exchange = 'BTCE';
 
 $data = file_get_contents('http://www.quandl.com/api/v1/datasets/BITCOIN/'.$exchange.$currency.'.csv?trim_start=2011-01-01');
 $data1 = explode("\n",$data);
