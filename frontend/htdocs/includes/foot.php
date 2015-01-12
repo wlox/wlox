@@ -93,7 +93,7 @@
 <script type="text/javascript" src="js/universal/jquery-ui-1.10.3.custom.min.js"></script>
 
 <!-- main js -->
-<script type="text/javascript" src="js/ops.js?v=20141125"></script>
+<script type="text/javascript" src="js/ops.js?v=20150112"></script>
 
 <? if ($CFG->self == 'index.php' || $CFG->self == 'order-book.php') { ?>
 <!-- flot -->

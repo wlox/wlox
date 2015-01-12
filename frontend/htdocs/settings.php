@@ -12,6 +12,7 @@ $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['
 $authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
 $match = false;
 $request_2fa = false;
+$too_few_chars = false;
 
 API::add('User','getInfo',array($_SESSION['session_id']));
 API::add('User','getCountries');
@@ -45,12 +46,14 @@ else {
 }
 
 if (!empty($_REQUEST['settings'])) {
-	if (!empty($_REQUEST['settings']['pass']))
-		$match = preg_match_all("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/",$_REQUEST['settings']['pass'],$matches);
+	if (!empty($_REQUEST['settings']['pass'])) {
+		$match = preg_match_all($CFG->pass_regex,$_REQUEST['settings']['pass'],$matches);
+		$too_few_chars = (strlen($_REQUEST['settings']['pass']) < $CFG->pass_min_chars);
+	}
 	
 	if (!empty($_REQUEST['settings']['pass'])) {
-		$_REQUEST['settings']['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['settings']['pass']);
-		$_REQUEST['settings']['pass2'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['settings']['pass2']);
+		$_REQUEST['settings']['pass'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass']);
+		$_REQUEST['settings']['pass2'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass2']);
 	}
 	
 	$_REQUEST['settings']['first_name'] = preg_replace("/[^\da-z  ]/i", "",$_REQUEST['settings']['first_name']);
@@ -69,7 +72,9 @@ $personal->verify();
 
 if ($match)
 	$personal->errors[] = htmlentities(str_replace('[characters]',implode(',',array_unique($matches[0])),Lang::string('login-pass-chars-error')));
-	
+if ($too_few_chars)	
+	$personal->errors[] = Lang::string('login-password-error');
+
 if (!empty($_REQUEST['submitted']) && !$token1 && !is_array($personal->errors)) {
 	if (!empty($_REQUEST['request_2fa'])) {
 		if (!($token1 > 0)) {

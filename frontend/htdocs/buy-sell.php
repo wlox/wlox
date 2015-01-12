@@ -73,7 +73,7 @@ $buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 $buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
 
 $sell_amount1 = (!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']) : 0;
-$sell_price1 = (!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : $current_bid;
+$sell_price1 = (!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;

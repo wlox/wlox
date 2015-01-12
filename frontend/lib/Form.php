@@ -747,10 +747,6 @@ class Form {
 							if (!Email::verifyAddress($value)) 
 								$this->errors[$name] = $this->verify_email_error;
 						break;
-						case 'password':
-							if (!preg_match($CFG->pass_regex,$value)) 
-								$this->errors[$name] = $this->verify_password_error;
-						break;
 						case 'checkbox':
 							if ($value == 'N') 
 								$this->errors[$name] = $this->verify_default_error;

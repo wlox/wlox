@@ -4,7 +4,7 @@ include '../lib/common.php';
 
 $page_title = Lang::string('home-login');
 $user1 = (!empty($_REQUEST['login']['user'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['login']['user']) : false;
-$pass1 = (!empty($_REQUEST['login']['pass'])) ? preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['login']['pass']) : false;
+$pass1 = (!empty($_REQUEST['login']['pass'])) ? preg_replace($CFG->pass_regex, "",$_REQUEST['login']['pass']) : false;
 
 if (!empty($_REQUEST['submitted'])) {
 	if (empty($user1)) {
