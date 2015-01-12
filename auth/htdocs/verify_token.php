@@ -1,10 +1,10 @@
 <?php 
-include '../cfg.php';
+include '../common.php';
 
-$session_id1 = ereg_replace("[^0-9]","",$_POST['session_id']);
+$session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
 $signature1 = hex2bin($_POST['signature']);
-$nonce1 = ereg_replace("[^0-9]","",$_POST['nonce']);
-$token1 = ereg_replace("[^0-9]","",$_POST['token']);
+$nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
+$token1 = preg_replace("/[^0-9]/","",$_POST['token']);
 $dont_ask1 = $_POST['dont_ask'];
 
 if (!$session_id1) {
@@ -41,7 +41,7 @@ if ($result[0]['authy_id'] > 0) {
 		exit;
 	}
 	
-	if ($response1['success'] === false) {
+	if (empty($response1['success']) || $response1['success'] === false) {
 		echo json_encode(array('error'=>'authy-errors','authy-errors'=>$response1['errors']));
 		exit;
 	}
