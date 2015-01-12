@@ -828,7 +828,8 @@ class Orders {
 				$order_status = 'FILLED';
 			}
 			
-			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_sell_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
+			$client_ip = (!empty($CFG->client_ip)) ? $CFG->client_ip : false;
+			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$client_ip,'history_action'=>$CFG->history_sell_id,'site_user'=>$user_info['id'],'order_id'=>$order_log_id));
 		}
 		
 		if ($hidden_executions && !$external_transaction && $amount > 0 && !$this_funds_finished) {
