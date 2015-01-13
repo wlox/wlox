@@ -1,6 +1,6 @@
 <?php
 class Currencies {
-	function get() {
+	public static function get() {
 		$sql = "SELECT * FROM currencies WHERE currency != 'BTC' AND is_active = 'Y' ORDER BY currency ASC";
 		$result = db_query_array($sql);
 		
@@ -12,7 +12,7 @@ class Currencies {
 		return $currencies;
 	}
 	
-	function getRecord($currency_abbr=false,$currency_id=false) {
+	public static function getRecord($currency_abbr=false,$currency_id=false) {
 		if (!$currency_abbr && !$currency_id)
 			return false;
 		

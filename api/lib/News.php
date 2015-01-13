@@ -1,6 +1,6 @@
 <?php
 class News{
-	function get($count=false,$page=false,$per_page=false) {
+	public static function get($count=false,$page=false,$per_page=false) {
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		

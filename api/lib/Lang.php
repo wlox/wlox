@@ -1,6 +1,6 @@
 <?php
 class Lang {
-	function getTable() {
+	public static function getTable() {
 		global $CFG;
 		$sql = "SELECT * FROM lang";
 		$result = db_query_array($sql);

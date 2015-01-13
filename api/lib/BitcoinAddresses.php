@@ -2,7 +2,7 @@
 class BitcoinAddresses{
 	static $bitcoin;
 	
-	function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false,$public_api=false) {
+	public static function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false,$public_api=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active || !(User::$info['id'] > 0))
@@ -44,7 +44,7 @@ class BitcoinAddresses{
 			return $result[0]['total'];
 	}
 	
-	function getNew($return_address=false) {
+	public static function getNew($return_address=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -63,7 +63,7 @@ class BitcoinAddresses{
 		return ($return_address) ? $new_address : $new_id;
 	}
 	
-	function getAddress($address) {
+	public static function getAddress($address) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -76,7 +76,7 @@ class BitcoinAddresses{
 		return $result[0];
 	}
 	
-	function getBalance() {
+	public static function getBalance() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -87,7 +87,7 @@ class BitcoinAddresses{
 		return $result[0]['balance'];
 	}
 	
-	function getBitcoindBalance() {
+	public static function getBitcoindBalance() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -110,7 +110,7 @@ class BitcoinAddresses{
 		return $total;
 	}
 	
-	function cheapsweep($destination) {
+	public static function cheapsweep($destination) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -150,7 +150,7 @@ class BitcoinAddresses{
 		}
 	}
 	
-	function getHotWallet() {
+	public static function getHotWallet() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -161,7 +161,7 @@ class BitcoinAddresses{
 		return $result[0];
 	}
 	
-	function getWarmWallet() {
+	public static function getWarmWallet() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -172,7 +172,7 @@ class BitcoinAddresses{
 		return $result[0];
 	}
 	
-	function validateAddress($btc_address) {
+	public static function validateAddress($btc_address) {
 		global $CFG;
 		
 		$btc_address = preg_replace("/[^0-9a-zA-Z]/",'',$btc_address);

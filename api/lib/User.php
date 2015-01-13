@@ -2,11 +2,11 @@
 class User {
 	public static $info, $on_hold;
 	
-	function setInfo($info) {
+	public static function setInfo($info) {
 		User::$info = $info;
 	}
 	
-	function getInfo($session_id=false) {
+	public static function getInfo($session_id=false) {
 		global $CFG;
 		
 		$session_id = preg_replace("/[^0-9]/", "",$session_id);
@@ -18,11 +18,11 @@ class User {
 		return $result[0];
 	}
 	
-	function verifyLogin() {
+	public static function verifyLogin() {
 		global $CFG;
 		
 		if (!($CFG->session_id > 0))
-			return false;
+			return array('message'=>'not-logged-in');
 		
 		if (!User::$info) {
 			return array('error'=>'session-not-found');
@@ -72,15 +72,15 @@ class User {
 			$return['tel'] = str_repeat('x',$s).substr($return['tel'], -2);
 		}
 		
-		if ($result['default_currency'] > 0) {
-			$currency = DB::getRecord('currencies',$result['default_currency'],0,1);
+		if (User::$info['default_currency'] > 0) {
+			$currency = DB::getRecord('currencies',User::$info['default_currency'],0,1);
 			$return['default_currency_abbr'] = $currency['currency'];
 		}
 		
 		return array('message'=>'logged-in','info'=>$return);
 	}
 	
-	function logOut($session_id=false) {
+	public static function logOut($session_id=false) {
 		if (!($session_id > 0))
 			return false;
 		
@@ -89,7 +89,7 @@ class User {
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
-	function getOnHold($for_update=false,$user_id=false) {
+	public static function getOnHold($for_update=false,$user_id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -98,13 +98,21 @@ class User {
 		$user_info = ($user_id > 0) ? DB::getRecord('site_users',$user_id,0,1,false,false,false,$for_update) : User::$info;
 		$user_fee = FeeSchedule::getRecord($user_info['fee_schedule']);
 		$lock = ($for_update) ? 'FOR UPDATE' : '';
+		$on_hold = array();
 	
 		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
-				$on_hold[$row['currency']]['withdrawal'] += floatval($row['amount']);
-				$on_hold[$row['currency']]['total'] += floatval($row['amount']);
+				if (!empty($on_hold[$row['currency']]['withdrawal']))
+					$on_hold[$row['currency']]['withdrawal'] += floatval($row['amount']);
+				else
+					$on_hold[$row['currency']]['withdrawal'] = floatval($row['amount']);
+					
+				if (!empty($on_hold[$row['currency']]['total']))
+					$on_hold[$row['currency']]['total'] += floatval($row['amount']);
+				else
+					$on_hold[$row['currency']]['total'] = floatval($row['amount']);
 			}
 		}
 	
@@ -113,12 +121,26 @@ class User {
 		if ($result) {
 			foreach ($result as $row) {
 				if ($row['type'] == $CFG->order_type_bid) {
-					$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
-					$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					if (!empty($on_hold[$row['currency']]['order']))
+						$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					else
+						$on_hold[$row['currency']]['order'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					
+					if (!empty($on_hold[$row['currency']]['total']))
+						$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					else
+						$on_hold[$row['currency']]['total'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
 				}
 				else {
-					$on_hold['BTC']['order'] += floatval($row['btc_amount']);
-					$on_hold['BTC']['total'] += floatval($row['btc_amount']);
+					if (!empty($on_hold['BTC']['order']))
+						$on_hold['BTC']['order'] += floatval($row['btc_amount']);
+					else 
+						$on_hold['BTC']['order'] = floatval($row['btc_amount']);
+						
+					if (!empty($on_hold['BTC']['total']))
+						$on_hold['BTC']['total'] += floatval($row['btc_amount']);
+					else 
+						$on_hold['BTC']['total'] = floatval($row['btc_amount']);
 				}
 			}
 		}
@@ -126,7 +148,7 @@ class User {
 		return $on_hold;
 	}
 	
-	function getAvailable() {
+	public static function getAvailable() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -134,19 +156,24 @@ class User {
 	
 		self::$on_hold = (is_array(self::$on_hold)) ? self::$on_hold : self::getOnHold();
 		if ($CFG->currencies) {
-			$available['BTC'] = User::$info['btc'] - self::$on_hold['BTC']['total'];
+			$on_hold = (!empty(self::$on_hold['BTC']['total'])) ? self::$on_hold['BTC']['total'] : 0;
+			$available['BTC'] = User::$info['btc'] - $on_hold;
 			$available['BTC'] = ($available['BTC'] < 0.00000001) ? 0 : $available['BTC'];
 			foreach ($CFG->currencies as $currency) {
-				if (User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'] == 0)
+				if (empty(User::$info[strtolower($currency['currency'])]))
+					continue;
+					
+				$on_hold = (!empty(self::$on_hold[$currency['currency']]['total'])) ? self::$on_hold[$currency['currency']]['total'] : 0;
+				if (User::$info[strtolower($currency['currency'])] - $on_hold <= 0)
 					continue;
 	
-				$available[$currency['currency']] = round(User::$info[strtolower($currency['currency'])] - self::$on_hold[$currency['currency']]['total'],2,PHP_ROUND_HALF_UP);
+				$available[$currency['currency']] = round(User::$info[strtolower($currency['currency'])] - $on_hold,2,PHP_ROUND_HALF_UP);
 			}
 		}
 		return $available;
 	}
 	
-	function hasCurrencies() {
+	public static function hasCurrencies() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -167,7 +194,7 @@ class User {
 		return $found;
 	}
 	
-	function getVolume() {
+	public static function getVolume() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -182,7 +209,7 @@ class User {
 		return $result[0]['volume'];
 	}
 	
-	function getNewId() {
+	public static function getNewId() {
 		$sql = 'SELECT FLOOR(10000000 + RAND() * 89999999) AS random_num
 				FROM site_users
 				WHERE "random_num" NOT IN (SELECT user FROM site_users)
@@ -197,13 +224,13 @@ class User {
 		return $result[0]['random_num'];
 	}
 	
-	function randomPassword($length = 8) {
+	public static function randomPassword($length = 8) {
 		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*?";
 		$password = substr(str_shuffle($chars),0,$length);
 		return $password;
 	}
 	
-	function sendSMS($authy_id=false) {
+	public static function sendSMS($authy_id=false) {
 		global $CFG;
 		
 		$authy_id = preg_replace("/[^0-9]/", "",$authy_id);
@@ -212,23 +239,13 @@ class User {
 			return false;
 		
 		$authy_id = ($authy_id > 0) ? $authy_id : User::$info['authy_id'];
-		$response = shell_exec('curl https://api.authy.com/protected/json/sms/'.$authy_id.'?api_key='.$CFG->authy_api_key);
+		$response = shell_exec('curl "https://api.authy.com/protected/json/sms/'.$authy_id.'?force=true&api_key='.$CFG->authy_api_key.'"');
 		$response1 = json_decode($response,true);
-		
+
 		return $response1;
-	
-		/*
-		if (!$response || !is_array($response1))
-			Errors::add(Lang::string('security-com-error'));
-		elseif ($response1['success'] === false)
-			Errors::merge($response1['errors']);
-		else {
-			return true;
-		}
-		*/
 	}
 	
-	function confirmToken($token,$authy_id=false) {
+	public static function confirmToken($token,$authy_id=false) {
 		global $CFG;
 		
 		if (!($CFG->session_active || $CFG->session_locked))
@@ -240,55 +257,36 @@ class User {
 		
 		if (!($token1 > 0) || !($authy_id > 0))
 			return false;
-		
-		
-		/*
-		if (!($token1 > 0))
-			Errors::add(Lang::string('security-no-token'));
-		*/
 	
-		//if (!is_array(Errors::$errors)) {
 			$authy_id = ($authy_id > 0) ? $authy_id : User::$info['authy_id'];
 			$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token.'/'.$authy_id.'?api_key='.$CFG->authy_api_key.'"');
 			$response1 = json_decode($response,true);
 			
 			return $response1;
-	
-			/*
-			if (!$response || !is_array($response1))
-				Errors::add(Lang::string('security-com-error'));
-			if ($response1['success'] === false)
-				Errors::merge($response1['errors']);
-	
-			if (!is_array(Errors::$errors)) {
-				return true;
-			}
-		}
-		*/
 	}
 	
-	function disableNeverLoggedIn($pass) {
-		$pass = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$pass);
-		if (strlen($pass) < 8)
+	public static function disableNeverLoggedIn($pass) {
+		$pass = preg_replace($CFG->pass_regex, "",$pass);
+		if (strlen($pass) < $CFG->pass_min_chars)
 			return false;
 		
 		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
 	
-	function firstLoginPassChange($pass) {
+	public static function firstLoginPassChange($pass) {
 		global $CFG;
 		
-		$pass = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$pass);
+		$pass = preg_replace($CFG->pass_regex, "",$pass);
 		
-		if (!$CFG->session_active || strlen($pass) < 8 || User::$info['no_logins'] != 'Y')
+		if (!$CFG->session_active || strlen($pass) < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
 			return false;
 		
 		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('pass'=>$pass));
 	}
 	
-	function userExists($email) {
+	public static function userExists($email) {
 		$email = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$email);
 		
 		if (!$email)
@@ -303,7 +301,7 @@ class User {
 			return false;
 	}
 	
-	function resetUser($email) {
+	public static function resetUser($email) {
 		global $CFG;
 		
 		$email = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$email);
@@ -330,7 +328,7 @@ class User {
 		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
 	}
 	
-	function registerNew($info) {
+	public static function registerNew($info) {
 		global $CFG;
 		
 		if (!is_array($info))
@@ -380,14 +378,16 @@ class User {
 			$email = SiteEmail::getRecord('register');
 			Email::send($CFG->form_email,$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
 		
-			$email = SiteEmail::getRecord('register-notify');
-			$info['pass'] = false;
-			Email::send($CFG->form_email,$CFG->accounts_email,$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+			if ($CFG->email_notify_new_users) {
+				$email = SiteEmail::getRecord('register-notify');
+				$info['pass'] = false;
+				Email::send($CFG->form_email,$CFG->support_email,$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+			}
 			return true;
 		}
 	}
 	
-	function registerAuthy($cell,$country_code) {
+	public static function registerAuthy($cell,$country_code) {
 		global $CFG;
 		
 		$cell = preg_replace("/[^0-9]/", "",$cell);
@@ -405,7 +405,7 @@ class User {
 		return $response1;
 	}
 	
-	function enableAuthy($cell,$country_code,$authy_id,$using_sms) {
+	public static function enableAuthy($cell,$country_code,$authy_id,$using_sms) {
 		global $CFG;
 		
 		$cell = preg_replace("/[^0-9]/", "",$cell);
@@ -415,10 +415,10 @@ class User {
 		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')
 			return false;
 		
-		db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
+		return db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
 	}
 	
-	function enableGoogle2fa($cell,$country_code) {
+	public static function enableGoogle2fa($cell,$country_code) {
 		global $CFG;
 	
 		$cell = preg_replace("/[^0-9]/", "",$cell);
@@ -436,7 +436,7 @@ class User {
 			return $key;
 	}
 	
-	function getGoogleSecret() {
+	public static function getGoogleSecret() {
 		global $CFG;
 		
 		if (!($CFG->session_active) || User::$info['verified_google'] == 'Y')
@@ -445,7 +445,7 @@ class User {
 		return array('secret'=>User::$info['google_2fa_code'],'label'=>$CFG->exchange_name);
 	}
 	
-	function verifiedAuthy() {
+	public static function verifiedAuthy() {
 		global $CFG;
 	
 		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified) || User::$info['verified_google'] == 'Y')
@@ -454,7 +454,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('verified_authy'=>'Y'));
 	}
 	
-	function verifiedGoogle() {
+	public static function verifiedGoogle() {
 		global $CFG;
 	
 		if (!($CFG->session_active && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
@@ -463,7 +463,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('verified_google'=>'Y'));
 	}
 	
-	function disable2fa() {
+	public static function disable2fa() {
 		global $CFG;
 		
 		if (!($CFG->session_active && $CFG->token_verified))
@@ -472,7 +472,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('google_2fa_code'=>'','verified_google'=>'N','using_sms'=>'N','authy_id'=>'','verified_authy'=>'N'));
 	}
 	
-	function updatePersonalInfo($info) {
+	public static function updatePersonalInfo($info) {
 		global $CFG;
 
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -481,7 +481,7 @@ class User {
 		if (!is_array($info))
 			return false;
 
-		$update['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$info['pass']);
+		$update['pass'] = preg_replace($CFG->pass_regex, "",$info['pass']);
 		$update['first_name'] = preg_replace("/[^\da-z ]/i", "",$info['first_name']);
 		$update['last_name'] = preg_replace("/[^\da-z ]/i", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
@@ -490,7 +490,7 @@ class User {
 		if (!$update['pass'])
 			unset($update['pass']);
 
-		if (($update['pass'] && strlen($update['pass']) < 8) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
+		if (($update['pass'] && strlen($update['pass']) < $CFG->pass_min_chars) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
 		
 		if ($CFG->session_id) {
@@ -504,7 +504,7 @@ class User {
 		return db_update('site_users',User::$info['id'],$update);
 	}
 	
-	function updateSettings($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1) {
+	public static function updateSettings($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1) {
 		global $CFG;
 		
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -523,7 +523,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('confirm_withdrawal_2fa_btc'=>$confirm_withdrawal_2fa_btc2,'confirm_withdrawal_email_btc'=>$confirm_withdrawal_email_btc2,'confirm_withdrawal_2fa_bank'=>$confirm_withdrawal_2fa_bank2,'confirm_withdrawal_email_bank'=>$confirm_withdrawal_email_bank2,'notify_deposit_btc'=>$notify_deposit_btc2,'notify_deposit_bank'=>$notify_deposit_bank2,'notify_withdraw_btc'=>$notify_withdraw_btc2,'notify_withdraw_bank'=>$notify_withdraw_bank2,'notify_login'=>$notify_login2));
 	}
 	
-	function deactivateAccount() {
+	public static function deactivateAccount() {
 		global $CFG;
 		
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -545,7 +545,7 @@ class User {
 			return db_update('site_users',User::$info['id'],array('deactivated'=>'Y'));
 	}
 	
-	function reactivateAccount() {
+	public static function reactivateAccount() {
 		global $CFG;
 
 		if (!(($CFG->session_locked || $CFG->session_active) && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -563,7 +563,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('locked'=>'Y'));
 	}
 	
-	function unlockAccount() {
+	public static function unlockAccount() {
 		global $CFG;
 	
 		if (!(($CFG->session_locked || $CFG->session_active) && ($CFG->token_verified || $CFG->email_2fa_verified)))
@@ -572,7 +572,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('locked'=>'N'));
 	}
 	
-	function settingsEmail2fa($request=false,$security_page=false) {
+	public static function settingsEmail2fa($request=false,$security_page=false) {
 		global $CFG;
 
 		if (!($CFG->session_locked || $CFG->session_active))
@@ -595,7 +595,7 @@ class User {
 		}
 	}
 	
-	function getSettingsChangeRequest($settings_change_id1) {
+	public static function getSettingsChangeRequest($settings_change_id1) {
 		global $CFG;
 
 		if (!$settings_change_id1)
@@ -610,7 +610,7 @@ class User {
 
 	}
 	
-	function notifyLogin() {
+	public static function notifyLogin() {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -630,12 +630,12 @@ class User {
 		Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$info);
 	}
 	
-	function getCountries() {
+	public static function getCountries() {
 		$sql = "SELECT * FROM iso_countries ORDER BY name ASC";
 		return db_query_array($sql);
 	}
 	
-	function setLang($lang) {
+	public static function setLang($lang) {
 		if (!$lang)
 			return false;
 		

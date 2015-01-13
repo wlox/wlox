@@ -1,26 +1,31 @@
 <?php 
-
-
 // get built-in php classes
 $system_classes = get_declared_classes();
 $system_classes[] = 'DB';
 
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
-$session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
-$signature1 = hex2bin($_POST['signature']);
-$nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
-$token1 = preg_replace("/[^0-9]/","",$_POST['token']);
-$settings_change_id1 = $_REQUEST['settings_change_id'];
-$request_id1 = $_REQUEST['request_id'];
-$api_key1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
-$api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']);
-$CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
-$CFG->client_ip = preg_replace("/[^0-9\.]/","",$_POST['ip']);
+$session_id1 = (!empty($_POST['session_id'])) ? preg_replace("/[^0-9]/","",$_POST['session_id']) : false;
+$signature1 = (!empty($_POST['signature'])) ? hex2bin($_POST['signature']) : false;
+$nonce1 = (!empty($_POST['nonce'])) ? preg_replace("/[^0-9]/","",$_POST['nonce']) : false;
+$token1 = (!empty($_POST['token'])) ? preg_replace("/[^0-9]/","",$_POST['token']) : false;
+$settings_change_id1 = (!empty($_POST['settings_change_id'])) ? $_REQUEST['settings_change_id'] : false;
+$request_id1 = (!empty($_POST['request_id'])) ? $_REQUEST['request_id'] : false;
+$api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']) : false;
+$api_signature1 = (!empty($_POST['api_signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']) : false;
+$update_nonce = false;
+
+$CFG->language = (!empty($_POST['lang'])) ? preg_replace("/[^a-z]/","",$_POST['lang']) : false;
+$CFG->client_ip = (!empty($_POST['ip'])) ? preg_replace("/[^0-9\.]/","",$_POST['ip']) : false;
 $CFG->session_id = $session_id1;
+$CFG->session_locked = false;
+$CFG->session_active = false;
+$CFG->session_api = false;
+$CFG->token_verified = false;
+$CFG->email_2fa_verified = false;
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
-$commands = json_decode($_POST['commands'],true);
+$commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) : false;
 
 // authenticate session
 if ($session_id1) {
@@ -28,8 +33,8 @@ if ($session_id1) {
 	if ($result && $result[0]['nonce'] >= ($nonce1 + 5) && $result[0]['nonce'] <= ($nonce1 - 5)) {
 		$return['error'] = 'invalid-nonce';
 	}
-	elseif ($result) {
-		if (openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
+	elseif (!empty($result)) {
+		if (!empty($_POST['commands']) && openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 			User::setInfo($result[0]);
 			$update_nonce = true;
 			
@@ -40,6 +45,9 @@ if ($session_id1) {
 			else {
 				$CFG->session_active = true;
 			}
+			
+			if (empty($CFG->language))
+				$CFG->language = $result[0]['last_lang'];
 		}
 		else
 			$return['error'] = 'invalid-signature';
@@ -51,16 +59,16 @@ if ($session_id1) {
 // verify api key
 if ($api_key1 && $api_signature1) {
 	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'" AND api_keys.nonce <= '.$nonce1);
-	$hash = hash_hmac('sha256',$nonce1.$result[0]['user'].$result[0]['api_key'],$result[0]['secret']);
 	if ($result) {
+		$hash = hash_hmac('sha256',$nonce1.$result[0]['user'].$result[0]['api_key'],$result[0]['secret']);
 		if ($api_signature1 == $hash) {
 			User::setInfo($result[0]);
 			
-			if ($_REQUEST['api_update_nonce'])
+			if (!empty($_REQUEST['api_update_nonce']))
 				db_update('api_keys',$result[0]['key_id'],array('nonce'=>$nonce1));
 				
-			if (!$CFG->language)
-				$CFG->language = 'en';
+			if (empty($CFG->language))
+				$CFG->language = $result[0]['last_lang'];
 				
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
 				$return['error'] = 'account-locked-or-deactivated';
@@ -79,14 +87,14 @@ if ($api_key1 && $api_signature1) {
 }
 
 // verify token
-if ($token1 > 0 && $result[0]['authy_id'] > 0) {
+if ($token1 > 0 && !empty($result[0]['authy_id']) && $result[0]['authy_id'] > 0) {
 	$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
-	$response1 = json_decode($response,true);
+	$response1 = (!empty($response)) ? json_decode($response,true) : false;
 	
-	if (!$response || !is_array($response1)) {
+	if (empty($response) || (empty($response1) || !is_array($response1))) {
 		$return['error'] = 'security-com-error';
 	}
-	elseif ($response1['success'] === false) {
+	elseif (!empty($response1['success']) && $response1['success'] === false) {
 		$return['error'] = 'authy-errors';
 		$return['authy_errors'] = $response1['errors'];
 	}
@@ -117,6 +125,13 @@ if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 	else
 		$return['error'] = 'request-expired';
 }
+
+/* Lang Key Selector */
+$CFG->lang_table_key = $CFG->language;
+if ($CFG->language == 'en')
+	$CFG->lang_table_key = 'eng';
+elseif ($CFG->language == 'es')
+$CFG->lang_table_key = 'esp';
 
 if (is_array($commands)) {
 	foreach ($commands as $classname => $methods_arr) {

@@ -1,6 +1,6 @@
 <?php
 class Requests{
-	function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false,$public_api=false,$id=false) {
+	public static function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false,$public_api=false,$id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -9,7 +9,7 @@ class Requests{
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
-		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$type = ($withdrawals) ? $CFG->request_withdrawal_id : $CFG->request_deposit_id;
 		$id = preg_replace("/[^0-9]/", "",$id);
 		
@@ -58,7 +58,7 @@ class Requests{
 			return $result[0]['total'];
 	}
 	
-	function insert($is_btc=false,$bank_account_currency=false,$amount=false,$btc_address=false,$account_number=false) {
+	public static function insert($is_btc=false,$bank_account_currency=false,$amount=false,$btc_address=false,$account_number=false) {
 		global $CFG;
 		
 		$bank_account_currency = preg_replace("/[^0-9]/", "",$bank_account_currency);
@@ -148,7 +148,7 @@ class Requests{
 			return $request_id;
 	}
 	
-	function emailValidate($authcode) {
+	public static function emailValidate($authcode) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
