@@ -79,6 +79,9 @@ INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (443, 'last-page', 'Último', 'Last', '', 17),
 (444, 'first-page', 'Primero', 'First', '', 17);
 
+INSERT INTO `admin_pages` (`id`, `f_id`, `name`, `url`, `icon`, `order`, `page_map_reorders`, `one_record`) VALUES
+(94, 64, 'App Configuration', 'app-configuration', '', 0, 0, 'Y');
+
 INSERT INTO `admin_controls` (`id`, `page_id`, `tab_id`, `action`, `class`, `arguments`, `order`, `is_static`) VALUES
 (269, 94, 0, 'form', 'Form', 'a:10:{s:4:"name";s:17:"app_configuration";s:6:"method";s:0:"";s:5:"class";s:0:"";s:5:"table";s:17:"app_configuration";s:18:"start_on_construct";s:0:"";s:9:"go_to_url";s:0:"";s:12:"go_to_action";s:0:"";s:12:"go_to_is_tab";s:0:"";s:6:"target";s:0:"";s:14:"return_to_self";s:0:"";}', 0, 'N');
 
