@@ -74,6 +74,7 @@ ALTER TABLE app_configuration ADD `quandl_api_key` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `cron_dirroot` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `backstage_db_debug` ENUM('Y','N') NOT NULL DEFAULT 'N';
 ALTER TABLE app_configuration ADD `backstage_dirroot` VARCHAR( 255 ) NOT NULL;
+ALTER TABLE app_configuration ADD `email_notify_fiat_withdrawals` ENUM('Y','N') NOT NULL DEFAULT 'N'
 
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (443, 'last-page', 'Último', 'Last', '', 17),
@@ -171,5 +172,9 @@ INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `con
 (2485, 'checkBox', 'a:9:{s:4:"name";s:18:"backstage_db_debug";s:7:"caption";s:16:"DB Debug On Fail";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 58, 269, 0),
 (2486, 'textInput', 'a:13:{s:4:"name";s:17:"backstage_dirroot";s:7:"caption";s:8:"Dir Root";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 59, 269, 0),
 (2487, 'endArea', '', 60, 269, 0);
+
+INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
+(2488, 'checkBox', 'a:9:{s:4:"name";s:29:"email_notify_fiat_withdrawals";s:7:"caption";s:28:"Notify user fiat withdrawals";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 14, 269, 0);
+
 
 UPDATE`status` SET `db_version` = '1.04' WHERE `status`.`id` =1;
