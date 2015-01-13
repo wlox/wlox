@@ -4,7 +4,7 @@
 class String {
 	public static $open_tags,$missing;
 	
-	function substring($string,$length=0,$start=0) {
+	public static function substring($string,$length=0,$start=0) {
 		if ($length == 0) {
 			return $string;
 		}
@@ -19,7 +19,7 @@ class String {
 		}
 	}
 	
-	function getSubstring($string,$delimiter1,$delimiter2) {
+	public static function getSubstring($string,$delimiter1,$delimiter2) {
 		$delimiter1 = preg_quote($delimiter1);
 		$delimiter2 = preg_quote($delimiter2);
 
@@ -27,7 +27,7 @@ class String {
 		return $matches[2];
 	}
 	
-	function getUrlFromEmbed($string) {
+	public static function getUrlFromEmbed($string) {
 		$parts = explode('"',$string);
 		if (is_array($parts)) {
 			foreach ($parts as $part) {
@@ -38,7 +38,7 @@ class String {
 		}
 	}
 	
-	function showPath() {
+	public static function showPath() {
 		global $CFG;
 		
 		if ($_REQUEST['tab_bypass'])
@@ -89,12 +89,12 @@ class String {
 		echo '</div>';
 	}
 	
-	function splitKeywords($string) {
+	public static function splitKeywords($string) {
 		$keywords = explode(' ',$string);
 		return '%'.implode('%',$keywords).'%';
 	}
 	
-	function fauxArray($array,$not_root=false) {
+	public static function fauxArray($array,$not_root=false) {
 		if (!is_array($array)) 
 			return $array;
 
@@ -115,7 +115,7 @@ class String {
 			return false;
 	}
 	
-	function unFauxArray($array) {
+	public static function unFauxArray($array) {
 		if (!is_array($array)) {
 			if (stristr($array,'array:')) {
 				$v = str_ireplace('array:','',$array);
@@ -130,7 +130,7 @@ class String {
 		
 	}
 	
-	function unFaux($faux) {
+	public static function unFaux($faux) {
 		if (stristr($faux,'array:')) {
 			$value = str_ireplace('array:','',$faux);
 			if (stristr($value,'|')) {
@@ -158,7 +158,7 @@ class String {
 		return $new_array;
 	}
 	
-	function checkSerialized($string) {
+	public static function checkSerialized($string) {
 		$check = @unserialize($string);
 		$s = ($check===false && $string != serialize(false)) ? false : true;
 		if ($s) {
@@ -169,7 +169,7 @@ class String {
 		}
 	}
 	
-	function sanitize($string,$detect_only=false,$delete_whitespace=false) {
+	public static function sanitize($string,$detect_only=false,$delete_whitespace=false) {
 		$ws = (!$delete_whitespace) ? '\s' : '';
 		
 		if ($detect_only) {
@@ -183,14 +183,14 @@ class String {
 		return $string;
 	}
 	
-	function stripQuotes($v) {
+	public static function stripQuotes($v) {
 		if (is_array($v))
 	    	return array_map(array('String','stripQuotes'), $v);
 	  	else
 	    	return stripslashes($v);
 	}
 	
-	function magicQuotesOff() {
+	public static function magicQuotesOff() {
 		if (get_magic_quotes_gpc()) {
   			$_GET = String::stripQuotes($_GET);
   			$_POST = String::stripQuotes($_POST);
@@ -199,7 +199,7 @@ class String {
 		}
 	}
 	
-	function validateURL($url) {
+	public static function validateURL($url) {
 		// returns true for OK
 		// USER AND PASS (optional)
 		$urlregex .= "([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?";
@@ -222,7 +222,7 @@ class String {
 		return eregi($urlregex, $url);
 	}
 	
-	function truncate($text, $length = 100, $ending = '...', $exact = false, $considerHtml = true) {
+	public static function truncate($text, $length = 100, $ending = '...', $exact = false, $considerHtml = true) {
 		String::$open_tags = array();
 		if ($considerHtml) {
 			// if the plain text is shorter than the maximum length, return the whole text
@@ -316,7 +316,7 @@ class String {
 		return $truncate;
 	}
 	
-	function getMonthNames($language=false) {
+	public static function getMonthNames($language=false) {
 		if ($language == 'es') {
 			$values[1] = 'Enero';
 			$values[2] = 'Febrero';
@@ -348,7 +348,7 @@ class String {
 		return $values;
 	}
 	
-	function getDayNames($language=false) {
+	public static function getDayNames($language=false) {
 		if ($language == 'es') {
 			$values[0] = 'Dom';
 			$values[1] = 'Lun';
@@ -370,7 +370,7 @@ class String {
 		return $values;
 	}
 	
-	function hexDarker($hex,$factor = 30) {
+	public static function hexDarker($hex,$factor = 30) {
 		$new_hex = '';
         $hex = str_replace('#','',$hex);
         
@@ -393,7 +393,7 @@ class String {
 		return '#'.$new_hex;        
 	}
 	
-	function hexLighter($hex,$factor = 30) {
+	public static function hexLighter($hex,$factor = 30) {
         $new_hex = '';
         $hex = str_replace('#','',$hex);
         
@@ -418,7 +418,7 @@ class String {
 	}
 	
 
-	function hexToRgb($hex) {
+	public static function hexToRgb($hex) {
 		$hex = ereg_replace("#", "", $hex);
 		$color = array();
 		
@@ -501,7 +501,7 @@ class String {
 		return $formula;
 	}
 	
-	function replaceConditionals($formula,$row,$f_id_field=false) {
+	public static function replaceConditionals($formula,$row,$f_id_field=false) {
 		global $CFG;
 		
 		$formula1 = preg_replace("/[\n\r]/","",$formula);
@@ -654,7 +654,7 @@ class String {
 		return $formula;
 	}
 	
-	function replaceSystemVars($var) {
+	public static function replaceSystemVars($var) {
 		global $CFG;
 		
 		if (!stristr($var,'cfg'))
@@ -665,7 +665,7 @@ class String {
 		return $var;
 	}
 	
-	function parseVariables($variables,$row,$record_id=0,$url=false,$update_variable_values=false) {
+	public static function parseVariables($variables,$row,$record_id=0,$url=false,$update_variable_values=false) {
 		global $CFG;
 		
 		$reserved_keywords = array('current_url','action','bypass','is_tab');

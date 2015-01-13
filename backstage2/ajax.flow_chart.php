@@ -1,5 +1,5 @@
 <?php
-include 'cfg.php';
+include'lib/common.php';
 $action = $_REQUEST['action'];
 
 if ($action == 'save_order') {

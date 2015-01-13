@@ -1,5 +1,5 @@
 <?php
-include('cfg.php');
+include'lib/common.php';
 
 $term = (is_array($_REQUEST['term'])) ? $_REQUEST['term']['term'] : $_REQUEST['term'];
 if (strstr($term,',')) {

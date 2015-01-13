@@ -4,7 +4,7 @@ class User {
 	private static $logged_in,$session_name;
 	public static $info;
 	
-	function logIn($user=false,$pass=false,$table=false,$session_name=false) {
+	public static function logIn($user=false,$pass=false,$table=false,$session_name=false) {
 		global $CFG;
 		
 		$user = strip_tags(mysql_real_escape_string($user));
@@ -55,11 +55,11 @@ class User {
 		return true;
 	}
 	
-	function isLoggedIn() {
+	public static function isLoggedIn() {
 		return self::$logged_in;
 	}
 	
-	function logOut($logout) {
+	public static function logOut($logout) {
 		if ($logout) {
 			unset($_SESSION[self::$session_name]);
 			unset($_SESSION['user_info']);
@@ -69,7 +69,7 @@ class User {
 		}
 	}
 	
-	function verify($user,$pass,$table=false) {
+	public static function verify($user,$pass,$table=false) {
 		global $CFG;
 
 		if (empty($user) || empty($pass))
@@ -87,7 +87,7 @@ class User {
 		return db_query_array("SELECT user FROM {$table}_users WHERE user = '$user' AND pass = '$pass' ");
 	}
 	
-	function getInfo($user,$table=false) {
+	public static function getInfo($user,$table=false) {
 		if (String::sanitize($user,true,true))
 			return false;
 		
@@ -97,7 +97,7 @@ class User {
 		return $result[0];
 	}
 	
-	function permission($page_id=0,$tab_id=0,$page_url=false,$table=false,$is_tab=false) {
+	public static function permission($page_id=0,$tab_id=0,$page_url=false,$table=false,$is_tab=false) {
 		global $CFG;
 
 		if (!$CFG->backstage_mode)
@@ -150,7 +150,7 @@ class User {
 		return $result[0]['permission'];
 	}
 	
-	function getIP() {
+	public static function getIP() {
 	    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
 	      $ip = $_SERVER['HTTP_CLIENT_IP'];
 	    }

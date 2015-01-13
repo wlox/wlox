@@ -1,5 +1,5 @@
 <?php
-	include('cfg.php');
+	include'lib/common.php';
 	String::magicQuotesOff();
 //print_ar($_REQUEST);
 	$action = $_REQUEST['action'];

@@ -1,5 +1,5 @@
 <?php
-	include('cfg.php');
+	include('lib/common.php');
 	String::magicQuotesOff();
 	
 	$rows = $_REQUEST['rows'];

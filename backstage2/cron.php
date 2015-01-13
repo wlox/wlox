@@ -20,7 +20,7 @@ $CFG->dbuser = "root";
 $CFG->dbpass = "";
 $dbh = mysql_connect ($CFG->dbhost,$CFG->dbuser,$CFG->dbpass);
 
-require_once ("../shared/autoload.php");
+require_once ("../shared2/autoload.php");
 
 
 $sql = "SHOW DATABASES";

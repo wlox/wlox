@@ -1,5 +1,5 @@
 <?php
-include 'cfg.php';
+include'lib/common.php';
 
 if (!empty($_REQUEST['table']) && !empty($_REQUEST['field']) && !empty($_REQUEST['value'])) {
 	$sql = "SELECT * FROM {$_REQUEST['table']} WHERE {$_REQUEST['field']} = {$_REQUEST['value']}";

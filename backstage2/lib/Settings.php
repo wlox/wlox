@@ -2,7 +2,7 @@
 
 class Settings {
 	
-	function assign(&$var) {
+	public static function assign(&$var) {
 		$all = Settings::getAll ();
 		
 		if (is_array ( $all )) {
@@ -26,14 +26,14 @@ class Settings {
 		}
 	}
 	
-	function get($name) {
+	public static function get($name) {
 		$result = db_query_array ( "SELECT value
 								  FROM settings
 								  WHERE name = '" . addslashes ( $name ) . "'", '', true );
 		return $result ['value'];
 	}
 	
-	function set($name, $value) {
+	public static function set($name, $value) {
 		if (stristr($value,'array:')) {
 			$v = str_ireplace('array:','',$value);
 			$v1 = DB::serializeCommas($v,true);
@@ -48,7 +48,7 @@ class Settings {
 		return true;
 	}
 	
-	function getAll() {
+	public static function getAll() {
 		
 		$sql = "SELECT *
 		
@@ -63,7 +63,7 @@ class Settings {
 		return $result;
 	}
 	
-	function getStructured() {
+	public static function getStructured() {
 		$sql = "SELECT * FROM settings";
 		$result = db_query_array($sql);
 		
@@ -82,13 +82,13 @@ class Settings {
 		return $ret;
 	}
 	
-	function _normalizeName($str) {
+	public static function _normalizeName($str) {
 		$str = strtolower ( $str );
 		return $str;
 		//return preg_replace ( '/[^a-z0-9_]/', '', $str );
 	}
 	
-	function mysqlTimeDiff() {
+	public static function mysqlTimeDiff() {
 		date_default_timezone_set($CFG->default_timezone);
 		
 		$sql = "SELECT NOW() AS ctime";
@@ -96,6 +96,20 @@ class Settings {
 		$sqltime = strtotime($result[0]['ctime']);
 		$phptime = time();
 		return (($sqltime - $phptime)/3600);
+	}
+	
+	public static function importTable($table) {
+		global $CFG;
+		
+		$sql = 'SELECT * FROM '.$table.' WHERE id = 1';
+		$result = db_query_array($sql);
+		
+		if (is_array($result[0]) && is_object($CFG)) {
+			foreach ($result[0] as $name => $value) {
+				$name = str_replace('backstage_','',$name);
+				$CFG->$name = $value;
+			}
+		}
 	}
 }
 

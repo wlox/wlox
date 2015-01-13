@@ -1,6 +1,6 @@
 <?php 
 chdir('..');
-include 'cfg.php';
+include 'lib/common.php';
 
 if (!$_SESSION['export_withdrawals'])
 	exit;

@@ -1,5 +1,5 @@
 <?
-include 'cfg.php';
+include'lib/common.php';
 
 $action = $_REQUEST['action'];
 $old_id = $_REQUEST['id'];

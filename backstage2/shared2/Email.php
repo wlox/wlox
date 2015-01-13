@@ -1,6 +1,6 @@
 <?php
 class Email {	
-	function send($from,$recipients,$subject,$from_name=false,$text_version=false,$html_version=false,$variables=false) {
+	public static function send($from,$recipients,$subject,$from_name=false,$text_version=false,$html_version=false,$variables=false) {
 		global $CFG;
 
 		$reply_to = $from;
@@ -190,7 +190,7 @@ Content-Transfer-Encoding: quoted-printable
 		
 	}
 	
-	function verifyAddress($email) {
+	public static function verifyAddress($email) {
 		$exp = "^[a-z\'0-9]+([._-][a-z\'0-9]+)*@([a-z0-9]+([._-][a-z0-9]+))+$";
    		if(eregi($exp,$email)){
 			return checkdnsrr(array_pop(explode("@",$email)),"MX");

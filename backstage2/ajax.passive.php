@@ -1,5 +1,5 @@
 <?php
-include 'cfg.php';
+include'lib/common.php';
 
 $CFG->passive_override_id = $_REQUEST['get_id'];
 $record = new Record($_REQUEST['table'],$_REQUEST['record_id']);

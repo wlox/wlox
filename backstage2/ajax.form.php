@@ -1,5 +1,5 @@
 <?php
-include('cfg.php');
+include'lib/common.php';
 String::magicQuotesOff();
 
 if (!empty($_REQUEST['form_name'])) {

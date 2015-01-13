@@ -2,7 +2,7 @@
 class DB {
 	public static $errors, $random_ids;
 	
-	function get($table,$fields,$page=0,$per_page=0,$order_by=false,$order_asc=false,$count=false,$filter_results=false,$f_id=false,$f_id_field=false,$get_total=false,$get_average=false,$s_date=false,$e_date=false,$s_date_field=false,$e_date_field=false,$calendar_mode=false,$filters=false,$group_by=false,$no_group_by=false) {
+	public static function get($table,$fields,$page=0,$per_page=0,$order_by=false,$order_asc=false,$count=false,$filter_results=false,$f_id=false,$f_id_field=false,$get_total=false,$get_average=false,$s_date=false,$e_date=false,$s_date_field=false,$e_date_field=false,$calendar_mode=false,$filters=false,$group_by=false,$no_group_by=false) {
 		global $CFG;
 		
 		if (!self::tableExists($table)) {
@@ -683,7 +683,7 @@ class DB {
 		}
 	}
 	
-	function getRecord($table,$id = 0,$f_id=0,$id_required=false,$f_id_field=false,$order_by=false,$order_asc=false,$for_update=false) {
+	public static function getRecord($table,$id = 0,$f_id=0,$id_required=false,$f_id_field=false,$order_by=false,$order_asc=false,$for_update=false) {
 		if ($id_required && !($id > 0))
 			return false;
 			
@@ -712,7 +712,7 @@ class DB {
 		return $result[0];
 	}
 	
-	function replaceTables($string,$joined_tables) {
+	public static function replaceTables($string,$joined_tables) {
 		if ($joined_tables) {
 			foreach ($joined_tables as $j_table => $j_alias) {
 				if (stristr($string,$j_alias))
@@ -725,7 +725,7 @@ class DB {
 	}
 	
 	// must put vars in braces
-	function getAggregateRow($name,$formula,$table,$record_id) {
+	public static function getAggregateRow($name,$formula,$table,$record_id) {
 		$matches = String::getSubstring($formula,'[',']');
 		foreach ($matches as $match) {
 			if (strstr($match,','))  {
@@ -773,7 +773,7 @@ class DB {
 		return $result[0][$name];
 	}
 	
-	function insert($table,$fields_array,$date_fields=false,$ignore_fields=false) {
+	public static function insert($table,$fields_array,$date_fields=false,$ignore_fields=false) {
 		global $CFG;
 		
 		if ($CFG->control_one_record)
@@ -843,7 +843,7 @@ class DB {
 		return $insert_id;
 	}
 	
-	function update($table,$fields_array,$id,$ignore_fields=false) {
+	public static function update($table,$fields_array,$id,$ignore_fields=false) {
 		global $CFG;
 
 		if ($fields_array['cat_selects']) {
@@ -911,7 +911,7 @@ class DB {
 		return $num_affected;
 	}
 	
-	function delete($id) {
+	public static function delete($id) {
 		$sql = "DELETE FROM notes WHERE f_id = $id AND f_type = 'C'";
 		db_query ( $sql );
 		
@@ -921,7 +921,7 @@ class DB {
 		return db_delete ( 'client', $id );
 	}
 	
-	function emptyTable($table) {
+	public static function emptyTable($table) {
 		if (!$table)
 			return false;
 			
@@ -929,7 +929,7 @@ class DB {
 			return db_query($sql);
 	}
 	
-	function getTotal($field,$table) {
+	public static function getTotal($field,$table) {
 		if (!$field || !$table)
 			return false;
 		
@@ -953,7 +953,7 @@ class DB {
 		return $result[0]['grand_total'];
 	}
 	
-	function getAverage($field,$table) {
+	public static function getAverage($field,$table) {
 		if (!$field || !$table)
 			return false;
 		
@@ -969,7 +969,7 @@ class DB {
 		return $result[0]['grand_total'];
 	}
 	
-	function tableExists($table) {
+	public static function tableExists($table) {
 		if (!$table)
 			return false;
 		
@@ -982,7 +982,7 @@ class DB {
 		}
 	}
 	
-	function getTableFields($table,$names_only=false,$for_autocomplete=false,$field_like=false) {
+	public static function getTableFields($table,$names_only=false,$for_autocomplete=false,$field_like=false) {
 		$field_like = ($field_like) ? '"%'.$field_like.'%"' : '';
 		$result = db_query_array("DESCRIBE {$table} {$field_like}");
 		if ($result) {
@@ -1010,7 +1010,7 @@ class DB {
 		return $fields;
 	}
 	
-	function getTables($table=false) {
+	public static function getTables($table=false) {
 		$result = db_query_array("SHOW TABLES LIKE '{$table}%' ");
 		if ($result) {
 			foreach ($result as $row) {
@@ -1024,7 +1024,7 @@ class DB {
 		}
 	}
 	
-	function getSubtables($table) {
+	public static function getSubtables($table) {
 		$result = db_query_array("SHOW TABLES LIKE '{$table}%' ");
 		if ($result) {
 			foreach ($result as $row) {
@@ -1041,7 +1041,7 @@ class DB {
 		return $subtables;
 	}
 	
-	function createTable($table,$fields_array,$enum_fields=false,$ignore_fields=false) {
+	public static function createTable($table,$fields_array,$enum_fields=false,$ignore_fields=false) {
 		if (empty($table) || !is_array($fields_array))
 			return false;
 		
@@ -1175,7 +1175,7 @@ class DB {
 		return db_query($sql);
 	}
 	
-	function editTable($table,$fields_array,$enum_fields=false) {
+	public static function editTable($table,$fields_array,$enum_fields=false) {
 		if (empty($table))
 			return false;
 			
@@ -1337,7 +1337,7 @@ class DB {
 		}
 	}
 	
-	function getMaxId($table,$f_id=false) {
+	public static function getMaxId($table,$f_id=false) {
 		$sql = "SELECT MAX(id) AS id FROM {$table} WHERE 1 ";
 
 		if ($f_id > 0) {
@@ -1347,7 +1347,7 @@ class DB {
 		return $result[0]['id'];
 	}
 	
-	function getSubTable($table, $table_fields=false,$f_id=0,$concat_char=false,$f_id_field=false,$search_term=false) {
+	public static function getSubTable($table, $table_fields=false,$f_id=0,$concat_char=false,$f_id_field=false,$search_term=false) {
 		$concat_char = ($concat_char) ? $concat_char : ' ';
 		$search_term = mysql_escape_string($search_term);
 		$sql = "SELECT ";
@@ -1413,7 +1413,7 @@ class DB {
 		return $fields_array;
 	}
 	
-	function getGridValues($table, $table_fields=false,$f_id=0) {
+	public static function getGridValues($table, $table_fields=false,$f_id=0) {
 		if (!($f_id > 0))
 			return false;
 			
@@ -1451,7 +1451,7 @@ class DB {
 		return db_query_array($sql);
 	}
 	
-	function isUniqueValue($table,$field_name,$value) {
+	public static function isUniqueValue($table,$field_name,$value) {
 		if (empty($table) || empty($field_name) || empty($value))
 			return true;
 			
@@ -1460,7 +1460,7 @@ class DB {
 		return (!is_array($result));
 	}
 	
-	function getUniqueValues($table,$field_name) {
+	public static function getUniqueValues($table,$field_name) {
 		if (is_array($field_name)) {
 			$k = key($field_name);
 			$field = $field_name[$k];
@@ -1481,7 +1481,7 @@ class DB {
 		return $fields_array;
 	}
 	
-	function getCats($table,$f_id=0) {
+	public static function getCats($table,$f_id=0) {
 		$sql = "SELECT {$table}.* FROM {$table} WHERE 1 ";
 		
 		if ($f_id > 0) {
@@ -1510,7 +1510,7 @@ class DB {
 	}
 	
 	
-	function sortCats($result,$p_id,$use_key_as_id=false,$level=false,$i=0,$structured=false) {
+	public static function sortCats($result,$p_id,$use_key_as_id=false,$level=false,$i=0,$structured=false) {
 		$i = ($i > 0) ? $i+1 : 1;
 		$structured = (is_array($structured)) ? $structured : array();
 		if (is_array($result)) {
@@ -1538,7 +1538,7 @@ class DB {
 		return $structured;
 	}
 	
-	function getCatSelection($table,$subtable,$id) {
+	public static function getCatSelection($table,$subtable,$id) {
 		if (!self::tableExists($table.'_'.$subtable)) {
 			db_query("CREATE TABLE `{$table}_{$subtable}` (
 			`f_id` INT( 10 ) UNSIGNED NOT NULL ,
@@ -1562,7 +1562,7 @@ class DB {
 		return $selection;
 	}
 	
-	function getCatValues($table,$values_table,$id) {	
+	public static function getCatValues($table,$values_table,$id) {	
 		if (!self::tableExists($table.'_'.$values_table)) {
 			db_query("CREATE TABLE `{$table}_{$values_table}` (
 			`f_id` INT( 10 ) UNSIGNED NOT NULL ,
@@ -1586,7 +1586,7 @@ class DB {
 		return $selection;
 	}
 	
-	function deleteCats($table,$id) {
+	public static function deleteCats($table,$id) {
 		$subtables = self::getSubtables($table);
 		if (is_array($subtables)) {
 			foreach ($subtables as $s_table) {
@@ -1602,7 +1602,7 @@ class DB {
 		}
 	}
 	
-	function getFiles($table,$id,$field_name=false,$limit=0,$start_record=0,$randomize=false) {
+	public static function getFiles($table,$id,$field_name=false,$limit=0,$start_record=0,$randomize=false) {
 		if (!self::tableExists($table))
 			return false;
 		
@@ -1638,7 +1638,7 @@ class DB {
 		return $result;
 	}
 	
-	function deleteFiles($table,$id) {
+	public static function deleteFiles($table,$id) {
 		global $CFG;
 		
 		$files = self::getFiles($table,$id);
@@ -1650,7 +1650,7 @@ class DB {
 		}
 	}
 	
-	function getOrder($control_id,$user_id) {
+	public static function getOrder($control_id,$user_id) {
 		if (!($control_id > 0) || !($user_id > 0))
 			return false;
 			
@@ -1659,7 +1659,7 @@ class DB {
 		return $result[0];
 	}
 	
-	function setOrder($id,$order_by,$order_asc,$control_id,$user_id) {
+	public static function setOrder($id,$order_by,$order_asc,$control_id,$user_id) {
 		if (empty($order_by) || !($control_id > 0) || !($user_id > 0))
 			return false;
 		
@@ -1671,7 +1671,7 @@ class DB {
 		}
 	}
 	
-	function getImageSizes($field_name) {
+	public static function getImageSizes($field_name) {
 		global $CFG;
 
 		if (!$field_name)
@@ -1694,7 +1694,7 @@ class DB {
 			return $CFG->image_sizes;
 	}
 	
-	function saveImageSizes($field_name,$size_info) {
+	public static function saveImageSizes($field_name,$size_info) {
 		if (!$field_name || !$size_info) 
 			return false;
 		
@@ -1706,7 +1706,7 @@ class DB {
 		}
 	}
 	
-	function getFields($table,$f_id,$subtable_fields=false,$f_id_field=false,$order_by=false,$order_asc=false,$record_id=false,$limit_is_curdate=false,$dont_format_results=0) {
+	public static function getFields($table,$f_id,$subtable_fields=false,$f_id_field=false,$order_by=false,$order_asc=false,$record_id=false,$limit_is_curdate=false,$dont_format_results=0) {
 		global $CFG;
 
 		$f_id = (strlen($f_id) > 0) ? $f_id : $record_id;
@@ -1782,7 +1782,7 @@ class DB {
 		return $row;
 	}
 	
-	function getFieldsByLookup($table,$subtable,$f_id,$field_names=false) {
+	public static function getFieldsByLookup($table,$subtable,$f_id,$field_names=false) {
 		$cats = self::getCatSelection($table,$subtable,$f_id);
 		foreach ($cats as $c_id) {
 			$field_name = (is_array($field_names)) ? implode(',',$field_names) : 'name';
@@ -1792,7 +1792,7 @@ class DB {
 		return $results;
 	}
 	
-	function getForeignValue($field,$f_id,$directly_link_fields=false,$first_row=false) {
+	public static function getForeignValue($field,$f_id,$directly_link_fields=false,$first_row=false) {
 		global $CFG;
 		
 		$first_row = ($CFG->passive_override_id > 0) ? $CFG->passive_override_id : $first_row;
@@ -1859,7 +1859,7 @@ class DB {
 		return $f_id;
 	}
 	
-	function show_errors() {
+	public static function show_errors() {
 		// display errors
 		if ($this->errors) {
 			echo '<ul class="errors">';
@@ -1870,7 +1870,7 @@ class DB {
 		}
 	}
 	
-	function serializeMultiples($fields_array,$table=false) {
+	public static function serializeMultiples($fields_array,$table=false) {
 		global $CFG;
 
 		if ($table)
@@ -1935,7 +1935,7 @@ class DB {
 		return $fields_array;
 	}
 	
-	function serializeCommas($value,$serialize=false) {
+	public static function serializeCommas($value,$serialize=false) {
 		if (stristr($value,',') || stristr($value,'=>')) {
 			preg_match_all('#\((.*?)\)#',$value,$m);
 			$parenthesis = $m[1];
@@ -1986,7 +1986,7 @@ class DB {
 		return $fields_array;
 	}
 	
-	function adequateFilterResults($filter_results,$filter_properties,$table,$is_folder=false) {
+	public static function adequateFilterResults($filter_results,$filter_properties,$table,$is_folder=false) {
 		if (!is_array($filter_results) || !is_array($filter_properties) || !$table)
 			return false;
 
@@ -2030,7 +2030,7 @@ class DB {
 		return $filter_results1;
 	}
 	
-	function deleteRecursive($table,$id) {
+	public static function deleteRecursive($table,$id) {
 		global $CFG;
 		
 		if (!$table || !($id > 0))
@@ -2051,7 +2051,7 @@ class DB {
 		}
 	}
 	
-	function countRows($table,$row=false) {
+	public static function countRows($table,$row=false) {
 		if (!$table)
 			return false;
 		
@@ -2086,7 +2086,7 @@ class DB {
 		return $result[0]['c'];
 	}
 	
-	function saveImageOrder($file_order,$table) {
+	public static function saveImageOrder($file_order,$table) {
 		if (!is_array($file_order) || !$table)
 			return false;
 			
@@ -2101,7 +2101,7 @@ class DB {
 		}
 	}
 	
-	function recordExists($table,$fields_array) {
+	public static function recordExists($table,$fields_array) {
 		if (!$table || !is_array($fields_array))
 			return false;
 			
@@ -2113,7 +2113,7 @@ class DB {
 		return (is_array(db_query_array($sql)));
 	}
 	
-	function getFieldsLikeType($table,$type,$names_only=false){
+	public static function getFieldsLikeType($table,$type,$names_only=false){
 		if (!$table || !$type)
 			return false;
 			

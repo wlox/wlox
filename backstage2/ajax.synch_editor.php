@@ -1,5 +1,5 @@
 <?
-include 'cfg.php';
+include'lib/common.php';
 
 $record_copy = array('Tabs','Comments','Calendar');
 $list_copy = array();

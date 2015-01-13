@@ -162,7 +162,7 @@ class Control {
 		}
 	}
 	
-	function getControls($id,$action,$is_tab=false) {
+	public static function getControls($id,$action,$is_tab=false) {
 		$id_field = ($is_tab) ? 'tab_id' : 'page_id';
 		$sql = "SELECT * FROM admin_controls WHERE {$id_field} = '$id' AND action = '$action' ORDER BY admin_controls.order ASC, admin_controls.id ASC";
 		$result = db_query_array($sql);
@@ -182,7 +182,7 @@ class Control {
 		return $controls;
 	}
 	
-	function getMethods($control_id) {
+	public static function getMethods($control_id) {
 		if (!($control_id > 0))
 			return false;
 			
@@ -190,7 +190,7 @@ class Control {
 		return db_query_array($sql);
 	}
 	
-	function getPageId($url,$is_tab=false,$return_row=false) {
+	public static function getPageId($url,$is_tab=false,$return_row=false) {
 		if ($url) {
 			if ($is_tab) {
 				$sql = "SELECT * FROM admin_tabs WHERE url = '$url'";
@@ -215,7 +215,7 @@ class Control {
 			return $result[0];
 	}
 	
-	function getCurrentTabId($url,$is_tab=false) {
+	public static function getCurrentTabId($url,$is_tab=false) {
 		if (!$url)
 			return false;
 			
@@ -223,7 +223,7 @@ class Control {
 		return ($is_tab) ? $row['id'] : $row['f_id'];
 	}
 	
-	function parseArguments($serialized,$class,$method) {
+	public static function parseArguments($serialized,$class,$method) {
 		$unserialized = unserialize($serialized);
 		$method = new ReflectionMethod($class,$method);
 		$params = $method->getParameters();
@@ -241,7 +241,7 @@ class Control {
 		return $args;
 	}
 	
-	function unSerializeAll($args){
+	public static function unSerializeAll($args){
 		if (is_array($args)) {
 			foreach ($args as $key => $arg) {
 				$check = @unserialize($arg);
@@ -255,7 +255,7 @@ class Control {
 		return $args;
 	}
 	
-	function getSubMethods($method_id,$class) {
+	public static function getSubMethods($method_id,$class) {
 		if (!($method_id > 0))
 			return false;
 			
@@ -272,7 +272,7 @@ class Control {
 		return $inputs_array;
 	}
 	
-	function findByTable($table,$action=false) {
+	public static function findByTable($table,$action=false) {
 		if (!$table)
 			return false;
 			

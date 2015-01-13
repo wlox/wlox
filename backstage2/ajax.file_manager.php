@@ -6,7 +6,7 @@ if ($_REQUEST['action'] == 'download') {
 	header('Content-Disposition: attachment; filename="archivos_encriptados.zip"');
 }
 
-include 'cfg.php';
+include'lib/common.php';
 $action = $_REQUEST['action'];
 
 if ($action == 'expand') {

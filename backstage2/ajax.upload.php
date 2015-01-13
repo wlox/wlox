@@ -1,5 +1,5 @@
 <?php
-include 'cfg.php';
+include'lib/common.php';
 
 
 $CFG->temp_file_location = 'tempfiles/';

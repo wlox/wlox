@@ -1,5 +1,5 @@
 <?php
-include('cfg.php');
+include'lib/common.php';
 $input_type = ($_REQUEST['input_type']) ? $_REQUEST['input_type'] : 'textarea';
 $elem_id = $_REQUEST['elem_id'];
 $caption = urldecode($_REQUEST['label_caption']);
