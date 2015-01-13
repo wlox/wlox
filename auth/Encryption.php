@@ -4,7 +4,7 @@ class Encryption
     const CYPHER = 'blowfish';
     const MODE   = 'cfb';
 
-    public function encrypt($plaintext){
+    public static function encrypt($plaintext){
     	global $CFG;
     	
         $td = mcrypt_module_open(self::CYPHER, '', self::MODE, '');
@@ -15,7 +15,7 @@ class Encryption
         return $iv.$crypttext;
     }
 
-    public function decrypt($crypttext){
+    public static function decrypt($crypttext){
     	global $CFG;
     	
         $plaintext = '';
@@ -31,12 +31,12 @@ class Encryption
         return $plaintext;
     }
     
-    public function hash($pass) {
+    public static function hash($pass) {
     	$blowfish_salt = bin2hex(openssl_random_pseudo_bytes(22));
     	return crypt($pass, "$2a$12$".$blowfish_salt);
     }
     
-    public function verify_hash($pass,$hash) {
+    public static function verify_hash($pass,$hash) {
     	return (crypt($pass, $hash) == $hash);
     }
 }

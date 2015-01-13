@@ -1,28 +1,8 @@
 <?php 
-class object {
-}
-$CFG = new object ( );
-
-$CFG->dbhost = "localhost";
+class object {}
+$CFG = new object ();
+$CFG->dbhost = "";
 $CFG->dbname = "";
 $CFG->dbuser = "";
 $CFG->dbpass = "";
-$CFG->authy_api_key = '';
-
-/* debugging */
-$DB_DEBUG = true;
-$DB_DIE_ON_FAIL = true;
-
-require_once ("dblib.php");
-require_once ("stdlib.php");
-require_once ("Google2FA.php");
-require_once ("Settings.php");
-require_once ("String.php");
-require_once ('Encryption.php');
-
-/* Connect to the database */
-db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
-
-/* Load settings and timezone */
-Settings::assign ($CFG);
-date_default_timezone_set($CFG->default_timezone);
+?>
