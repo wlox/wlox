@@ -1,6 +1,6 @@
 <?php
 class Status{
-	function get($for_update=false) {
+	public static function get($for_update=false) {
 		$sql = "SELECT * FROM status WHERE id= 1";
 		
 		if ($for_update)

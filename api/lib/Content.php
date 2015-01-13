@@ -1,7 +1,6 @@
 <?php
 class Content{
-	
-	function getRecord($url){
+	public static function getRecord($url){
 		global $CFG;
 		
 		$url = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$url);
