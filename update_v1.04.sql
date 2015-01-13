@@ -75,9 +75,9 @@ ALTER TABLE app_configuration ADD `cron_dirroot` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `backstage_db_debug` ENUM('Y','N') NOT NULL DEFAULT 'N';
 ALTER TABLE app_configuration ADD `backstage_dirroot` VARCHAR( 255 ) NOT NULL;
 
-INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`, `zh`, `ru`) VALUES
-(443, 'last-page', 'Último', 'Last', '', 17, '最后一页', 'последний'),
-(444, 'first-page', 'Primero', 'First', '', 17, '第一页', 'первый');
+INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
+(443, 'last-page', 'Último', 'Last', '', 17),
+(444, 'first-page', 'Primero', 'First', '', 17);
 
 INSERT INTO `admin_controls` (`id`, `page_id`, `tab_id`, `action`, `class`, `arguments`, `order`, `is_static`) VALUES
 (269, 94, 0, 'form', 'Form', 'a:10:{s:4:"name";s:17:"app_configuration";s:6:"method";s:0:"";s:5:"class";s:0:"";s:5:"table";s:17:"app_configuration";s:18:"start_on_construct";s:0:"";s:9:"go_to_url";s:0:"";s:12:"go_to_action";s:0:"";s:12:"go_to_is_tab";s:0:"";s:6:"target";s:0:"";s:14:"return_to_self";s:0:"";}', 0, 'N');
