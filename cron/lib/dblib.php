@@ -1,43 +1,31 @@
 <?php
 
-if (! isset ( $DB_DIE_ON_FAIL )) {
-	$DB_DIE_ON_FAIL = true;
-}
-if (! isset ( $DB_DEBUG )) {
-	$DB_DEBUG = false;
+if (! isset ( $CFG->db_debug )) {
+	$CFG->db_debug = false;
 }
 
 function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
-	global $DB_DIE_ON_FAIL, $DB_DEBUG, $CFG;
+	global $CFG;
 	
 	if (! $dbh = mysql_connect ( $dbhost, $dbuser, $dbpass )) {
-		if ($DB_DEBUG) {
-			echo "<h2>Can't connect to $dbhost as $dbuser</h2>";
-			echo "<p><b>MySQL Error</b>: ", mysql_error ();
+		if ($CFG->db_debug == 'Y') {
+			$output = "Can't connect to $dbhost as $dbuser";
+			$output .= "MySQL Error: ".mysql_error ();
+			trigger_error($output,E_USER_ERROR);
 		} else {
-			echo "<h2>Database error encountered</h2>";
-		}
-		
-		if ($DB_DIE_ON_FAIL) {
-			echo "<p>This script cannot continue, terminating.";
-			echo "<a href=\"./\">Click here</a> to return to the homepage.";
-			die ();
+			$output = "Database error encountered";
+			trigger_error($output,E_USER_WARNING);
 		}
 	}
 	
 	if (! mysql_select_db ( $dbname )) {
-		if ($DB_DEBUG) {
-			echo "<h2>Can't select database $dbname</h2>";
-			echo "<p><b>MySQL Error</b>: ", mysql_error ();
+		if ($CFG->db_debug == 'Y') {
+			$output = "Can't select database $dbname";
+			$output .= "MySQL Error: ".mysql_error ();
+			trigger_error($output,E_USER_ERROR);
 		} else {
-			echo "<h2>Database error encountered</h2>";
-			db_error_mail ( "$_SERVER[HTTP_HOST] DB Select Failed", "Page: $_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]" );
-		}
-		
-		if ($DB_DIE_ON_FAIL) {
-			echo "<p>This script cannot continue, terminating.";
-			echo "<a href=\"./\">Click here</a> to return to the homepage.";
-			die ();
+			$output = "Database error encountered";
+			trigger_error($output,E_USER_WARNING);
 		}
 	}
 	
@@ -57,14 +45,7 @@ function db_disconnect() {
 }
 
 function db_query($query, $debug = false, $die_on_debug = true, $silent = false, $unbuffered = false) {
-	global $DB_DIE_ON_FAIL, $DB_DEBUG, $CFG;
-	
-	if ($debug) {
-		echo "<pre>" . htmlspecialchars ( $query ) . "</pre>";
-		
-		if ($die_on_debug)
-			die ();
-	}
+	global $CFG;
 	
 	if ($unbuffered)
 		$qid = mysql_unbuffered_query ( $query );
@@ -72,22 +53,17 @@ function db_query($query, $debug = false, $die_on_debug = true, $silent = false,
 		$qid = mysql_query ( $query );
 	
 	if (! $qid && ! $silent) {
-		if ($DB_DEBUG) {
-			echo "<h2>Can't execute query</h2>";
-			echo "<pre>" . htmlspecialchars ( $query ) . "</pre>";
-			echo "<p><b>MySQL Error</b>: ", mysql_error ();
-			echo "<p><b>Debug</b>: ";
-			print_ar ( debug_backtrace () );
+		if ($CFG->db_debug == 'Y') {
+			$output = "Can't execute query";
+			$output .= "<pre>" . htmlspecialchars ( $query ) . "</pre>";
+			$output .= "MySQL Error: ".mysql_error ();
+			$output .= "Debug: ";
+			$output .= print_r(debug_backtrace (),true);
+			trigger_error($output,E_USER_ERROR);
 		} else {
-			echo "<h2>Database error encountered</h2>";
-			$params = func_get_args ();
-			//db_error_mail ( "$_SERVER[HTTP_HOST] DB Error", "$query\r\nMySQL Error:" . mysql_error () . "\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ), true );
-		}
-		
-		if ($DB_DIE_ON_FAIL) {
-			echo "<p>This script cannot continue, terminating.";
-			echo "<a href=\"./\">Click here</a> to return to the homepage.";
-			die ();
+			$output = "Database error encountered";
+			$output .= print_r(func_get_args(),true);
+			trigger_error($output,E_USER_WARNING);
 		}
 	}
 	return $qid;
@@ -117,7 +93,7 @@ function db_free_result($qid) {
 }
 
 function db_query_array($query, $key = '', $first_record = false, $unbuffered = false, $val_field = '') {
-	global $CFG, $DB_DEBUG;
+	global $CFG;
 	
 	$result = db_query ( $query, false, true, false, $unbuffered );
 	
@@ -129,11 +105,10 @@ function db_query_array($query, $key = '', $first_record = false, $unbuffered = 
 	if ($amt > 100000) {
 		$params = func_get_args ();
 		
-		if ($DB_DEBUG) {
-			echo "<h1>$_SERVER[HTTP_HOST] DB Overload $amt ROWS</h1>";
-			echo "<pre>$query\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ) . '</pre>';
-		} else {
-			db_error_mail ( "$_SERVER[HTTP_HOST] DB Overload $amt ROWS", "$query\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ) );
+		if ($CFG->db_debug == 'Y') {
+			$output = "$_SERVER[HTTP_HOST] DB Overload $amt ROWS";
+			$output .= "<pre>$query\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ) . '</pre>';
+			trigger_error($output,E_USER_ERROR);
 		}
 	}
 
@@ -183,9 +158,6 @@ function db_insert($table, $info, $date = '', $ignore = false, $silent = false, 
 		if (! $return_val)
 			return $return_val;
 	}
-	
-	if ($echo_sql)
-		echo "<div style='border:1px solid black'>{$sql}</div>";
 	
 	if ($return_bool)
 		return $return_val;

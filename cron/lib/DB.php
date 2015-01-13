@@ -2,7 +2,7 @@
 class DB {
 	public static $errors, $random_ids;
 	
-	function getRecord($table,$id = 0,$f_id=0,$id_required=false,$f_id_field=false,$order_by=false,$order_asc=false,$for_update=false) {
+	public static function getRecord($table,$id = 0,$f_id=0,$id_required=false,$f_id_field=false,$order_by=false,$order_asc=false,$for_update=false) {
 		if ($id_required && !($id > 0))
 			return false;
 			

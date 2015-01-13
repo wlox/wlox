@@ -2,7 +2,7 @@
 <?php
 echo "Beginning Monthly Stats processing...".PHP_EOL;
 
-include 'cfg.php';
+include 'common.php';
 
 /* should run at the very start of every month */
 
@@ -41,7 +41,7 @@ db_query($sql);
 // move factored profits to individual currency escrows (these tell you how much of each currency you can safely withdraw as profit)
 // create new ledger entries for next month
 $status = DB::getRecord('status',1,0,1,false,false,false,1);
-if ($ledger) {
+if (!empty($ledger)) {
 	foreach ($ledger as $currency_abbr => $row) {
 		$escrows[] = strtolower($currency_abbr).'_escrow = '.($row['profit_to_factor'] + $status[strtolower($currency_abbr).'_escrow']).' ';
 		db_insert('conversions',array('amount'=>($row['amount'] - $row['profit_to_factor']),'total_withdrawals'=>'0','date'=>date('Y-m-d H:i:s'),'date1'=>date('Y-m-d H:i:s'),'currency'=>$row['currency'],'is_active'=>'N','factored'=>'N'));
@@ -57,5 +57,5 @@ $gross_profit = $total_fees - $result[0]['fees_incurred'];
 
 db_insert('monthly_reports',array('date'=>date('Y-m-d',strtotime('-1 day')),'transactions_btc'=>$transactions_btc,'avg_transaction_size_btc'=>$avg_transaction,'transaction_volume_per_user'=>$trans_per_user,'total_fees_btc'=>$total_fees,'fees_per_user_btc'=>$fees_per_user,'gross_profit_btc'=>$gross_profit));
 
-db_update('status',1,array('cron_monthly_stats'=>date('Y-m-d H:i:s')));x
+db_update('status',1,array('cron_monthly_stats'=>date('Y-m-d H:i:s')));
 echo 'done'.PHP_EOL;

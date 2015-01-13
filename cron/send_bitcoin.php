@@ -2,7 +2,7 @@
 <?php
 echo "Beginning Send Bitcoin processing...".PHP_EOL;
 
-include 'cfg.php';
+include 'common.php';
 
 db_start_transaction();
 
@@ -11,6 +11,7 @@ $status = DB::getRecord('status',1,0,1,false,false,false,1);
 $available = $status['hot_wallet_btc'];
 $deficit = $status['deficit_btc'];
 $bitcoin->settxfee($CFG->bitcoin_sending_fee);
+$users = array();
 
 $sql = "SELECT id, btc FROM site_users FOR UPDATE";
 $result = db_query_array($sql);
@@ -77,28 +78,30 @@ if ($result) {
 	}
 }
 
-if (count($transactions) > 1) {
-	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
-	$json_arr = array();
-	$fees_charged = 0;
-	foreach ($transactions as $address => $amount) {
-		$json_arr[$address] = ($amount - $CFG->bitcoin_sending_fee);
-		$fees_charged += $CFG->bitcoin_sending_fee;
-	}
-	$response = $bitcoin->sendmany($CFG->bitcoin_accountname,json_decode(json_encode($json_arr)));
-	echo $bitcoin->error.PHP_EOL;
-}
-elseif (count($transactions) == 1) {
-	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
-	$fees_charged = 0;
-	foreach ($transactions as $address => $amount) {
-		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,(float)bcsub($amount,$CFG->bitcoin_sending_fee,8));
-		$fees_charged += $CFG->bitcoin_sending_fee;
+if (!empty($transactions)) {
+	if (count($transactions) > 1) {
+		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
+		$json_arr = array();
+		$fees_charged = 0;
+		foreach ($transactions as $address => $amount) {
+			$json_arr[$address] = ($amount - $CFG->bitcoin_sending_fee);
+			$fees_charged += $CFG->bitcoin_sending_fee;
+		}
+		$response = $bitcoin->sendmany($CFG->bitcoin_accountname,json_decode(json_encode($json_arr)));
 		echo $bitcoin->error.PHP_EOL;
+	}
+	elseif (count($transactions) == 1) {
+		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
+		$fees_charged = 0;
+		foreach ($transactions as $address => $amount) {
+			$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,(float)bcsub($amount,$CFG->bitcoin_sending_fee,8));
+			$fees_charged += $CFG->bitcoin_sending_fee;
+			echo $bitcoin->error.PHP_EOL;
+		}
 	}
 }
 
-if ($response && $users && !$bitcoin->error) {
+if (!empty($response) && $users && !$bitcoin->error) {
 	echo 'Transactions sent: '.$response.PHP_EOL;
 	
 	$total = 0;
@@ -123,7 +126,7 @@ if ($response && $users && !$bitcoin->error) {
 	}
 }
 
-if (!$pending) db_update('status',1,array('deficit_btc'=>'0'));
+if (empty($pending)) db_update('status',1,array('deficit_btc'=>'0'));
 
 db_commit();
 

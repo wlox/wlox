@@ -2,7 +2,7 @@
 <?php
 echo "Beginning Maintenance processing...".PHP_EOL;
 
-include 'cfg.php';
+include 'common.php';
 $CFG->session_active = 1;
 $CFG->in_cron = 1;
 

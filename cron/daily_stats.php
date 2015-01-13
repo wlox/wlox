@@ -2,7 +2,7 @@
 <?php
 echo "Beginning Daily Stats Processing...".PHP_EOL;
 
-include 'cfg.php';
+include 'common.php';
 
 /* should run at the very start of every day */
 
