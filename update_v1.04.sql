@@ -176,4 +176,6 @@ INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `con
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
 (2488, 'checkBox', 'a:9:{s:4:"name";s:29:"email_notify_fiat_withdrawals";s:7:"caption";s:28:"Notify user fiat withdrawals";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 14, 269, 0);
 
+UPDATE `app_configuration` SET `btc_currency_id` = '28',`deposit_bitcoin_desc` = '4',`default_fee_schedule_id` = '1',`history_buy_id` = '2',`history_deposit_id` = '4',`history_login_id` = '1',`history_sell_id` = '3',`history_withdraw_id` = '5',`order_type_ask` = '2',`request_awaiting_id` = '4',`request_cancelled_id` = '3',`request_completed_id` = '2',`order_type_bid` = '1',`request_deposit_id` = '2',`request_pending_id` = '1',`request_withdrawal_id` = '1',`transactions_buy_id` = '1',`transactions_sell_id` = '2',`withdraw_fiat_desc` = '1',`withdraw_btc_desc` = '2' WHERE `app_configuration`.`id` = 1;
+
 UPDATE`status` SET `db_version` = '1.04' WHERE `status`.`id` =1;
