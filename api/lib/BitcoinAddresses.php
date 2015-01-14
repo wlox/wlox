@@ -58,6 +58,12 @@ class BitcoinAddresses{
 			$bitcoin = self::$bitcoin;
 		
 		$new_address = $bitcoin->getnewaddress($CFG->bitcoin_accountname);
+		
+		if (!$new_address) {
+			trigger_error($bitcoin->error,E_USER_WARNING);
+			return false;
+		}
+		
 		$new_id = db_insert('bitcoin_addresses',array('address'=>$new_address,'site_user'=>User::$info['id'],'date'=>date('Y-m-d H:i:s')));
 		
 		return ($return_address) ? $new_address : $new_id;
@@ -189,7 +195,12 @@ class BitcoinAddresses{
 		
 		$response = $bitcoin->validateaddress($btc_address);
 	
-		if (!$response['isvalid'] || !is_array($response))
+		if (!$response) {
+			trigger_error($bitcoin->error,E_USER_WARNING);
+			return false;
+		}
+		
+		if (!$response['isvalid'])
 			return false;
 		else
 			return true;
