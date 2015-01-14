@@ -2,7 +2,7 @@
 <?php
 echo "Beginning Get Status processing...".PHP_EOL;
 
-include 'cfg.php';
+include 'common.php';
 
 
 // GET BITCOIN GLOBAL STATS

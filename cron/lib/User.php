@@ -2,7 +2,7 @@
 class User {
 	public static $info, $on_hold;
 	
-	function getOnHold($for_update=false,$user_id=false) {
+	public static function getOnHold($for_update=false,$user_id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -11,13 +11,21 @@ class User {
 		$user_info = ($user_id > 0) ? DB::getRecord('site_users',$user_id,0,1,false,false,false,$for_update) : User::$info;
 		$user_fee = DB::getRecord('fee_schedule',$user_info['fee_schedule'],0,1);
 		$lock = ($for_update) ? 'FOR UPDATE' : '';
+		$on_hold = array();
 	
 		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
-				$on_hold[$row['currency']]['withdrawal'] += floatval($row['amount']);
-				$on_hold[$row['currency']]['total'] += floatval($row['amount']);
+				if (!empty($on_hold[$row['currency']]['withdrawal']))
+					$on_hold[$row['currency']]['withdrawal'] += floatval($row['amount']);
+				else
+					$on_hold[$row['currency']]['withdrawal'] = floatval($row['amount']);
+					
+				if (!empty($on_hold[$row['currency']]['total']))
+					$on_hold[$row['currency']]['total'] += floatval($row['amount']);
+				else
+					$on_hold[$row['currency']]['total'] = floatval($row['amount']);
 			}
 		}
 	
@@ -26,12 +34,26 @@ class User {
 		if ($result) {
 			foreach ($result as $row) {
 				if ($row['type'] == $CFG->order_type_bid) {
-					$on_hold[$row['currency']]['order'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
-					$on_hold[$row['currency']]['total'] += floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01));
+					if (!empty($on_hold[$row['currency']]['order']))
+						$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					else
+						$on_hold[$row['currency']]['order'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					
+					if (!empty($on_hold[$row['currency']]['total']))
+						$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+					else
+						$on_hold[$row['currency']]['total'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
 				}
 				else {
-					$on_hold['BTC']['order'] += floatval($row['btc_amount']);
-					$on_hold['BTC']['total'] += floatval($row['btc_amount']);
+					if (!empty($on_hold['BTC']['order']))
+						$on_hold['BTC']['order'] += floatval($row['btc_amount']);
+					else 
+						$on_hold['BTC']['order'] = floatval($row['btc_amount']);
+						
+					if (!empty($on_hold['BTC']['total']))
+						$on_hold['BTC']['total'] += floatval($row['btc_amount']);
+					else 
+						$on_hold['BTC']['total'] = floatval($row['btc_amount']);
 				}
 			}
 		}
