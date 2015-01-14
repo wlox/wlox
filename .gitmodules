@@ -1,15 +1,15 @@
 [submodule "frontend"]
 	path = frontend
-	url = https://github.com/1btcxe/wlox-frontend.git
+	url = https://github.com/wlox/wlox-frontend.git
 [submodule "auth"]
 	path = auth
-	url = https://github.com/1btcxe/wlox-auth.git
+	url = https://github.com/wlox/wlox-auth.git
 [submodule "api"]
 	path = api
-	url = https://github.com/1btcxe/wlox-api.git
+	url = https://github.com/wlox/wlox-api.git
 [submodule "backstage2"]
 	path = backstage2
-	url = https://github.com/1btcxe/backstage2.git
+	url = https://github.com/wlox/backstage2.git
 [submodule "cron"]
 	path = cron
-	url = https://github.com/1btcxe/wlox-cron.git
+	url = https://github.com/wlox/wlox-cron.git
