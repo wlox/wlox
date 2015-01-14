@@ -11,7 +11,7 @@ elseif (!User::isLoggedIn())
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename=transactions_'.date('Y-m-d').'.csv');
 
-API::add('Transactions','get',array(false,false,false,false,1,false,false,false,false,1));
+API::add('Transactions','get',array(false,false,false,false,1,false,false,false,false,false,1));
 $query = API::send();
 
 $transactions = $query['Transactions']['get']['results'][0];
@@ -21,7 +21,7 @@ if ($transactions) {
 	foreach ($transactions as $transaction) {
 		fputcsv($output,array(
 			' '.$transaction['type'].' ',
-			' '.date('M j, Y, H:i:a',strtotime($transaction['date'])).' UTC ',
+			' '.date('M j, Y, H:i',strtotime($transaction['date']) + $CFG->timezone_offset).' UTC ',
 			' '.number_format($transaction['btc'],8).' ',
 			' '.$transaction['currency'].' ',
 			' '.number_format($transaction['btc_net'] * $transaction['fiat_price'],2).' ',
