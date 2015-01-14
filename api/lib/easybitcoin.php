@@ -161,6 +161,7 @@ class Bitcoin {
 		}
 
 		if ($this->error) {
+			trigger_error($this->error,E_USER_WARNING);
 			return false;
 		} else {
 			return $this->response['result'];
