@@ -16,7 +16,7 @@ $account1 = (!empty($_REQUEST['account'])) ? preg_replace("/[^0-9]/", "",$_REQUE
 $fiat_amount1 = (!empty($_REQUEST['fiat_amount']) && $_REQUEST['fiat_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['fiat_amount']) : 0;
 $fiat_total1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? $fiat_amount1 - $CFG->fiat_withdraw_fee : 0;
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
-$authcode1 = !empty($_REQUEST['authcode']);
+$authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
 $request_2fa = false;
 $no_token = false;
 
