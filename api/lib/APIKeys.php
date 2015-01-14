@@ -1,6 +1,6 @@
 <?php 
 class APIKeys {
-	function get() {
+	public static function get() {
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked)
@@ -10,7 +10,7 @@ class APIKeys {
 		return db_query_array($sql);
 	}
 	
-	function edit($ids_array) {
+	public static function edit($ids_array) {
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked || !is_array($ids_array) || !$CFG->token_verified)
@@ -29,7 +29,7 @@ class APIKeys {
 		}
 	}
 	
-	function add() {
+	public static function add() {
 		global $CFG;
 		
 		if (!$CFG->session_active || $CFG->session_locked || !$CFG->token_verified)
@@ -48,7 +48,7 @@ class APIKeys {
 		return $secret;
 	}
 	
-	function delete($remove_id) {
+	public static function delete($remove_id) {
 		global $CFG;
 	
 		$remove_id = preg_replace("/[^0-9]/", "",$remove_id);
@@ -58,7 +58,7 @@ class APIKeys {
 		return db_delete('api_keys',$remove_id);
 	}
 	
-	function hasPermission($api_key) {
+	public static function hasPermission($api_key) {
 		global $CFG;
 		
 		$sql = 'SELECT api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw FROM api_keys WHERE api_keys.key = "'.$api_key.'"';

@@ -1,6 +1,6 @@
 <?php 
 class History {
-	function get($count=false,$page=false,$per_page=false) {
+	public static function get($count=false,$page=false,$per_page=false,$dont_paginate=false) {
 		global $CFG;
 		
 		$page = preg_replace("/[^0-9]/", "",$page);
