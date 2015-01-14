@@ -3,6 +3,7 @@ include '../cfg.php';
 
 $user1 = ereg_replace("[^0-9]","",$_REQUEST['user']);
 $pass1 = ereg_replace("[^0-9a-zA-Z!@#$%&*?\.\-\_]","",$_REQUEST['pass']);
+$lang1 = ereg_replace("[^a-zA_Z]","",$_REQUEST['lang']);
 
 if (!$user1 || !$pass1)
 	$invalid_login = 1;
