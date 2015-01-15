@@ -106,6 +106,9 @@ class Settings {
 		
 		if (is_array($result[0]) && is_object($CFG)) {
 			foreach ($result[0] as $name => $value) {
+				if ($name == 'pass_regex')
+					continue;
+				
 				$name = str_replace('backstage_','',$name);
 				$CFG->$name = $value;
 			}
