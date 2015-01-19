@@ -7,7 +7,7 @@ include 'session.php';
 include 'autoload.php';
 
 session_start();
-session_regenerate_id();
+session_regenerate_id(true);
 
 /* Common Info */
 API::add('Lang','getTable');
