@@ -54,7 +54,7 @@ if ($account1 > 0) {
 }
 
 if ($remove_id1 > 0) {
-	if ($bank_accounts[$account1])
+	if (empty($bank_accounts[$account1]))
 		Errors::add(Lang::string('bank-accounts-remove-error'));
 	
 	if (!is_array(Errors::$errors)) {
