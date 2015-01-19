@@ -76,6 +76,11 @@ class BankAccounts{
 		if (!$CFG->session_active)
 			return false;
 		
+		$sql = 'SELECT id FROM bank_accounts WHERE id = '.$remove_id.' AND site_user = '.User::$info['id'];
+		$result = db_query_array($sql);
+		if (!$result)
+			return false;
+		
 		$remove_id = preg_replace("/[^0-9]/", "",$remove_id);
 		
 		db_delete('bank_accounts',$remove_id);
