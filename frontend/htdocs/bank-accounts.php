@@ -54,7 +54,15 @@ if ($account1 > 0) {
 }
 
 if ($remove_id1 > 0) {
-	if (empty($bank_accounts[$account1]))
+	$found = false;
+	if (!empty($bank_accounts) && is_array($bank_accounts)) {
+		foreach ($bank_accounts as $account) {
+			if ($account['id'] == $remove_id1)
+				$found = true;
+		}
+	}
+	
+	if (!$found)
 		Errors::add(Lang::string('bank-accounts-remove-error'));
 	
 	if (!is_array(Errors::$errors)) {
