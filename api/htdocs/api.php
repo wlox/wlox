@@ -90,15 +90,15 @@ if ($api_key1 && $api_signature1) {
 if ($token1 > 0 && !empty($result[0]['authy_id']) && $result[0]['authy_id'] > 0) {
 	$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
 	$response1 = (!empty($response)) ? json_decode($response,true) : false;
-	
+
 	if (empty($response) || (empty($response1) || !is_array($response1))) {
 		$return['error'] = 'security-com-error';
 	}
-	elseif (!empty($response1['success']) && $response1['success'] === false) {
+	elseif (!empty($response1['errors']) || $response1['success'] === false || $response1['success'] === 'false') {
 		$return['error'] = 'authy-errors';
 		$return['authy_errors'] = $response1['errors'];
 	}
-	else {
+	elseif (!empty($response1['success']) && ($response1['success'] == true || $response1['success'] == 'true')) {
 		$CFG->token_verified = true;
 	}
 }
