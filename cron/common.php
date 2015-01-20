@@ -35,4 +35,31 @@ $CFG->currency_conversion_fee = $CFG->currency_conversion_fee * 0.01;
 $CFG->form_email = $CFG->support_email;
 $CFG->request_widthdrawal_id = $CFG->request_withdrawal_id;
 $CFG->bitcoin_reserve_ratio = $CFG->bitcoin_reserve_ratio * 0.01;
+
+
+/* Wait for other cron jobs and create lock file when ready */
+$start_time = time();
+$lock_file = $CFG->dirroot.'lock/lock';
+$lock_file_info = false;
+$last_notify = $start_time;
+
+require_once ("lib/shutdown.php");
+
+while (file_exists($lock_file)) {
+	sleep(1);
+	if (time() - $last_notify >= 60) {
+		$lock_file_info = explode('|',file_get_contents($lock_file));
+		$last_notify = time();
+		
+		$content = 'Script '.$CFG->self.' has been waiting for'.(time() - $start_time).'s for '.$lock_file_info[0].' ('.(time() - $lock_file_info[1]).'s) to complete.';
+		Email::send($CFG->support_email,$CFG->support_email,'Cron Bottleneck @'.$CFG->self,$CFG->exchange_name.' Cron',false,$content);
+		trigger_error($content,E_USER_WARNING);
+	}
+}
+
+$created = file_put_contents($lock_file,$CFG->self.'|'.$start_time);
+if ($created === false) {
+	trigger_error('Cannot access lock file. Check "lock" directory permissions.',E_USER_ERROR);
+	exit;
+}
 ?>
