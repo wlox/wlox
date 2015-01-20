@@ -6,7 +6,7 @@ if (User::isLoggedIn())
 elseif (!User::$awaiting_token)
 	Link::redirect('login.php');
 
-$token1 = ereg_replace("[^0-9]", "",$_REQUEST['token']);
+$token1 = preg_replace("/[^0-9]/", "",$_REQUEST['token']);
 $dont_ask1 = $_REQUEST['dont_ask'];
 
 if ($_REQUEST['step'] == 1) {

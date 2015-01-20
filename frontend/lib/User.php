@@ -76,12 +76,12 @@ class User {
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
-		
-		if ($result['authy-errors'] == 'false') {
-			Errors::merge($result['authy-errors']);
+
+		if (!empty($result['authy-errors']['message'])) {
+			Errors::add(Lang::string('security-incorrect-token'));
 			return false;
 		}
-		elseif ($result['error'] == 'security-incorrect-token') {
+		elseif ($result['error'] == 'security-incorrect-token' || $result['error']) {
 			Errors::add(Lang::string('security-incorrect-token'));
 			return false;
 		}
