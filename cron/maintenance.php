@@ -58,12 +58,20 @@ db_commit();
 
 // subtract withdrawals
 db_start_transaction();
-$sql = 'SELECT requests.site_user AS site_user, LOWER(currencies.currency) AS currency, SUM(requests.amount) AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' GROUP BY requests.site_user, requests.currency FOR UPDATE';
+$sql = 'SELECT site_users.*, requests.id AS request_id, requests.site_user AS site_user, LOWER(currencies.currency) AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users ON (site_users.id = requests.site_user) LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' FOR UPDATE';
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
-		$sql = 'UPDATE site_users SET '.$row['currency'].' = '.$row['currency'].' - '.round($row['amount'],2,PHP_ROUND_HALF_UP).' WHERE id = '.$row['site_user'];
+		if (empty($old_balance[$row['site_user']][$row['currency']]))
+			$old_balance[$row['site_user']][$row['currency']] = $row[$row['currency']];
+		
+		$sql = 'UPDATE site_users SET '.$row['currency'].' = '.$row['currency'].' - '.$row['amount'].' WHERE id = '.$row['site_user'];
 		db_query($sql);
+		
+		$sql = 'UPDATE history SET balance_before = '.$old_balance[$row['site_user']][$row['currency']].', balance_after = '.($old_balance[$row['site_user']][$row['currency']] - $row['amount']).' WHERE request_id = '.$row['request_id'];
+		db_query($sql);
+		
+		$old_balance[$row['site_user']][$row['currency']] = $old_balance[$row['site_user']][$row['currency']] - $row['amount'];
 	}
 	$sql = 'UPDATE requests SET request_status = '.$CFG->request_completed_id.' WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' ';
 	db_query($sql);
