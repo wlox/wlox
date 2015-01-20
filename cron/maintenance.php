@@ -62,7 +62,7 @@ $sql = 'SELECT requests.site_user AS site_user, LOWER(currencies.currency) AS cu
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
-		$sql = 'UPDATE site_users SET '.$row['currency'].' = '.$row['currency'].' - '.$row['amount'].' WHERE id = '.$row['site_user'];
+		$sql = 'UPDATE site_users SET '.$row['currency'].' = '.$row['currency'].' - '.round($row['amount'],2,PHP_ROUND_HALF_UP).' WHERE id = '.$row['site_user'];
 		db_query($sql);
 	}
 	$sql = 'UPDATE requests SET request_status = '.$CFG->request_completed_id.' WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' ';

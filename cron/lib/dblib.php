@@ -10,10 +10,11 @@ function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
 	if (! $dbh = mysql_connect ( $dbhost, $dbuser, $dbpass )) {
 		if ($CFG->db_debug == 'Y') {
 			$output = "Can't connect to $dbhost as $dbuser";
-			$output .= "MySQL Error: ".mysql_error ();
+			$output .= "MySQL Error: ".mysql_error();
 			trigger_error($output,E_USER_ERROR);
 		} else {
 			$output = "Database error encountered";
+			$output .= "MySQL Error: ".mysql_error();
 			trigger_error($output,E_USER_WARNING);
 		}
 	}
@@ -21,10 +22,11 @@ function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
 	if (! mysql_select_db ( $dbname )) {
 		if ($CFG->db_debug == 'Y') {
 			$output = "Can't select database $dbname";
-			$output .= "MySQL Error: ".mysql_error ();
+			$output .= "MySQL Error: ".mysql_error();
 			trigger_error($output,E_USER_ERROR);
 		} else {
 			$output = "Database error encountered";
+			$output .= "MySQL Error: ".mysql_error();
 			trigger_error($output,E_USER_WARNING);
 		}
 	}
@@ -62,6 +64,7 @@ function db_query($query, $debug = false, $die_on_debug = true, $silent = false,
 			trigger_error($output,E_USER_ERROR);
 		} else {
 			$output = "Database error encountered";
+			$output .= "MySQL Error: ".mysql_error ();
 			$output .= print_r(func_get_args(),true);
 			trigger_error($output,E_USER_WARNING);
 		}
