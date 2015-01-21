@@ -24,7 +24,7 @@ if (!$request_2fa && !$no_2fa) {
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
 $remove_id1 = (!empty($_REQUEST['remove_id'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['remove_id']) : false;
 if (!empty($_REQUEST['permissions']))
-	$permissions = (is_array($_REQUEST['permissions'])) ? $_REQUEST['permissions'] : unserialize($_REQUEST['permissions']);
+	$permissions = (is_array($_REQUEST['permissions'])) ? $_REQUEST['permissions'] : unserialize(urldecode($_REQUEST['permissions']));
 else
 	$permissions = false;
 
@@ -149,7 +149,7 @@ include 'includes/head.php';
 				</h3>
 				<form id="enable_tfa" action="api-access.php" method="POST">
 					<input type="hidden" name="request_2fa" value="1" />
-					<input type="hidden" name="permissions" value="<?= serialize($permissions) ?>" />
+					<input type="hidden" name="permissions" value="<?= urlencode(serialize($permissions)) ?>" />
 					<input type="hidden" name="remove_id" value="<?= $remove_id1 ?>" />
 					<input type="hidden" name="action" value="<?= preg_replace("/[^a-z]/", "",$_REQUEST['action']) ?>" />
 					<div class="buyform">
