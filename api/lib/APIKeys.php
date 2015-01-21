@@ -55,6 +55,10 @@ class APIKeys {
 		if (!$CFG->session_active || $CFG->session_locked || !($remove_id > 0) || !$CFG->token_verified)
 			return false;
 		
+		$existing = DB::getRecord('api_keys',$remove_id,0,1);
+		if (!$existing || $existing['site_user'] != User::$info['id'])
+			continue;
+		
 		return db_delete('api_keys',$remove_id);
 	}
 	
