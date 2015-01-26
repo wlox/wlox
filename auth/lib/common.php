@@ -1,10 +1,12 @@
 <?php
-require_once ("cfg.php");
-require_once ("dblib.php");
-require_once ("stdlib.php");
-require_once ("Google2FA.php");
-require_once ("Settings.php");
-require_once ('Encryption.php');
+include "../cfg.php";
+include "dblib.php";
+include "stdlib.php";
+include "Google2FA.php";
+include "Settings.php";
+include 'Encryption.php';
+include 'SiteEmail.php';
+include 'Email.php';
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);

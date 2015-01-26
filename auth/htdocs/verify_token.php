@@ -1,5 +1,5 @@
 <?php 
-include '../common.php';
+include '../lib/common.php';
 
 $session_id1 = preg_replace("/[^0-9]/","",$_POST['session_id']);
 $signature1 = hex2bin($_POST['signature']);
