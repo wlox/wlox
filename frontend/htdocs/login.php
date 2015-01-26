@@ -18,7 +18,7 @@ if (!empty($_REQUEST['submitted'])) {
 	if ($_SESSION["register_uniq"] != $_REQUEST['uniq'])
 		Errors::add('Page expired.');
 	
-	if (!empty(User::$attempts) && User::$attempts > 2) {
+	if (!empty(User::$attempts) && User::$attempts > 2 && !empty($CFG->google_recaptch_api_key) && !empty($CFG->google_recaptch_api_secret)) {
 		$captcha = new Form('captcha');
 		$captcha->reCaptchaCheck(1);
 		if (!empty($captcha->errors) && is_array($captcha->errors)) {
@@ -97,7 +97,7 @@ include 'includes/head.php';
 		    			<input type="password" class="login" name="login[pass]" value="<?= $pass1 ?>">
 		    		</div>
 	    		</div>
-	    		<? if (!empty(User::$attempts) && User::$attempts > 2) { ?>
+	    		<? if (!empty(User::$attempts) && User::$attempts > 2 && !empty($CFG->google_recaptch_api_key) && !empty($CFG->google_recaptch_api_secret)) { ?>
 		    	<div style="margin-bottom:10px;">
 		    		<div class="g-recaptcha" data-sitekey="<?= $CFG->google_recaptch_api_key ?>"></div>
 		    	</div>
