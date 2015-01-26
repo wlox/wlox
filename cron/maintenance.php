@@ -35,6 +35,11 @@ $result = db_query($sql);
 $sql = "DELETE FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
 db_query($sql);
 
+// delete ip access log
+$timeframe = (!empty($CFG->cloudflare_blacklist_timeframe)) ? $CFG->cloudflare_blacklist_timeframe : 15;
+$sql = "DELETE FROM ip_access_log WHERE `timestamp` < ('".date('Y-m-d H:i:s')."' - INTERVAL $timeframe MINUTE) ";
+db_query($sql);
+
 // set market price orders at market price
 db_start_transaction();
 $sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,currencies.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
