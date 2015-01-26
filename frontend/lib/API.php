@@ -72,7 +72,7 @@ class API{
 		return $result;
 	}
 	
-	static public function getUserIp($force_string=null) {
+	static public function getUserIp() {
 		$ip_addresses = array();
 		$ip_elements = array(
 				'HTTP_X_FORWARDED_FOR', 'HTTP_FORWARDED_FOR',

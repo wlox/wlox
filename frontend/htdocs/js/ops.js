@@ -994,6 +994,25 @@ function timeSince(elem) {
 	});
 }
 
+function timeUntil(elem) {
+	var miliseconds = $(elem).siblings('.time_until_seconds').val();
+	var date = new Date(parseInt(miliseconds)*1000);
+	var lang = $('#language_selector').val();
+	lang = (lang = 'zh') ? 'zh-CN' : lang;
+	
+		
+	$(elem).countdown({ 
+	    until: date,
+	    significant: 1,
+	    onExpiry: pageRefresh,
+	    layout: '{o<}{on} {ol}{o>}{w<}{wn} {wl}{w>}{d<}{dn} {dl}{d>}{h<}{hn} {hl}{h>}{m<}{mn} {ml}{m>}{s<}{sn} {sl}{s>}'
+	});
+}
+
+function pageRefresh() {
+	location.reload(); 
+}
+
 function startFileSortable() {
 	
 }

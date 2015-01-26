@@ -4,12 +4,24 @@ include '../lib/common.php';
 
 $page_title = Lang::string('login-forgot');
 $email1 = (!empty($_REQUEST['forgot']['email'])) ? preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['forgot']['email']) : false;
+$captcha_error = false;
 
 if (!empty($_REQUEST['forgot']) && $email1 && $_SESSION["forgot_uniq"] == $_REQUEST['uniq']) {
-	include_once 'securimage/securimage.php';
-	$securimage = new Securimage();
-
-	if (!empty($_REQUEST['forgot']['captcha']) && $securimage->check($_REQUEST['forgot']['captcha'])) {
+	if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret)) {
+		include_once 'securimage/securimage.php';
+		$securimage = new Securimage();
+		$captcha_error = (empty($_REQUEST['forgot']['captcha']) || !$securimage->check($_REQUEST['forgot']['captcha']));
+	}
+	else {
+		$captcha = new Form('captcha');
+		$captcha->reCaptchaCheck(1);
+		if (!empty($captcha->errors) && is_array($captcha->errors)) {
+			$captcha_error = true;
+			Errors::add($captcha->errors['recaptcha']);
+		}
+	}
+	
+	if (!$captcha_error) {
 		API::add('User','resetUser',array($email1));
 		$query = API::send();
 
@@ -64,6 +76,7 @@ include 'includes/head.php';
 		    			<input type="text" class="login" name="forgot[email]" value="<?= $email1 ?>" />
 		    		</div>
 	    		</div>
+	    		<? if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret)) { ?>
 	    		<div>
 	    			<div><?= Lang::string('settings-capcha') ?></div> 
 	    			<img class="captcha_image" src="securimage/securimage_show.php" />
@@ -74,6 +87,11 @@ include 'includes/head.php';
 		    			<input type="text" class="login" name="forgot[captcha]" value="" />
 		    		</div>
 		    	</div>
+		    	<? } else { ?>
+		    	<div style="margin-bottom:10px;">
+		    		<div class="g-recaptcha" data-sitekey="<?= $CFG->google_recaptch_api_key ?>"></div>
+		    	</div>
+		    	<? } ?>
 		    	<input type="hidden" name="uniq" value="<?= $_SESSION["forgot_uniq"] ?>" />
 	    		<input type="submit" name="submit" value="<?= Lang::string('login-forgot-send-new') ?>" class="but_user" />
 	    	</div>

@@ -18,6 +18,14 @@ if (!empty($_REQUEST['submitted'])) {
 	if ($_SESSION["register_uniq"] != $_REQUEST['uniq'])
 		Errors::add('Page expired.');
 	
+	if (!empty(User::$attempts) && User::$attempts > 2) {
+		$captcha = new Form('captcha');
+		$captcha->reCaptchaCheck(1);
+		if (!empty($captcha->errors) && is_array($captcha->errors)) {
+			Errors::add($captcha->errors['recaptcha']);
+		}
+	}
+	
 	if (!is_array(Errors::$errors)) {
 		$login = User::logIn($user1,$pass1);
 		if ($login && !$login['error']) {
@@ -61,7 +69,7 @@ include 'includes/head.php';
 			echo '
 		<div class="error" id="div4">
 			<div class="message-box-wrap">
-				'.Errors::$errors[0].'
+				'.((User::$timeout > 0) ? str_replace('[timeout]','<span class="time_until"></span><input type="hidden" class="time_until_seconds" value="'.(time() + User::$timeout).'" />',Lang::string('login-timeout')) : Errors::$errors[0]).'
 			</div>
 		</div>';
 		}
@@ -89,6 +97,11 @@ include 'includes/head.php';
 		    			<input type="password" class="login" name="login[pass]" value="<?= $pass1 ?>">
 		    		</div>
 	    		</div>
+	    		<? if (!empty(User::$attempts) && User::$attempts > 2) { ?>
+		    	<div style="margin-bottom:10px;">
+		    		<div class="g-recaptcha" data-sitekey="<?= $CFG->google_recaptch_api_key ?>"></div>
+		    	</div>
+		    	<? } ?>
 	    		<input type="hidden" name="submitted" value="1" />
 	    		<input type="hidden" name="uniq" value="<?= $_SESSION["register_uniq"] ?>" />
 	    		<input type="submit" name="submit" value="<?= Lang::string('home-login') ?>" class="but_user" />

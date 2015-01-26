@@ -86,6 +86,12 @@
 	<? if ($CFG->self == 'api-docs.php') { ?>
 	<link rel="stylesheet" media="screen" href="css/prism.css" type="text/css" />
 	<? } ?>
+	
+	<? if ($CFG->self == 'contact.php' || $CFG->self == 'login.php' || $CFG->self == 'register.php' || $CFG->self == 'forgot.php') { ?>
+	<script src='https://www.google.com/recaptcha/api.js<?= ((!empty($CFG->language) && $CFG->language != 'en') ? '?hl='.($CFG->language == 'zh' ? 'zh-CN' : $CFG->language) : '') ?>'></script>
+	<? } ?>
+	
+	<?= Lang::url($CFG->self,1); ?>
 </head>
 
 <body>

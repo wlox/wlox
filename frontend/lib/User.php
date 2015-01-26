@@ -1,19 +1,27 @@
 <?php
 class User {
 	private static $logged_in;
-	public static $awaiting_token, $info;
+	public static $awaiting_token, $info, $attempts, $timeout;
 	
 	static function logIn($user,$pass) {
 		global $CFG;
 		
+		$ip = API::getUserIp();
+		
 		$ch = curl_init($CFG->auth_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass));
+		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass,'ip'=>$ip));
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
+		
+		if (!empty($result['attempts']))
+			self::$attempts = $result['attempts'];
+		
+		if (!empty($result['timeout']))
+			self::$attempts = $result['timeout'];
 		
 		if (!$result || $result['error']) {
 			return false;
@@ -28,12 +36,15 @@ class User {
 	
 	static function verifyLogin($query) {
 		global $CFG;
-
-		if (empty($_SESSION['session_id']))
-			return false;
 		
 		if (isset($query['User']['verifyLogin']['results'][0]))
 			$result = $query['User']['verifyLogin']['results'][0];
+
+		if (!empty($result['attempts']))
+			self::$attempts = $result['attempts'];
+		
+		if (empty($_SESSION['session_id']))
+			return false;
 
 		if (!empty($result['error']) || !empty($query['error']) || !isset($result)) {
 			session_destroy();

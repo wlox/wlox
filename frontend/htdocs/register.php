@@ -1,18 +1,22 @@
 <?php
 include '../lib/common.php';
 
-if (!empty($_REQUEST['register'])) {
-	$_REQUEST['register']['first_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['first_name']);
-	$_REQUEST['register']['last_name'] = preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['last_name']);
-	$_REQUEST['register']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['register']['country']);
-	$_REQUEST['register']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['register']['email']);
-	$_REQUEST['register']['default_currency'] = preg_replace("/[^0-9]/", "",$_REQUEST['register']['default_currency']);
-	$_REQUEST['is_caco'] = (empty($_REQUEST['is_caco'])) ? array('register'=>1) : $_REQUEST['is_caco'];
-}
+$_REQUEST['register']['first_name'] = (!empty($_REQUEST['register']['first_name'])) ? preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['first_name']) : false;
+$_REQUEST['register']['last_name'] = (!empty($_REQUEST['register']['last_name'])) ? preg_replace("/[^\p{Hebrew} \p{Cyrillic} a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['register']['last_name']) : false;
+$_REQUEST['register']['country'] = (!empty($_REQUEST['register']['country'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['register']['country']) : false;
+$_REQUEST['register']['email'] = (!empty($_REQUEST['register']['email'])) ? preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['register']['email']) : false;
+$_REQUEST['register']['default_currency'] = (!empty($_REQUEST['register']['default_currency'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['register']['default_currency']) : false;
+
+if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret))
+	$_REQUEST['is_caco'] = (!empty($_REQUEST['form_name']) && empty($_REQUEST['is_caco'])) ? array('register'=>1) : (!empty($_REQUEST['is_caco']) ? $_REQUEST['is_caco'] : false);
+
+if (empty($_REQUEST['form_name']))
+	unset($_REQUEST['register']);
 
 $register = new Form('register',false,false,'form3');
 unset($register->info['uniq']);
 $register->verify();
+$register->reCaptchaCheck();
 
 if (!empty($_REQUEST['register']) && (empty($_SESSION["register_uniq"]) || $_SESSION["register_uniq"] != $_REQUEST['register']['uniq']))
 	$register->errors[] = 'Page expired.';

@@ -1,15 +1,18 @@
 <?php
 include '../lib/common.php';
 
-if (!empty($_REQUEST['contact'])) {
-	$_REQUEST['contact']['first_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['first_name']);
-	$_REQUEST['contact']['last_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['last_name']);
-	$_REQUEST['contact']['company'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['company']);
-	$_REQUEST['contact']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['contact']['email']);
-	$_REQUEST['contact']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']);
-	$_REQUEST['contact']['subject'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['subject']);
-	$_REQUEST['is_caco'] = (empty($_REQUEST['is_caco'])) ? array('contact'=>1) : $_REQUEST['is_caco'];
-}
+$_REQUEST['contact']['first_name'] = (!empty($_REQUEST['contact']['first_name'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['first_name']) : false;
+$_REQUEST['contact']['last_name'] = (!empty($_REQUEST['contact']['last_name'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['last_name']) : false;
+$_REQUEST['contact']['company'] = (!empty($_REQUEST['contact']['company'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['company']) : false;
+$_REQUEST['contact']['email'] = (!empty($_REQUEST['contact']['email'])) ? preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['contact']['email']) : false;
+$_REQUEST['contact']['country'] = (!empty($_REQUEST['contact']['country'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']) : false;
+$_REQUEST['contact']['subject'] = (!empty($_REQUEST['contact']['subject'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['subject']) : false;
+
+if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret))
+	$_REQUEST['is_caco'] = (!empty($_REQUEST['form_name']) && empty($_REQUEST['is_caco'])) ? array('contact'=>1) : (!empty($_REQUEST['is_caco']) ? $_REQUEST['is_caco'] : false);
+
+if (empty($_REQUEST['form_name']))
+	unset($_REQUEST['contact']);
 
 API::add('Content','getRecord',array('contact'));
 API::add('Content','getRecord',array('contact-small'));
@@ -23,8 +26,9 @@ $countries = $query['User']['getCountries']['results'][0];
 
 $contact = new Form('contact',false,false,'form2');
 $contact->verify();
+$contact->reCaptchaCheck();
 
-if (!empty($_REQUEST['contact']) && $_SESSION["contact_uniq"] != $_REQUEST['contact']['uniq'])
+if (!empty($_REQUEST['contact']) && (empty($_SESSION["contact_uniq"]) || $_SESSION["contact_uniq"] != $_REQUEST['contact']['uniq']))
 	$contact->errors[] = 'Page expired.';
 
 if (!empty($_REQUEST['contact']) && is_array($contact->errors)) {

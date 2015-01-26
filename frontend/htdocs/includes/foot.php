@@ -93,7 +93,7 @@
 <script type="text/javascript" src="js/universal/jquery-ui-1.10.3.custom.min.js"></script>
 
 <!-- main js -->
-<script type="text/javascript" src="js/ops.js?v=20150112"></script>
+<script type="text/javascript" src="js/ops.js?v=20150116"></script>
 
 <? if ($CFG->self == 'index.php' || $CFG->self == 'order-book.php') { ?>
 <!-- flot -->
@@ -107,10 +107,10 @@
 <script src="https://www.authy.com/form.authy.min.js" type="text/javascript"></script>
 <? } ?>
 
-<? if ($CFG->self == 'index.php') { ?>
+<? if ($CFG->self == 'index.php' || $CFG->self == 'login.php') { ?>
 <!-- countdown -->
 <script type="text/javascript" src="js/countdown/jquery.countdown.js"></script>
-<? ($CFG->language == 'es') ? '<script type="text/javascript" src="js/countdown/jquery.countdown-es.js"></script>' : '' ?>
+<?= ($CFG->language != 'en' && !empty($CFG->language)) ? '<script type="text/javascript" src="js/countdown/jquery.countdown-'.(($CFG->language == 'zh') ? 'zh-CN' : $CFG->language).'.js"></script>' : '' ?>
 <? } ?>
 
 <!-- main menu -->
