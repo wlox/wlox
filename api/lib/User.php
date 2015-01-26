@@ -669,10 +669,17 @@ class User {
 	public static function banIP($ip) {
 		global $CFG;
 		
-		if (empty($ip) || empty($CFG->cloudflare_api_key) || empty($CFG->cloudflare_email))
+		if (empty($ip) || empty($CFG->cloudflare_api_key) || empty($CFG->cloudflare_email) || empty($CFG->cloudflare_blacklist) || $CFG->cloudflare_blacklist != 'Y')
 			return false;
 		
-		trigger_error($ip,E_USER_WARNING);
+		$ch = curl_init('https://www.cloudflare.com/api_json.html');
+		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+		curl_setopt($ch,CURLOPT_POSTFIELDS,array('a'=>'ban','tkn'=>$CFG->cloudflare_api_key,'email'=>$CFG->cloudflare_email,'key'=>$ip));
+		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
+		
+		$result1 = curl_exec($ch);
+		$result = json_decode($result1,true);
+		curl_close($ch);
 	}
 }
 
