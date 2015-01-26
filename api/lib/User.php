@@ -21,15 +21,38 @@ class User {
 	public static function verifyLogin() {
 		global $CFG;
 		
+		// IP throttling
+		$login_attempts = 0;
+		$ip_int = ip2long($CFG->client_ip);
+		if ($ip_int) {
+			$timeframe = (!empty($CFG->cloudflare_blacklist_timeframe)) ? $CFG->cloudflare_blacklist_timeframe : 15;
+			$max_attempts = (!empty($CFG->cloudflare_blacklist_attempts)) ? $CFG->cloudflare_blacklist_attempts : 80;
+			
+			$sql = 'SELECT IFNULL(SUM(IF(login = "Y",1,0)),0) AS login_attempts, IFNULL(SUM(IF(login = "N",1,0)),0) AS hits, IFNULL(MIN(`timestamp`),NOW()) AS start FROM ip_access_log WHERE `timestamp` > DATE_SUB("'.date('Y-m-d H:i:s').'", INTERVAL '.$timeframe.' MINUTE) AND ip = '.$ip_int;
+			$result = db_query_array($sql);
+			if ($result) {
+				$login_attempts = $result[0]['login_attempts'];
+				if ($CFG->cloudflare_blacklist && $result[0]['hits'] > 0) {
+					$time_elapsed = time() - strtotime($result[0]['start']);
+					$hits_per_minute = $result[0]['hits'] / (($time_elapsed > 60 ? $time_elapsed : 60) / 60);
+					
+					if ($hits_per_minute >= $max_attempts && $time_elapsed >= 60)
+						User::banIP($CFG->client_ip);
+				}
+			}
+			
+			db_insert('ip_access_log',array('ip'=>$ip_int,'timestamp'=>date('Y-m-d H:i:s')));
+		}
+
 		if (!($CFG->session_id > 0))
-			return array('message'=>'not-logged-in');
+			return array('message'=>'not-logged-in','attempts'=>$login_attempts);
 		
 		if (!User::$info) {
-			return array('error'=>'session-not-found');
+			return array('error'=>'session-not-found','attempts'=>$login_attempts);
 		}
 		
 		if (User::$info['awaiting'] == 'Y') {
-			return array('message'=>'awaiting-token');
+			return array('message'=>'awaiting-token','attempts'=>$login_attempts);
 		}
 		
 		$return_values = array(
@@ -641,6 +664,15 @@ class User {
 		
 		$lang = preg_replace("/[^a-z]/", "",$lang);
 		return db_update('site_users',User::$info['id'],array('last_lang'=>$lang));
+	}
+	
+	public static function banIP($ip) {
+		global $CFG;
+		
+		if (empty($ip) || empty($CFG->cloudflare_api_key) || empty($CFG->cloudflare_email))
+			return false;
+		
+		trigger_error($ip,E_USER_WARNING);
 	}
 }
 
