@@ -80,9 +80,9 @@ class Orders {
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
-		if (!$count && $dont_paginate && !$public_api_open_orders)
+		if (!$count && $dont_paginate && !$public_api_open_orders && !$public_api_order_book)
 			$sql .= " ORDER BY $order_by $order_desc ";
-		if (!$count && $dont_paginate && $public_api_open_orders)
+		if (!$count && $dont_paginate && ($public_api_open_orders || $public_api_order_book))
 			$sql .= " ORDER BY price $order_desc ";
 
 		$result = db_query_array($sql);
@@ -452,6 +452,7 @@ class Orders {
 		$min_price = 0;
 		$executed_orders = array();
 		$executed_prices = array();
+		$executed_orig_prices = false;
 		
 		$on_hold = User::getOnHold(1,$user_info['id']);
 		if (!empty($on_hold['BTC']['total']))
@@ -620,7 +621,7 @@ class Orders {
 			if (round($amount,8,PHP_ROUND_HALF_UP) > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						if (!($no_compatible && $CFG->in_cron)) {
+						if (!($no_compatible && !empty($CFG->in_cron))) {
 							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>(($price != $stop_price) ? $price : 0),'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id,'stop_price'=>$stop_price));
 							$edit_order = 1;
 						}
@@ -795,7 +796,7 @@ class Orders {
 			if (round($amount,8,PHP_ROUND_HALF_UP) > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						if (!($no_compatible && $CFG->in_cron)) {
+						if (!($no_compatible && !empty($CFG->in_cron))) {
 							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>($amount*$price),'btc_price'=>(($price != $stop_price) ? $price : 0),'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id,'stop_price'=>$stop_price));
 							$edit_order = 1;
 						}
@@ -838,7 +839,7 @@ class Orders {
 					continue; 
 				
 				$return = self::executeOrder((!$buy),$comp_order['orig_btc_price'],$comp_order['btc_outstanding'],strtolower($comp_order['currency_abbr']),false,false,$comp_order['id'],$comp_order['site_user'],1,$comp_order['stop_price'],1,1);
-				if ($return['order_info']['comp_orig_prices'][($edit_id ? $edit_id : $insert_id)] > 0) {
+				if (!empty($return['order_info']['comp_orig_prices'][($edit_id ? $edit_id : $insert_id)])) {
 					$executed_prices[] = $return['order_info']['comp_orig_prices'][($edit_id ? $edit_id : $insert_id)];
 					++$transactions;
 				}
@@ -872,8 +873,8 @@ class Orders {
 					$avg_exec[] = ($exec['amount'] / $exec_amount_sum) * $exec['price'];
 				}
 			}
-			
-			$order_info = array('id'=>$order_log_id,'side'=>($buy ? 'buy' : 'sell'),'type'=>(($market_price) ? 'market' : ($stop_price > 0) ? 'stop' : 'limit'),'amount'=>$orig_amount,'amount_remaining'=>$amount,'price'=>round($price,8,PHP_ROUND_HALF_UP),'avg_price_executed'=>((count($executed_prices) > 0) ? round(array_sum($avg_exec),2,PHP_ROUND_HALF_UP) : 0),'stop_price'=>$stop_price,'currency'=>strtoupper($currency1),'status'=>$order_status,'replaced'=>($edit_id ? $orig_order['log_id'] : 0),'comp_orig_prices'=>$executed_orig_prices);
+
+			$order_info = array('id'=>$order_log_id,'side'=>($buy ? 'buy' : 'sell'),'type'=>(($market_price) ? 'market' : (($stop_price > 0) ? 'stop' : 'limit')),'amount'=>$orig_amount,'amount_remaining'=>$amount,'price'=>round($price,8,PHP_ROUND_HALF_UP),'avg_price_executed'=>((count($executed_prices) > 0) ? round(array_sum($avg_exec),2,PHP_ROUND_HALF_UP) : 0),'stop_price'=>$stop_price,'currency'=>strtoupper($currency1),'status'=>$order_status,'replaced'=>($edit_id ? $orig_order['log_id'] : 0),'comp_orig_prices'=>$executed_orig_prices);
 		}
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
 	}
