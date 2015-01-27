@@ -47,8 +47,8 @@ if ($result[0]['authy_id'] > 0) {
 	}
 }
 elseif ($result[0]['google_2fa_code']) {
-	$result = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
-	if (!$result) {
+	$response = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
+	if (!$response) {
 		echo json_encode(array('error'=>'security-incorrect-token'));
 		exit;
 	}
@@ -58,6 +58,7 @@ if ($dont_ask1 > 0)
 	db_update('site_users',$result[0]['user_id'],array('dont_ask_30_days'=>'Y','dont_ask_date'=>date('Y-m-d H:i:s')));
 		
 db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'awaiting'=>'N'),'session_id');
+db_delete('site_users_access',$result[0]['user_id'],'site_user');
 
 echo json_encode(array('message'=>'OK'));
 
