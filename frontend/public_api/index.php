@@ -1,14 +1,17 @@
 <?php 
 include '../lib/common.php';
 
-$api_key1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
-$api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['signature']);
-$nonce1 = preg_replace("/[^0-9]/","",$_POST['nonce']);
-$CFG->language = preg_replace("/[^a-z]/","",$_POST['lang']);
-$currency1 = preg_replace("/[^a-zA-Z]/","",$_REQUEST['currency']);
+$api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']) : false;
+$api_signature1 = (!empty($_POST['signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['signature']) : false;
+$nonce1 = (!empty($_POST['nonce'])) ? preg_replace("/[^0-9]/","",$_POST['nonce']) : false;
+$CFG->language = (!empty($_POST['lang'])) ? preg_replace("/[^a-z]/","",$_POST['lang']) : false;
+$currency1 = (!empty($_POST['currency'])) ? preg_replace("/[^a-zA-Z]/","",$_REQUEST['currency']) : false;
 
 $post = ($_SERVER['REQUEST_METHOD'] == 'POST');
 $endpoint = $_REQUEST['endpoint'];
+
+$invalid_signature = false;
+$invalid_currency = false;
 
 // check if API key/signature received
 if ($api_key1 && (strlen($api_key1) != 16 || strlen($api_signature1) != 64)) {
@@ -51,7 +54,7 @@ elseif ($endpoint == 'historical-prices') {
 		// timeframe values: 1mon, 3mon, 6mon, ytd, 1year
 		$timeframe_values = array('1mon','3mon','6mon','ytd','1year');
 		$currency1 = (!$currency1) ? 'usd' : strtolower($currency1);
-		$timeframe1 = preg_replace("/[^0-9a-zA-Z]/","",$_REQUEST['timeframe']);
+		$timeframe1 = (!empty($_REQUEST['timeframe'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_REQUEST['timeframe']) : false;
 		$timeframe1 = (!$timeframe1 || !in_array($timeframe1,$timeframe_values)) ? '1mon' : $timeframe1;
 		
 		API::add('Stats','getHistorical',array(strtolower($timeframe1),$currency1,1));
@@ -81,7 +84,7 @@ elseif ($endpoint == 'order-book') {
 elseif ($endpoint == 'transactions') {
 	// currency filters transactions involving that particular currency
 	if (!$invalid_currency) {
-		$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
+		$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : false;
 		$limit1 = (!$limit1) ? 10 : $limit1;
 		
 		API::add('Transactions','get',array(false,false,$limit1,strtolower($currency1),false,false,false,false,false,1));
@@ -104,7 +107,7 @@ elseif ($endpoint == 'balances-and-info') {
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
-				if (!$query['error']) {
+				if (empty($query['error'])) {
 					$return['balances-and-info']['on_hold'] = ($query['User']['getOnHold']['results'][0]) ? $query['User']['getOnHold']['results'][0] : array();
 					$return['balances-and-info']['available'] = ($query['User']['getAvailable']['results'][0]) ? $query['User']['getAvailable']['results'][0] : array();
 					$return['balances-and-info']['usd_volume'] = ($query['User']['getVolume']['results'][0]) ? $query['User']['getVolume']['results'][0] : 0;
@@ -136,7 +139,7 @@ elseif ($endpoint == 'open-orders') {
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
-				if (!$query['error']) {
+				if (empty($query['error'])) {
 					$return['open-orders']['bid'] = ($query['Orders']['get']['results'][0]) ? $query['Orders']['get']['results'][0] : array();
 					$return['open-orders']['ask'] = ($query['Orders']['get']['results'][1]) ? $query['Orders']['get']['results'][1] : array();
 					$return['open-orders']['request_currency'] = (!$currency1) ? 'ORIGINAL' : strtoupper($currency1);
@@ -159,9 +162,9 @@ elseif ($endpoint == 'user-transactions') {
 			if ($permissions['p_view'] == 'Y') {
 				// currency filters by currency
 				// type can be 'buy' or 'sell'
-				$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
+				$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : false;
 				$limit1 = (!$limit1) ? 10 : $limit1;
-				$type1 = preg_replace("/[^a-zA-Z]/","",$_REQUEST['side']);
+				$type1 = (!empty($_REQUEST['side'])) ? preg_replace("/[^a-zA-Z]/","",$_REQUEST['side']) : false;
 				
 				API::add('Transactions','get',array(false,false,$limit1,$currency1,1,false,strtolower($type1),false,false,1));
 				API::apiKey($api_key1);
@@ -169,7 +172,7 @@ elseif ($endpoint == 'user-transactions') {
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
-				if (!$query['error'])
+				if (empty($query['error']))
 					$return['user-transactions'] = ($query['Transactions']['get']['results'][0]) ? $query['Transactions']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -187,7 +190,7 @@ elseif ($endpoint == 'btc-deposit-address/get') {
 	if ($post) {
 		if (!$invalid_signature && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_view'] == 'Y') {
-				$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
+				$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : false;
 				$limit1 = (!$limit1) ? 10 : $limit1;
 				
 				API::add('BitcoinAddresses','get',array(false,false,$limit1,false,false,false,1));
@@ -196,7 +199,7 @@ elseif ($endpoint == 'btc-deposit-address/get') {
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
-				if (!$query['error'])
+				if (empty($query['error']))
 					$return['btc-deposit-address-get'] = ($query['BitcoinAddresses']['get']['results'][0]) ? $query['BitcoinAddresses']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -223,14 +226,14 @@ elseif ($endpoint == 'btc-deposit-address/new') {
 					$error = true;
 				}
 				
-				if (!$error) {
+				if (empty($error)) {
 					API::add('BitcoinAddresses','getNew',array(1));
 					API::apiKey($api_key1);
 					API::apiSignature($api_signature1);
 					API::apiUpdateNonce();
 					$query = API::send($nonce1);
 					
-					if (!$query['error'])
+					if (empty($query['error']))
 						$return['btc-deposit-address-new']['address'] = $query['BitcoinAddresses']['getNew']['results'][0];
 					else
 						$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -250,23 +253,23 @@ elseif ($endpoint == 'deposits/get') {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_view'] == 'Y') {
 				// status can be 'pending' or 'completed'
-				$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
+				$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : false;
 				$limit1 = (!$limit1) ? 10 : $limit1;
-				$status1 = strtolower(preg_replace("/[^a-zA-Z]/","",$_REQUEST['status']));
+				$status1 = (!empty($_REQUEST['status'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$_REQUEST['status'])) : false;
 				
 				if ($status1 && ($status1 != 'pending' && $status1 != 'completed' && $status1 != 'cancelled')) {
 					$return['errors'][] = array('message'=>'Invalid status.','code'=>'DEPOSIT_INVALID_STATUS');
 					$error = true;
 				}
 				
-				if (!$error) {
+				if (empty($error)) {
 					API::add('Requests','get',array(false,false,$limit1,false,strtolower($currency1),$status1,1));
 					API::apiKey($api_key1);
 					API::apiSignature($api_signature1);
 					API::apiUpdateNonce();
 					$query = API::send($nonce1);
 					
-					if (!$query['error'])
+					if (empty($query['error']))
 						$return['deposits'] = ($query['Requests']['get']['results'][0]) ? $query['Requests']['get']['results'][0] : array();
 					else
 						$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -284,9 +287,9 @@ elseif ($endpoint == 'withdrawals/get') {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_view'] == 'Y') {
 				// status can be 'pending' or 'completed'
-				$limit1 = preg_replace("/[^0-9]/","",$_REQUEST['limit']);
+				$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : false;
 				$limit1 = (!$limit1) ? 10 : $limit1;
-				$status1 = strtolower(preg_replace("/[^a-zA-Z]/","",$_REQUEST['status']));
+				$status1 = (!empty($_REQUEST['status'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$_REQUEST['status'])) : false;
 				
 				if ($status1 && ($status1 != 'pending' && $status1 != 'completed' && $status1 != 'cancelled')) {
 					$return['errors'][] = array('message'=>'Invalid status.','code'=>'DEPOSIT_INVALID_STATUS');
@@ -299,7 +302,7 @@ elseif ($endpoint == 'withdrawals/get') {
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 					
-				if (!$query['error'])
+				if (empty($query['error']))
 					$return['withdrawals'] = ($query['Requests']['get']['results'][0]) ? $query['Requests']['get']['results'][0] : array();
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -320,23 +323,23 @@ elseif ($endpoint == 'orders/new') {
 				// new orders can be many or just one, can be in json or regular array (use http_build_query on all commands)
 				// params: side(buy/sell), type(market,limit,stop), limit_price, stop_price, amount, currency
 	
-				$json = json_decode($_POST['orders'],1);
-				if (is_array($_POST['orders']))
+				$json = (!empty($_POST['orders'])) ? json_decode($_POST['orders'],1) : false;
+				if (!empty($_POST['orders']) && is_array($_POST['orders']))
 					$orders = $_POST['orders'];
 				elseif (is_array($json))
 					$orders = $json;
 				else
-					$orders[] = array('side'=>$_POST['side'],'type'=>$_POST['type'],'currency'=>strtolower($currency1),'limit_price'=>$_POST['limit_price'],'stop_price'=>$_POST['stop_price'],'amount'=>$_POST['amount']);
+					$orders[] = array('side'=>((!empty($_POST['side'])) ? $_POST['side'] : false),'type'=>((!empty($_POST['type'])) ? $_POST['type'] : false),'currency'=>strtolower($currency1),'limit_price'=>((!empty($_POST['limit_price'])) ? $_POST['limit_price'] : false),'stop_price'=>((!empty($_POST['stop_price'])) ? $_POST['stop_price'] : false),'amount'=>((!empty($_POST['amount'])) ? $_POST['amount'] : false));
 				
 				if (is_array($orders)) {
 					$i = 1;
 					foreach ($orders as $order) {
-						$order['side'] = strtolower(preg_replace("/[^a-zA-Z]/","",$order['side']));
-						$order['type'] = strtolower(preg_replace("/[^a-zA-Z]/","",$order['type']));
-						$order['currency'] = strtolower(preg_replace("/[^a-zA-Z]/","",$order['currency']));
-						$order['limit_price'] = preg_replace("/[^0-9.]/", "",$order['limit_price']);
-						$order['stop_price'] = ($order['type'] == 'stop') ? preg_replace("/[^0-9.]/", "",$order['stop_price']) : false;
-						$order['amount'] = preg_replace("/[^0-9.]/", "",$order['amount']);
+						$order['side'] = (!empty($order['side'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['side'])) : false;
+						$order['type'] = (!empty($order['type'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['type'])) : false;
+						$order['currency'] = (!empty($order['currency'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['currency'])) : false;
+						$order['limit_price'] = (!empty($order['limit_price'])) ? preg_replace("/[^0-9.]/", "",$order['limit_price']) : false;
+						$order['stop_price'] = (!empty($order['type']) && $order['type'] == 'stop') ? preg_replace("/[^0-9.]/", "",$order['stop_price']) : false;
+						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
 						
 						// preliminary validation
 						if ($order['side'] != 'buy' && $order['side'] != 'sell') {
@@ -347,7 +350,7 @@ elseif ($endpoint == 'orders/new') {
 							$return['errors'][] = array('message'=>'Invalid order type (must be market, limit or stop).','code'=>'ORDER_INVALID_TYPE');
 							continue;
 						}
-						elseif (!is_array($CFG->currencies[strtoupper($order['currency'])])) {
+						elseif (empty($CFG->currencies[strtoupper($order['currency'])])) {
 							$return['errors'][] = array('message'=>'Unsupported currency.','code'=>'INVALID_CURRENCY');
 							continue;
 						}
@@ -373,7 +376,7 @@ elseif ($endpoint == 'orders/new') {
 							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency'],1));
 							API::add('Orders','checkStopsOverBid',array($order['stop_price'],$order['currency']));
 						}
-						if (!$user_fee_both)
+						if (empty($user_fee_both))
 							API::add('FeeSchedule','getRecord',array(false,1));
 						
 						API::add('User','getAvailable');
@@ -386,7 +389,7 @@ elseif ($endpoint == 'orders/new') {
 						API::apiSignature($api_signature1);
 						$query = API::send($nonce1);
 						
-						if ($query['error']) {
+						if (!empty($query['error'])) {
 							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 							break;
 						}
@@ -396,18 +399,18 @@ elseif ($endpoint == 'orders/new') {
 							break;
 						}
 							
-						$user_fee_both = (!$user_fee_both) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
+						$user_fee_both = (empty($user_fee_both)) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
 						$user_available = $query['User']['getAvailable']['results'][0];
 						$current_bid = $query['Orders']['getCurrentBid']['results'][0];
 						$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
 						$bids = $query['Orders']['get']['results'][0];
 						$asks = $query['Orders']['get']['results'][1];
-						$self_orders = $query['Orders']['checkOutbidSelf']['results'][0][0]['price'];
-						$self_stops = $query['Orders']['checkOutbidStops']['results'][0][0]['price'];
-						$self_limits = $query['Orders']['checkStopsOverBid']['results'][0][0]['price'];
-						$self_orders_currency = $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'];
-						$self_stops_currency = $query['Orders']['checkOutbidStops']['results'][0][0]['currency'];
-						$self_limits_currency = $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'];
+						$self_orders = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
+						$self_stops = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['price'] : false;
+						$self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['price'] : false;
+						$self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
+						$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
+						$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
 						$order['limit_price'] = ($order['type'] == 'market') ? (($order['side'] == 'buy') ? $current_ask : $current_bid) : $order['limit_price'];
 							
 						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
@@ -494,22 +497,22 @@ elseif ($endpoint == 'orders/edit') {
 	if ($post) {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_orders'] == 'Y') {
-				$json = json_decode($_POST['orders'],1);
-				if (is_array($_POST['orders']))
+				$json = (!empty($_POST['orders'])) ? json_decode($_POST['orders'],1) : false;
+				if (!empty($_POST['orders']) && is_array($_POST['orders']))
 					$orders = $_POST['orders'];
 				elseif (is_array($json))
 					$orders = $json;
 				else
-					$orders[] = array('id'=>$_POST['id'],'type'=>$_POST['type'],'limit_price'=>$_POST['limit_price'],'stop_price'=>$_POST['stop_price'],'amount'=>$_POST['amount']);
+					$orders[] = array('id'=>((!empty($_POST['id'])) ? $_POST['id'] : false),'type'=>((!empty($_POST['type'])) ? $_POST['type'] : false),'limit_price'=>((!empty($_POST['limit_price'])) ? $_POST['limit_price'] : false),'stop_price'=>((!empty($_POST['stop_price'])) ? $_POST['stop_price'] : false),'amount'=>((!empty($_POST['amount'])) ? $_POST['amount'] : false));
 					
 				if (is_array($orders)) {
 					$i = 1;
 					foreach ($orders as $order) {
-						$order['id'] = preg_replace("/[^0-9]/", "",$order['id']);
-						$order['type'] = strtolower(preg_replace("/[^a-zA-Z]/","",$order['type']));
-						$order['limit_price'] = preg_replace("/[^0-9.]/", "",$order['limit_price']);
-						$order['stop_price'] = preg_replace("/[^0-9.]/", "",$order['stop_price']);
-						$order['amount'] = preg_replace("/[^0-9.]/", "",$order['amount']);
+						$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
+						$order['type'] = (!empty($order['type'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['type'])) : false;
+						$order['limit_price'] = (!empty($order['limit_price'])) ? preg_replace("/[^0-9.]/", "",$order['limit_price']) : false;
+						$order['stop_price'] = (!empty($order['stop_price'])) ? preg_replace("/[^0-9.]/", "",$order['stop_price']) : false;
+						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
 						
 						// preliminary validation
 						if ($order['type'] != 'market' && $order['type'] != 'limit' && $order['type'] != 'stop') {
@@ -537,7 +540,7 @@ elseif ($endpoint == 'orders/edit') {
 						$query = API::send($nonce1);
 						$orig_order = $query['Orders']['getRecord']['results'][0];
 						
-						if ($query['error']) {
+						if (!empty($query['error'])) {
 							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 							break;
 						}
@@ -547,7 +550,7 @@ elseif ($endpoint == 'orders/edit') {
 							break;
 						}
 						
-						if (!($orig_order['id']) > 0) {
+						if (empty($orig_order['id'])) {
 							$return['errors'][] = array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND');
 							continue;
 						}
@@ -566,7 +569,7 @@ elseif ($endpoint == 'orders/edit') {
 							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency'],1));
 							API::add('Orders','checkStopsOverBid',array($order['stop_price'],$order['currency']));
 						}
-						if (!$user_fee_both)
+						if (empty($user_fee_both))
 							API::add('FeeSchedule','getRecord',array(false,1));
 							
 						API::add('User','getAvailable');
@@ -578,18 +581,18 @@ elseif ($endpoint == 'orders/edit') {
 						API::apiSignature($api_signature1);
 						$query = API::send($nonce1);
 		
-						$user_fee_both = (!$user_fee_both) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
+						$user_fee_both = (empty($user_fee_both)) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
 						$user_available = $query['User']['getAvailable']['results'][0];
 						$current_bid = $query['Orders']['getCurrentBid']['results'][0];
 						$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
 						$bids = $query['Orders']['get']['results'][0];
 						$asks = $query['Orders']['get']['results'][1];
-						$self_orders = $query['Orders']['checkOutbidSelf']['results'][0][0]['price'];
-						$self_stops = $query['Orders']['checkOutbidStops']['results'][0][0]['price'];
-						$self_limits = $query['Orders']['checkStopsOverBid']['results'][0][0]['price'];
-						$self_orders_currency = $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'];
-						$self_stops_currency = $query['Orders']['checkOutbidStops']['results'][0][0]['currency'];
-						$self_limits_currency = $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'];
+						$self_orders = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
+						$self_stops = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['price'] : false;
+						$self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['price'] : false;
+						$self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
+						$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
+						$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
 						$order['limit_price'] = ($order['type'] == 'market') ? (($order['side'] == 'buy') ? $current_ask : $current_bid) : $order['limit_price'];
 		
 						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
@@ -674,19 +677,19 @@ elseif ($endpoint == 'orders/cancel') {
 	if ($post) {
 		if (!$invalid_signature && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_orders'] == 'Y') {
-				if (!$_POST['all']) {
-					$json = json_decode($_POST['orders'],1);
-					if (is_array($_POST['orders']))
+				if (empty($_POST['all'])) {
+					$json = (!empty($_POST['orders'])) ? json_decode($_POST['orders'],1) : false;
+					if (!empty($_POST['orders']) && is_array($_POST['orders']))
 						$orders = $_POST['orders'];
 					elseif (is_array($json))
 						$orders = $json;
 					else
-						$orders[] = array('id'=>$_POST['id']);
+						$orders[] = array('id'=>((!empty($_POST['id'])) ? $_POST['id'] : false));
 			
 					if (is_array($orders)) {
 						$i++;
 						foreach ($orders as $order) {
-							$order['id'] = preg_replace("/[^0-9]/", "",$order['id']);
+							$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
 							
 							API::add('Orders','getRecord',array(false,$order['id']));
 							API::apiKey($api_key1);
@@ -694,12 +697,12 @@ elseif ($endpoint == 'orders/cancel') {
 							$query = API::send($nonce1);
 							$orig_order = $query['Orders']['getRecord']['results'][0];
 							
-							if ($query['error']) {
+							if (!empty($query['error'])) {
 								$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 								break;
 							}
 							
-							if (!$orig_order) {
+							if (empty($orig_order)) {
 								$return['errors'][] = array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND');
 								continue;
 							}
@@ -714,7 +717,7 @@ elseif ($endpoint == 'orders/cancel') {
 							$query = API::send($nonce1);
 							$result = $query['Orders']['delete']['results'][0];
 							
-							if (!$result) {
+							if (empty($result)) {
 								$return['errors'][] = array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND');
 								continue;
 							}
@@ -746,18 +749,18 @@ elseif ($endpoint == 'orders/status') {
 	if ($post) {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_view'] == 'Y') {
-				$json = json_decode($_POST['orders'],1);
-				if (is_array($_POST['orders']))
+				$json = (!empty($_POST['orders'])) ? json_decode($_POST['orders'],1) : false;
+				if (!empty($_POST['orders']) && is_array($_POST['orders']))
 					$orders = $_POST['orders'];
 				elseif (is_array($json))
 					$orders = $json;
 				else
-					$orders[] = array('id'=>$_POST['id']);
+					$orders[] = array('id'=>((!empty($_POST['id'])) ? $_POST['id'] : false));
 				
 				if (is_array($orders)) {
 					$i = 1;
 					foreach ($orders as $order) {
-						$order['id'] = preg_replace("/[^0-9]/", "",$order['id']);
+						$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
 						
 						API::add('Orders','getStatus',array($order['id']));
 						API::apiKey($api_key1);
@@ -769,7 +772,7 @@ elseif ($endpoint == 'orders/status') {
 						$query = API::send($nonce1);
 						$result = $query['Orders']['getStatus']['results'][0];
 						
-						if ($query['error']) {
+						if (!empty($query['error'])) {
 							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 							break;
 						}
@@ -795,9 +798,9 @@ elseif ($endpoint == 'withdrawals/new') {
 	if ($post) {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_withdraw'] == 'Y') {
-				$amount1 = preg_replace("/[^0-9.]/", "",$_POST['amount']);
-				$address1 = ereg_replace("/[^\da-z]/i", "",$_POST['address']);
-				$account1 = preg_replace("/[^0-9]/", "",$_POST['account_number']);
+				$amount1 = (!empty($_POST['amount'])) ? preg_replace("/[^0-9.]/", "",$_POST['amount']) : false;
+				$address1 = (!empty($_POST['address'])) ? preg_replace("/[^\da-z]/i", "",$_POST['address']) : false;
+				$account1 = (!empty($_POST['account_number'])) ? preg_replace("/[^0-9]/", "",$_POST['account_number']) : false;
 				
 				if (!($amount1 > 0))
 					$return['errors'][] = array('message'=>Lang::string('withdraw-amount-zero'),'code'=>'WITHDRAW_INVALID_AMOUNT');
@@ -819,7 +822,7 @@ elseif ($endpoint == 'withdrawals/new') {
 							$return['errors'][] = array('message'=>Lang::string('withdrawal-suspended'),'code'=>'WITHDRAWALS_SUSPENDED');
 							$error = true;
 						}
-						elseif ($query['error']) {
+						elseif (!empty($query['error'])) {
 							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 							$error = true;
 						}
@@ -827,7 +830,7 @@ elseif ($endpoint == 'withdrawals/new') {
 							$return['errors'][] = array('message'=>Lang::string('withdraw-too-much'),'code'=>'WITHDRAW_BALANCE_TOO_LOW');
 							$error = true;
 						}
-						elseif (!$query['BitcoinAddresses']['validateAddress']['results'][0]) {
+						elseif (empty($query['BitcoinAddresses']['validateAddress']['results'][0])) {
 							$return['errors'][] = array('message'=>Lang::string('withdraw-address-invalid'),'code'=>'WITHDRAW_INVALID_ADDRESS');
 							$error = true;
 						}
@@ -848,7 +851,7 @@ elseif ($endpoint == 'withdrawals/new') {
 							$return['errors'][] = array('message'=>Lang::string('withdrawal-suspended'),'code'=>'WITHDRAWALS_SUSPENDED');
 							$error = true;
 						}
-						elseif ($query['error']) {
+						elseif (!empty($query['error'])) {
 							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
 							$error = true;
 						}
@@ -856,7 +859,7 @@ elseif ($endpoint == 'withdrawals/new') {
 							$return['errors'][] = array('message'=>Lang::string('withdraw-account-not-found'),'code'=>'WITHDRAW_INVALID_ACCOUNT');
 							$error = true;
 						}
-						elseif (!$bank_accounts[$bank_account['account_number']]) {
+						elseif (empty($bank_accounts[$bank_account['account_number']])) {
 							$return['errors'][] = array('message'=>Lang::string('withdraw-account-not-found'),'code'=>'WITHDRAW_INVALID_ACCOUNT');
 							$error = true;
 						}
@@ -866,7 +869,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						}
 					}
 					
-					if (!$error) {
+					if (empty($error)) {
 						API::add('Requests','insert',array((strtolower($currency1) == 'btc'),$CFG->currencies[strtoupper($currency1)]['id'],$amount1,$address1,$account1));
 						API::apiKey($api_key1);
 						API::apiSignature($api_signature1);

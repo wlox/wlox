@@ -51,6 +51,7 @@ class API{
 		}
 		
 		if (API::$api_key) {
+			$commands['nonce'] = $nonce;
 			$commands['api_key'] = API::$api_key;
 			$commands['api_signature'] = API::$api_signature;
 			$commands['api_update_nonce'] = API::$api_update_nonce;

@@ -10,8 +10,10 @@
 	
 	<meta charset="utf-8">
 	<meta name="keywords" content="" />
-	<meta name="description" content="<?= $meta_desc ?>" />
+
+	<meta name="description" content="<?= (!empty($meta_desc) ? $meta_desc : false) ?>" />
 	<meta name="publisher" content="WLOX White Label Open-Source Exchange" />
+
     
     <!-- Favicon --> 
 	<link rel="shortcut icon" href="images/favicon.ico">

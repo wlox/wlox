@@ -23,10 +23,10 @@ class User {
 		if (!empty($result['timeout']))
 			self::$attempts = $result['timeout'];
 		
-		if (!$result || $result['error']) {
+		if (empty($result) || !empty($result['error'])) {
 			return false;
 		}
-		elseif ($result['message']) {
+		elseif (!empty($result['message'])) {
 			$_SESSION['session_id'] = $result['session_id'];
 			$_SESSION['session_key'] = $result['session_key'];
 			$_SESSION['nonce'] = $result['nonce'];
@@ -52,7 +52,7 @@ class User {
 			return false;
 		}
 		
-		if ($result['message'] == 'awaiting-token') {
+		if (!empty($result['message']) && $result['message'] == 'awaiting-token') {
 			self::$awaiting_token = true;
 			return true;
 		}
@@ -92,16 +92,16 @@ class User {
 			Errors::add(Lang::string('security-incorrect-token'));
 			return false;
 		}
-		elseif ($result['error'] == 'security-incorrect-token' || $result['error']) {
+		elseif (!empty($result['error'])) {
 			Errors::add(Lang::string('security-incorrect-token'));
 			return false;
 		}
-		elseif (!$result || $result['error']) {
+		elseif (empty($result)) {
 			Errors::add(Lang::string('security-com-error'));
 			return false;
 		}
 		
-		if ($result['message'] == 'OK') {
+		if (!empty($result['message']) && $result['message'] == 'OK') {
 			self::$info = $result['info'];
 			self::$logged_in = true;
 			self::updateNonce();
