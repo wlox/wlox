@@ -63,30 +63,34 @@ $self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['
 $self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
 $status = $query['Status']['get']['results'][0];
 
-$user_fee_bid = (!empty($_REQUEST['buy']) && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || $_REQUEST['buy_market_price'] || !$_REQUEST['buy_amount'])) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
-$user_fee_ask = (!empty($_REQUEST['sell']) && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || $_REQUEST['sell_market_price'] || !$_REQUEST['sell_amount'])) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$user_fee_bid = (!empty($_REQUEST['buy']) && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || !empty($_REQUEST['buy_market_price']) || empty($_REQUEST['buy_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$user_fee_ask = (!empty($_REQUEST['sell']) && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 
 $buy_amount1 = (!empty($_REQUEST['buy_amount']) && $_REQUEST['buy_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : 0;
 $buy_price1 = (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
 $buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 $buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
+$buy_stop = false;
+$buy_stop_price1 = false;
 
 $sell_amount1 = (!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']) : 0;
 $sell_price1 = (!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
+$sell_stop = false;
+$sell_stop_price1 = false;
 
 if ($status['trading_status'] == 'suspended')
 	Errors::add(Lang::string('buy-trading-disabled'));
 
 if (!empty($_REQUEST['buy'])) {
-	$buy_market_price1 = preg_replace("/[^0-9]/", "",$_REQUEST['buy_market_price']);
+	$buy_market_price1 = (!empty($_REQUEST['buy_market_price']));
 	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
-	$buy_stop = preg_replace("/[^0-9]/", "",$_REQUEST['buy_stop']);
+	$buy_stop = (!empty($_REQUEST['buy_stop']));
 	$buy_stop_price1 = ($buy_stop) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : false;
-	$buy_limit = preg_replace("/[^0-9]/", "",$_REQUEST['buy_limit']);
+	$buy_limit = (!empty($_REQUEST['buy_limit']));
 	$buy_limit = (!$buy_stop && !$buy_market_price1) ? 1 : $buy_limit;
 
 	if (!($buy_amount1 > 0))
@@ -147,11 +151,11 @@ if (!empty($_REQUEST['buy'])) {
 }
 
 if (!empty($_REQUEST['sell'])) {
-	$sell_market_price1 = preg_replace("/[^0-9]/", "",$_REQUEST['sell_market_price']);
+	$sell_market_price1 = (!empty($_REQUEST['sell_market_price']));
 	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
-	$sell_stop = preg_replace("/[^0-9]/", "",$_REQUEST['sell_stop']);
+	$sell_stop = (!empty($_REQUEST['sell_stop']));
 	$sell_stop_price1 = ($sell_stop) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']) : false;
-	$sell_limit = preg_replace("/[^0-9]/", "",$_REQUEST['sell_limit']);
+	$sell_limit = (!empty($_REQUEST['sell_limit']));
 	$sell_limit = (!$sell_stop && !$sell_market_price1) ? 1 : $sell_limit;
 	
 	if (!($sell_amount1 > 0))
@@ -431,7 +435,7 @@ if (!$bypass) {
 					<form id="confirm_form" action="buy-sell.php" method="POST">
 						<input type="hidden" name="confirmed" value="1" />
 						<input type="hidden" id="cancel" name="cancel" value="" />
-						<? if ($_REQUEST['buy']) { ?>
+						<? if (!empty($_REQUEST['buy'])) { ?>
 						<div class="balances" style="margin-left:0;">
 							<div class="label"><?= Lang::string('buy-amount') ?></div>
 							<div class="amount"><?= number_format($buy_amount1,8) ?></div>

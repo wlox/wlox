@@ -6,10 +6,10 @@ if (User::isLoggedIn())
 elseif (!User::$awaiting_token)
 	Link::redirect('login.php');
 
-$token1 = preg_replace("/[^0-9]/", "",$_REQUEST['token']);
-$dont_ask1 = $_REQUEST['dont_ask'];
+$token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
+$dont_ask1 = !empty($_REQUEST['dont_ask']);
 
-if ($_REQUEST['step'] == 1) {
+if (!empty($_REQUEST['step']) && $_REQUEST['step'] == 1) {
 	if (!($token1 > 0))
 		Errors::add(Lang::string('security-no-token'));
 	
