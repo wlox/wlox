@@ -12,6 +12,7 @@ $available = $status['hot_wallet_btc'];
 $deficit = $status['deficit_btc'];
 $bitcoin->settxfee($CFG->bitcoin_sending_fee);
 $users = array();
+$transactions = array();
 
 $sql = "SELECT id, btc FROM site_users FOR UPDATE";
 $result = db_query_array($sql);
@@ -37,17 +38,17 @@ if ($result) {
 	
 	foreach ($result as $row) {
 		// check if user has enough available
-		if (bcadd($row['amount'],$users[$row['site_user']],8) > $user_balances[$row['site_user']])
+		if ((!empty($user_balances[$row['site_user']]) && !empty($users[$row['site_user']])) && bcadd($row['amount'],$users[$row['site_user']],8) > $user_balances[$row['site_user']])
 			continue;
 		
 		// check if user sending to himself
-		if ($addresses[$row['send_address']] == $row['site_user']) {
+		if (!empty($addresses[$row['send_address']]) && $addresses[$row['send_address']] == $row['site_user']) {
 			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
 			continue;
 		}
 		
 		// check if sending to another wlox user
-		if ($addresses[$row['send_address']] > 0) {
+		if (!empty($addresses[$row['send_address']])) {
 			db_update('site_users',$row['site_user'],array('btc'=>$user_balances[$row['site_user']] - $row['amount']));
 			db_update('site_users',$addresses[$row['send_address']],array('btc'=>$user_balances[$addresses[$row['send_address']]] + $row['amount']));
 			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
@@ -64,10 +65,10 @@ if ($result) {
 			continue;
 		
 		if (bcsub($row['amount'],$CFG->bitcoin_sending_fee,8) > 0) {
-			$transactions[$row['send_address']] = bcadd($row['amount'],$transactions[$row['send_address']],8);
+			$transactions[$row['send_address']] = (!empty($transactions[$row['send_address']])) ? bcadd($row['amount'],$transactions[$row['send_address']],8) : $row['amount'];
 		}
 		
-		$users[$row['site_user']] = bcadd($row['amount'],$users[$row['site_user']],8);
+		$users[$row['site_user']] = (!empty($users[$row['site_user']])) ? bcadd($row['amount'],$users[$row['site_user']],8) : $row['amount'];
 		$requests[] = $row['id'];
 		$available = bcsub($available,$row['amount'],8);
 	}
