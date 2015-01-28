@@ -39,8 +39,10 @@ INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `con
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
 (2497, 'startArea', 'a:3:{s:6:"legend";s:13:"IP Throttling";s:5:"class";s:3:"box";s:6:"height";s:0:"";}', 17, 269, 0),
 (2498, 'endArea', '', 21, 269, 0),
-(2499, 'textInput', 'a:13:{s:4:"name";s:30:"cloudflare_blacklist_timeframe";s:7:"caption";s:29:"Blacklist Timeframe (minutes)";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:7:"decimal";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 19, 269, 0),
-(2500, 'textInput', 'a:13:{s:4:"name";s:29:"cloudflare_blacklist_attempts";s:7:"caption";s:42:"Allowed Attempts per IP per Minute (int)";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:3:"int";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 20, 269, 0);
+(2499, 'textInput', 'a:13:{s:4:"name";s:30:"cloudflare_blacklist_timeframe";s:7:"caption";s:29:"Blacklist Timeframe (minutes)";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:7:"decimal";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 19, 269, 0);
+
+INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
+(2500, 'textInput', 'a:13:{s:4:"name";s:29:"cloudflare_blacklist_attempts";s:7:"caption";s:40:"Allowed Attempts per IP per Minute (int)";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:3:"int";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 20, 269, 0);
 
 UPDATE `admin_controls_methods` SET `id` = 2397,`order` = 2 WHERE `admin_controls_methods`.`id` = 2397;
 UPDATE `admin_controls_methods` SET `id` = 2398,`order` = 16 WHERE `admin_controls_methods`.`id` = 2398;
