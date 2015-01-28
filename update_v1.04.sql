@@ -74,15 +74,10 @@ ALTER TABLE app_configuration ADD `quandl_api_key` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `cron_dirroot` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `backstage_db_debug` ENUM('Y','N') NOT NULL DEFAULT 'N';
 ALTER TABLE app_configuration ADD `backstage_dirroot` VARCHAR( 255 ) NOT NULL;
-ALTER TABLE app_configuration ADD `email_notify_fiat_withdrawals` ENUM('Y','N') NOT NULL DEFAULT 'N';
-ALTER TABLE app_configuration ADD `contact_email` VARCHAR( 255 ) NOT NULL;
 
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 (443, 'last-page', 'Último', 'Last', '', 17),
 (444, 'first-page', 'Primero', 'First', '', 17);
-
-INSERT INTO `admin_pages` (`id`, `f_id`, `name`, `url`, `icon`, `order`, `page_map_reorders`, `one_record`) VALUES
-(94, 64, 'App Configuration', 'app-configuration', '', 0, 0, 'Y');
 
 INSERT INTO `admin_controls` (`id`, `page_id`, `tab_id`, `action`, `class`, `arguments`, `order`, `is_static`) VALUES
 (269, 94, 0, 'form', 'Form', 'a:10:{s:4:"name";s:17:"app_configuration";s:6:"method";s:0:"";s:5:"class";s:0:"";s:5:"table";s:17:"app_configuration";s:18:"start_on_construct";s:0:"";s:9:"go_to_url";s:0:"";s:12:"go_to_action";s:0:"";s:12:"go_to_is_tab";s:0:"";s:6:"target";s:0:"";s:14:"return_to_self";s:0:"";}', 0, 'N');
@@ -173,14 +168,5 @@ INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `con
 (2485, 'checkBox', 'a:9:{s:4:"name";s:18:"backstage_db_debug";s:7:"caption";s:16:"DB Debug On Fail";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 58, 269, 0),
 (2486, 'textInput', 'a:13:{s:4:"name";s:17:"backstage_dirroot";s:7:"caption";s:8:"Dir Root";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 59, 269, 0),
 (2487, 'endArea', '', 60, 269, 0);
-
-INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
-(2488, 'checkBox', 'a:9:{s:4:"name";s:29:"email_notify_fiat_withdrawals";s:7:"caption";s:28:"Notify user fiat withdrawals";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 14, 269, 0);
-
-INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
-(2489, 'textInput', 'a:13:{s:4:"name";s:13:"contact_email";s:7:"caption";s:18:"Contact Form Email";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 19, 269, 0);
-
-
-UPDATE `app_configuration` SET `btc_currency_id` = '28',`deposit_bitcoin_desc` = '4',`default_fee_schedule_id` = '1',`history_buy_id` = '2',`history_deposit_id` = '4',`history_login_id` = '1',`history_sell_id` = '3',`history_withdraw_id` = '5',`order_type_ask` = '2',`request_awaiting_id` = '4',`request_cancelled_id` = '3',`request_completed_id` = '2',`order_type_bid` = '1',`request_deposit_id` = '2',`request_pending_id` = '1',`request_withdrawal_id` = '1',`transactions_buy_id` = '1',`transactions_sell_id` = '2',`withdraw_fiat_desc` = '1',`withdraw_btc_desc` = '2' WHERE `app_configuration`.`id` = 1;
 
 UPDATE`status` SET `db_version` = '1.04' WHERE `status`.`id` =1;
