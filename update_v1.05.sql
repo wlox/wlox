@@ -139,8 +139,6 @@ UPDATE `admin_controls_methods` SET `id` = 2498,`order` = 21 WHERE `admin_contro
 UPDATE `admin_controls_methods` SET `id` = 2499,`order` = 19 WHERE `admin_controls_methods`.`id` = 2499;
 UPDATE `admin_controls_methods` SET `id` = 2500,`order` = 20 WHERE `admin_controls_methods`.`id` = 2500;
 
-UPDATE `app_configuration` SET `btc_currency_id` = '28',`deposit_bitcoin_desc` = '4',`default_fee_schedule_id` = '1',`history_buy_id` = '2',`history_deposit_id` = '4',`history_login_id` = '1',`history_sell_id` = '3',`history_withdraw_id` = '5',`order_type_ask` = '2',`request_awaiting_id` = '4',`request_cancelled_id` = '3',`request_completed_id` = '2',`order_type_bid` = '1',`request_deposit_id` = '2',`request_pending_id` = '1',`request_withdrawal_id` = '1',`transactions_buy_id` = '1',`transactions_sell_id` = '2',`withdraw_fiat_desc` = '1',`withdraw_btc_desc` = '2' WHERE `app_configuration`.`id` = 1;
-
 CREATE TABLE IF NOT EXISTS `site_users_access` (
   `site_user` int(10) unsigned NOT NULL,
   `start` bigint(20) unsigned NOT NULL,
