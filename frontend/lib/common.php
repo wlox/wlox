@@ -2,7 +2,7 @@
 /* Load Libraries */
 include '../cfg/cfg.php';
 include 'stdlib.php';
-include 'session.php';
+//include 'session.php';
 include 'autoload.php';
 
 if (!empty($_SERVER["HTTPS"]))
