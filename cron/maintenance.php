@@ -112,8 +112,8 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	$result = db_query_array($sql);
 	if ($result) {
 		foreach ($result as $row) {
-			$ledger[$row['currency']] = ($ledger[$row['currency']]) ? $ledger[$row['currency']] + $row['amount'] : $row['amount'];
-			$ledger[$row['currency1']] = ($ledger[$row['currency1']]) ? $ledger[$row['currency1']] - $row['amount_needed'] : ($row['amount_needed'] * -1);
+			$ledger[$row['currency']] = (!empty($ledger[$row['currency']])) ? $ledger[$row['currency']] + $row['amount'] : $row['amount'];
+			$ledger[$row['currency1']] = (!empty($ledger[$row['currency1']])) ? $ledger[$row['currency1']] - $row['amount_needed'] : ($row['amount_needed'] * -1);
 		}
 	}
 	
@@ -129,9 +129,9 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 			$sql = 'SELECT id FROM conversions WHERE currency = '.$currency.' AND is_active != "Y" LIMIT 0,1';
 			$result = db_query_array($sql);
 			if ($result)
-				db_update('conversions',$result[0]['id'],array('amount'=>$amount,'total_withdrawals'=>$withdrawals[$currency],'date1'=>date('Y-m-d H:i:s')));
+				db_update('conversions',$result[0]['id'],array('amount'=>$amount,'total_withdrawals'=>((!empty($withdrawals[$currency])) ? $withdrawals[$currency] : 0),'date1'=>date('Y-m-d H:i:s')));
 			else
-				db_insert('conversions',array('amount'=>$amount,'total_withdrawals'=>$withdrawals[$currency],'date'=>date('Y-m-d H:i:s'),'date1'=>date('Y-m-d H:i:s'),'currency'=>$currency,'is_active'=>'N','factored'=>'N'));
+				db_insert('conversions',array('amount'=>$amount,'total_withdrawals'=>((!empty($withdrawals[$currency])) ? $withdrawals[$currency] : 0),'date'=>date('Y-m-d H:i:s'),'date1'=>date('Y-m-d H:i:s'),'currency'=>$currency,'is_active'=>'N','factored'=>'N'));
 		}
 	}
 	
