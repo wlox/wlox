@@ -5,16 +5,15 @@ ALTER TABLE app_configuration ADD `cloudflare_blacklist` ENUM('Y','N') NOT NULL 
 ALTER TABLE app_configuration ADD `cloudflare_email` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE app_configuration ADD `cloudflare_blacklist_attempts` INT( 10 ) NOT NULL;
 ALTER TABLE app_configuration ADD `cloudflare_blacklist_timeframe` DOUBLE( 10, 2 ) NOT NULL;
+ALTER TABLE app_configuration ADD `email_notify_fiat_withdrawals` ENUM('Y','N') NOT NULL DEFAULT 'N';
+ALTER TABLE app_configuration ADD `contact_email` VARCHAR( 255 ) NOT NULL;
+
+INSERT INTO `admin_pages` (`id`, `f_id`, `name`, `url`, `icon`, `order`, `page_map_reorders`, `one_record`) VALUES (94, 64, 'App Configuration', 'app-configuration', '', 0, 0, 'Y');
 
 INSERT INTO `emails` (`id`, `key`, `title_en`, `title_es`, `content_en`, `content_es`) VALUES
 (24, 'bruteforce-notify', 'Multiple Failed Login Attempts', 'Múltiples Intentos de Login Incorrectos', 0x3c703e44656172205b66697273745f6e616d655d205b6c6173745f6e616d655d2c3c2f703e0d0a0d0a3c703e57652068617665206465746563746564206d756c7469706c65206661696c656420617474656d70747320746f206c6f6720696e746f20796f7572206163636f756e742e205b65786368616e67655f6e616d655d262333393b73207465616d20697320616c72656164792074616b696e672074686520617070726f707269617465206d6561737572657320746f2070726f7465637420796f7572206163636f756e742066726f6d2074686520706f74656e7469616c2061747461636b65722e205468657365206d65617375726573206d617920636175736520796f7572206163636f756e7420746f2062652074656d706f726172696c7920696e61636365737369626c652e3c2f703e0d0a0d0a3c703e496620796f7572206163636f756e742072656d61696e7320696e61636365737369626c6520666f72206d6f7265207468616e20616e20686f75722c20706c6561736520636f6e74616374206f757220737570706f7274207465616d20736f2077652063616e2074616b65206164646974696f6e616c206d656173757265732e3c2f703e0d0a0d0a3c703e4265737420726567617264732c3c2f703e0d0a0d0a3c703e5b65786368616e67655f6e616d655d20537570706f7274205465616d3c2f703e0d0a, 0x3c703e457374696d61646f205b66697273745f6e616d655d205b6c6173745f6e616d655d2c3c2f703e0d0a0d0a3c703e48656d6f732064657465637461646f206d267561637574653b6c7469706c657320696e74656e746f7320696e636f72726563746f73206465206c6f67696e2061207375206375656e74612e20456c2065717569706f206465205b65786368616e67655f6e616d655d20796120657374266161637574653b20746f6d616e646f206d656469646173206170726f70696164617320706172612070726f7465676572207375206375656e74612064656c2061677265736f722e204573746173206d65646964617320706f6472266961637574653b616e2063617573617220717565207375206375656e7461207365612074656d706f72616c6d656e746520696e616363657369626c652e3c2f703e0d0a0d0a3c703e5369207375206375656e7461207065726d616e65636520696e616363657369626c6520706f72206d266161637574653b7320646520756e6120686f72612c20706f72206661766f7220636f6e74616374652061206e75657374726f20736f706f7274652074266561637574653b636e69636f207061726120746f6d6172206d6564696461732061646963696f6e616c65732e3c2f703e0d0a0d0a3c703e4174656e74616d656e74652c3c2f703e0d0a0d0a3c703e536f706f7274652054266561637574653b636e69636f206465205b65786368616e67655f6e616d655d3c2f703e0d0a);
 
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
-<<<<<<< HEAD
-(445, 'google-recaptcha-error', 'Por favor seleccione la casilla en el Google ReCaptcha!', 'Please check the Google ReCaptcha!', '', 26),
-(446, 'google-recaptcha-connection', 'No hay conección al servicio de reCaptcha.', 'Could not connect to the reCaptcha service.', '', 26),
-(447, 'login-timeout', 'Por favor espere [timeout] antes de intentar hacer login.', 'Please wait [timeout] until your next login attempt.', '', 27);
-=======
 (445, 'google-recaptcha-error', 'Por favor seleccione la casilla en el Google ReCaptcha!', 'Please check the Google ReCaptcha!', '', 26, '', ''),
 (446, 'google-recaptcha-connection', 'No hay conección al servicio de reCaptcha.', 'Could not connect to the reCaptcha service.', '', 26, '', ''),
 (447, 'login-timeout', 'Por favor espere [timeout] antes de intentar hacer login.', 'Please wait [timeout] until your next login attempt.', '', 27, '', '');
@@ -22,7 +21,6 @@ INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`) VALUES
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES (2488, 'checkBox', 'a:9:{s:4:"name";s:29:"email_notify_fiat_withdrawals";s:7:"caption";s:28:"Notify user fiat withdrawals";s:8:"required";s:0:"";s:2:"id";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:11:"label_class";s:0:"";s:7:"checked";s:0:"";}', 14, 269, 0);
 
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES (2489, 'textInput', 'a:13:{s:4:"name";s:13:"contact_email";s:7:"caption";s:18:"Contact Form Email";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 19, 269, 0);
->>>>>>> 66b0673127555caa4318d94bf39ba232cc3b71e6
 
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
 (2491, 'field', 'a:18:{s:4:"name";s:14:"request_status";s:8:"subtable";s:14:"request_status";s:14:"header_caption";s:11:"Req. Status";s:6:"filter";s:1:"Y";s:8:"link_url";s:0:"";s:15:"subtable_fields";a:1:{s:7:"name_en";s:7:"name_en";}s:22:"subtable_fields_concat";s:0:"";s:5:"class";s:0:"";s:18:"aggregate_function";s:0:"";s:12:"thumb_amount";s:0:"";s:12:"media_amount";s:0:"";s:10:"media_size";s:0:"";s:10:"f_id_field";s:72:"history.request_id,requests.id,requests.request_status,request_status.id";s:8:"order_by";s:0:"";s:9:"order_asc";s:0:"";s:11:"link_is_tab";s:0:"";s:16:"limit_is_curdate";s:0:"";s:8:"is_media";s:0:"";}', 8, 263, 0);
