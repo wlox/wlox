@@ -5,7 +5,7 @@ $api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POS
 $api_signature1 = (!empty($_POST['signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['signature']) : false;
 $nonce1 = (!empty($_POST['nonce'])) ? preg_replace("/[^0-9]/","",$_POST['nonce']) : false;
 $CFG->language = (!empty($_POST['lang'])) ? preg_replace("/[^a-z]/","",$_POST['lang']) : false;
-$currency1 = (!empty($_POST['currency'])) ? preg_replace("/[^a-zA-Z]/","",$_REQUEST['currency']) : false;
+$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^a-zA-Z]/","",$_REQUEST['currency']) : false;
 
 $post = ($_SERVER['REQUEST_METHOD'] == 'POST');
 $endpoint = $_REQUEST['endpoint'];
