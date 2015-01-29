@@ -136,6 +136,7 @@ if (!$bypass) {
 								
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr '.$blink.'">
+							<input type="hidden" class="usd_price" value="'.number_format($bid['usd_price'],2).'" />
 							<td>'.$type.'</td>
 							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
@@ -188,6 +189,7 @@ if (!$bypass) {
 								
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr '.$blink.'">
+							<input type="hidden" class="usd_price" value="'.number_format($ask['usd_price'],2).'" />
 							<td>'.$type.'</td>
 							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
