@@ -412,11 +412,11 @@ elseif ($endpoint == 'orders/new') {
 						$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
 						$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
 						$order['limit_price'] = ($order['type'] == 'market') ? (($order['side'] == 'buy') ? $current_ask : $current_bid) : $order['limit_price'];
-							
+
 						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
 						$user_fee_bid = (($asks && $order['limit_price'] >= $asks[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
 						$user_fee_ask = (($bids && $order['limit_price'] <= $bids[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$subtotal = $order['amount'] * $order['limit_price'];
+						$subtotal = $order['amount'] * (($order['type'] == 'stop' && !($order['limit_price']) > 0) ? $order['stop_price'] : $order['limit_price']);
 						$fee_amount = ($order['side'] == 'buy') ? ($user_fee_bid * 0.01) * $subtotal : ($user_fee_ask * 0.01) * $subtotal;
 						$total = ($order['side'] == 'buy') ? $subtotal + $fee_amount : $subtotal - $fee_amount;
 						
@@ -598,10 +598,10 @@ elseif ($endpoint == 'orders/edit') {
 						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
 						$user_fee_bid = (($asks && $order['limit_price'] >= $asks[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
 						$user_fee_ask = (($bids && $order['limit_price'] <= $bids[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$subtotal = $order['amount'] * $order['limit_price'];
+						$subtotal = $order['amount'] * (($order['type'] == 'stop' && !($order['limit_price']) > 0) ? $order['stop_price'] : $order['limit_price']);
 						$fee_amount = ($order['side'] == 'buy') ? ($user_fee_bid * 0.01) * $subtotal : ($user_fee_ask * 0.01) * $subtotal;
 						$total = ($order['side'] == 'buy') ? $subtotal + $fee_amount : $subtotal - $fee_amount;
-							
+						
 						// advanced validation
 						if (($order['side'] == 'buy' && $total > $user_available[strtoupper($order['currency'])]) || ($order['side'] == 'sell' && $order['amount'] > $user_available['BTC'])) {
 							$return['errors'][] = array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW');
