@@ -21,7 +21,7 @@ class User {
 			self::$attempts = $result['attempts'];
 		
 		if (!empty($result['timeout']))
-			self::$attempts = $result['timeout'];
+			self::$timeout = $result['timeout'];
 		
 		if (empty($result) || !empty($result['error'])) {
 			return false;
