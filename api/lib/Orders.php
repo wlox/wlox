@@ -120,9 +120,12 @@ class Orders {
 		return $result[0];
 	}
 	
-	public static function getCurrentBid($currency,$currency_id=false,$absolute=false) {
+	public static function getCurrentBid($currency=false,$currency_id=false,$absolute=false) {
 		global $CFG;
 
+		if (empty($currency) && empty($currency_id))
+			return false;
+		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$usd_info = $CFG->currencies['USD'];
@@ -158,9 +161,12 @@ class Orders {
 		return $result[0]['fiat_price'];
 	}
 	
-	public static function getCurrentAsk($currency,$currency_id=false,$absolute=false) {
+	public static function getCurrentAsk($currency=false,$currency_id=false,$absolute=false) {
 		global $CFG;
 
+		if (empty($currency) && empty($currency_id))
+			return false;
+		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$usd_info = $CFG->currencies['USD'];

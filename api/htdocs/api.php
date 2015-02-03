@@ -15,7 +15,7 @@ $api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POS
 $api_signature1 = (!empty($_POST['api_signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']) : false;
 $update_nonce = false;
 
-$CFG->language = (!empty($_POST['lang'])) ? preg_replace("/[^a-z]/","",$_POST['lang']) : false;
+$CFG->language = (!empty($_POST['lang']) && in_array(strtolower($_POST['lang']),array('en','es','ru','zh'))) ? strtolower($_POST['lang']) : false;
 $CFG->client_ip = (!empty($_POST['ip'])) ? preg_replace("/[^0-9\.]/","",$_POST['ip']) : false;
 $CFG->session_id = $session_id1;
 $CFG->session_locked = false;
