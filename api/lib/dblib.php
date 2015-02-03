@@ -55,14 +55,15 @@ function db_query($query, $debug = false, $die_on_debug = true, $silent = false,
 	if (! $qid && ! $silent) {
 		if ($CFG->db_debug == 'Y') {
 			$output = "Can't execute query";
-			$output .= "<pre>" . htmlspecialchars ( $query ) . "</pre>";
+			$output .= "<pre>".$query."</pre>";
 			$output .= "MySQL Error: ".mysql_error ();
 			$output .= "Debug: ";
 			$output .= print_r(debug_backtrace (),true);
 			trigger_error($output,E_USER_ERROR);
 		} else {
-			$output = "Database error encountered";
-			$output .= print_r(func_get_args(),true);
+			$output = "Database error: ";
+			$output .= mysql_error();
+			$output .= ' '.$query;
 			trigger_error($output,E_USER_WARNING);
 		}
 	}
