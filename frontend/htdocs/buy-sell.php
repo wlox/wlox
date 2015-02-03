@@ -8,10 +8,15 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-if (!empty($_REQUEST['currency']))
+if (empty($_REQUEST) && empty($_SESSION['currency']) && !empty(User::$info['default_currency_abbr']))
+	$_SESSION['currency'] = User::$info['default_currency_abbr'];
+elseif (empty($_REQUEST) && empty($_SESSION['currency']) && empty(User::$info['default_currency_abbr']))
+	$_SESSION['currency'] = 'usd';
+elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
-elseif (empty($_SESSION['currency']))
-	$_SESSION['currency'] = (User::$info['default_currency_abbr']) ? strtolower(User::$info['default_currency_abbr']) : 'usd';
+
+if (empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
+	$_SESSION['currency'] = 'usd';
 
 if (!empty($_REQUEST['buy']) || !empty($_REQUEST['sell'])) {
 	if (empty($_SESSION["buysell_uniq"]) || empty($_REQUEST['uniq']) || !in_array($_REQUEST['uniq'],$_SESSION["buysell_uniq"]))
@@ -19,7 +24,7 @@ if (!empty($_REQUEST['buy']) || !empty($_REQUEST['sell'])) {
 }
 
 $ask_confirm = false;
-$currency1 = preg_replace("/[^a-z]/", "",$_SESSION['currency']);
+$currency1 = preg_replace("/[^a-z]/", "",strtolower($_SESSION['currency']));
 $currency_info = $CFG->currencies[strtoupper($currency1)];
 $confirmed = (!empty($_REQUEST['confirmed'])) ? $_REQUEST['confirmed'] : false;
 $cancel = (!empty($_REQUEST['cancel'])) ? $_REQUEST['cancel'] : false;
@@ -38,13 +43,15 @@ API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,
 API::add('BankAccounts','get',array($currency_info['id']));
 API::add('Status','get');
 
-if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price'])) {
+if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price']) && !empty($_REQUEST['buy_price'])) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
 	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
 }
 elseif (!empty($_REQUEST['sell']) && empty($_REQUEST['sell_market_price'])) {
-	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
-	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
+	if (!empty($_REQUEST['sell_price']))
+		API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
+	if (!empty($_REQUEST['sell_stop_price']))
+		API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }
 
 $query = API::send();
@@ -259,7 +266,7 @@ if (!$bypass) {
 							<div class="spacer"></div>
 							<div class="calc dotted">
 								<div class="label"><?= str_replace('[currency]','<span class="sell_currency_label">'.$currency_info['currency'].'</span>',Lang::string('buy-fiat-available')) ?></div>
-								<div class="value"><span class="buy_currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="buy_user_available"><?= number_format($user_available[strtoupper($currency1)],2) ?></span></div>
+								<div class="value"><span class="buy_currency_char"><?= $currency_info['fa_symbol'] ?></span><span id="buy_user_available"><?= ((!empty($user_available[strtoupper($currency1)])) ? number_format($user_available[strtoupper($currency1)],2) : '0.00') ?></span></div>
 								<div class="clear"></div>
 							</div>
 							<div class="spacer"></div>

@@ -1,5 +1,7 @@
 <?php
 chdir('..');
+
+$ajax = true;
 include '../lib/common.php';
 
 API::add('User','getAvailable');

@@ -1,9 +1,11 @@
 <?php
 chdir('..');
+
+$ajax = true;
 include '../lib/common.php';
 
 $timeframe1 = (!empty($_REQUEST['timeframe'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['timeframe']) : false;
-$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['currency']) : false;
+$currency1 = (!empty($CFG->currencies[strtoupper($_REQUEST['currency'])])) ? $_REQUEST['currency'] : 'usd';
 $action1 = (!empty($_REQUEST['action'])) ? preg_replace("/[^0-9a-zA-Z]/", "",$_REQUEST['action']) : false;
 
 if (!$action1) {

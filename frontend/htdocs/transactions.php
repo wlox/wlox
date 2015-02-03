@@ -8,7 +8,7 @@ elseif (User::$awaiting_token)
 elseif (!User::isLoggedIn())
 	Link::redirect('login.php');
 
-$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['currency']) : false;
+$currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^a-z]/", "",strtolower($_REQUEST['currency'])) : false;
 $order_by1 = (!empty($_REQUEST['order_by'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['order_by']) : false;
 $order_desc1 = (!empty($_REQUEST['order_desc'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['order_desc']) : false;
 $start_date1 = false;

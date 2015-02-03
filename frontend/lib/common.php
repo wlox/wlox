@@ -2,15 +2,21 @@
 /* Load Libraries */
 include '../cfg/cfg.php';
 include 'stdlib.php';
-//include 'session.php';
+include 'session.php';
 include 'autoload.php';
 
 if (!empty($_SERVER["HTTPS"]))
 	ini_set('session.cookie_secure',1);
 
 ini_set('session.cookie_httponly',1);
-session_start();
-session_regenerate_id(true);
+
+if (empty($ajax)) {
+	session_start();
+	session_regenerate();
+}
+else {
+	session_readonly();
+}
 
 /* Common Info */
 API::add('Lang','getTable');
@@ -34,8 +40,8 @@ $CFG->timezone_offset = $dtz->getOffset($dtz1);
 
 /* Detect Language */
 $CFG->lang_table = $query['Lang']['getTable']['results'][0];
-$lang = (!empty($_REQUEST['lang'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['lang']) : false;
-if ($lang)  {
+$lang = (!empty($_REQUEST['lang'])) ? preg_replace("/[^a-z]/", "",strtolower($_REQUEST['lang'])) : false;
+if ($lang && in_array($lang,array('en','es','ru','zh')))  {
 	$CFG->language = $lang;
 	$_SESSION['language'] = $lang;
 	if (User::isLoggedIn())

@@ -32,13 +32,15 @@ $query = API::send();
 $currency_info = $query['Currencies']['getRecord']['results'][0];
 $currency1 = strtolower($currency_info['currency']);
 
-if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price'])) {
+if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price']) && !empty($_REQUEST['buy_price'])) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
 	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
 }
 elseif (!empty($_REQUEST['sell']) && empty($_REQUEST['sell_market_price'])) {
-	API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
-	API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
+	if (!empty($_REQUEST['sell_price']))
+		API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
+	if (!empty($_REQUEST['sell_stop_price']))
+		API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }
 
 API::add('Orders','getCurrentBid',array($currency1));

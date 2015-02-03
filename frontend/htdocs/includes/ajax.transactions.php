@@ -1,8 +1,10 @@
 <?php
 chdir('..');
+
+$ajax = true;
 include '../lib/common.php';
 
-$currency1 = preg_replace("/[^a-zA-Z]/", "",$_REQUEST['currency']);
+$currency1 = (!empty($CFG->currencies[strtoupper($_REQUEST['currency'])])) ? strtolower($_REQUEST['currency']) : false;
 $type1 = preg_replace("/[^0-9]/", "",$_REQUEST['type']);
 $order_by1 = preg_replace("/[^a-z]/", "",$_REQUEST['order_by']);
 $page1 = preg_replace("/[^0-9]/", "",$_REQUEST['page']);

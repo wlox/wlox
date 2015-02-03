@@ -29,7 +29,8 @@ $total_btc_volume = $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_
 
 $referer = substr($_SERVER['HTTP_REFERER'],strrpos($_SERVER['HTTP_REFERER'],'/')+1);
 if ($referer == 'login.php' || $referer == 'verify-token.php' || $referer == 'first-login.php') {
-	$_SESSION['currency'] = strtolower(User::$info['default_currency_abbr']);
+	if (!empty(User::$info['default_currency_abbr']))
+		$_SESSION['currency'] = strtolower(User::$info['default_currency_abbr']);
 	
 	API::add('User','notifyLogin');
 	$query = API::send();

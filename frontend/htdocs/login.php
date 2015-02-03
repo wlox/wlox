@@ -15,7 +15,7 @@ if (!empty($_REQUEST['submitted'])) {
 		Errors::add(Lang::string('login-password-empty-error'));
 	}
 	
-	if ($_SESSION["register_uniq"] != $_REQUEST['uniq'])
+	if (!empty($_REQUEST['submitted']) && (empty($_SESSION["register_uniq"]) || $_SESSION["register_uniq"] != $_REQUEST['uniq']))
 		Errors::add('Page expired.');
 	
 	if (!empty(User::$attempts) && User::$attempts > 2 && !empty($CFG->google_recaptch_api_key) && !empty($CFG->google_recaptch_api_secret)) {
@@ -28,21 +28,21 @@ if (!empty($_REQUEST['submitted'])) {
 	
 	if (!is_array(Errors::$errors)) {
 		$login = User::logIn($user1,$pass1);
-		if ($login && !$login['error']) {
-			if ($login['message'] == 'awaiting-token') {
+		if ($login && empty($login['error'])) {
+			if (!empty($login['message']) && $login['message'] == 'awaiting-token') {
 			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('verify-token.php');
 			}
-			elseif ($login['message'] == 'logged-in' && $login['no_logins'] == 'Y') {
+			elseif (!empty($login['message']) && $login['message'] == 'logged-in' && $login['no_logins'] == 'Y') {
 			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('first_login.php');
 			}
-			elseif ($login['message'] == 'logged-in') {
+			elseif (!empty($login['message']) && $login['message'] == 'logged-in') {
 			    $_SESSION["register_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('account.php');
 			}
 		}
-		elseif (!$login || $login['error']) {
+		elseif (!$login || !empty($login['error'])) {
 			Errors::add(Lang::string('login-invalid-login-error'));
 		}
 	}

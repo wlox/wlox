@@ -1,8 +1,10 @@
 <?php
 chdir('..');
+
+$ajax = true;
 include '../lib/common.php';
 
-$currency1 = ereg_replace("/[^\da-z]/i", "",$_REQUEST['currency']);
+$currency1 = (!empty($CFG->currencies[strtoupper($_REQUEST['currency'])])) ? $_REQUEST['currency'] : 'usd';
 
 API::add('Stats','getCurrent',array(false,$currency1));
 $query = API::send();

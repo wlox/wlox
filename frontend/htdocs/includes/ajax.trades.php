@@ -1,8 +1,10 @@
 <?php
 chdir('..');
+
+$ajax = true;
 include '../lib/common.php';
 
-$currency1 = (array_key_exists(strtoupper($_REQUEST['currency']),$CFG->currencies)) ? $_REQUEST['currency'] : false;
+$currency1 = (array_key_exists(strtoupper($_REQUEST['currency']),$CFG->currencies)) ? strtolower($_REQUEST['currency']) : false;
 $notrades = (!empty($_REQUEST['notrades']));
 $limit = (!empty($_REQUEST['get10'])) ? 10 : 5;
 $user = (!empty($_REQUEST['user']));

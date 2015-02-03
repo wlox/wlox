@@ -418,7 +418,7 @@ if (empty($_REQUEST['bypass'])) {
         		</table>
 			</div>
 			<?= $pagination ?>
-<? if (!$_REQUEST['bypass']) { ?>
+<? if (empty($_REQUEST['bypass'])) { ?>
 		</div>
 		<div class="mar_top5"></div>
 	</div>

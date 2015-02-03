@@ -102,7 +102,6 @@ class User {
 		}
 		
 		if (!empty($result['message']) && $result['message'] == 'OK') {
-			self::$info = $result['info'];
 			self::$logged_in = true;
 			self::updateNonce();
 			return true;
