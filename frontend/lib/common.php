@@ -36,6 +36,7 @@ if (!empty($_SERVER["HTTPS"]))
 	ini_set('session.cookie_secure',1);
 
 ini_set('session.cookie_httponly',1);
+ini_set('session.cookie_path','/');
 
 if (empty($ajax)) {
 	session_start();
