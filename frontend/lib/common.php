@@ -5,6 +5,33 @@ include 'stdlib.php';
 include 'session.php';
 include 'autoload.php';
 
+$hostname = (!empty($_SERVER["HTTP_HOST"])) ? $_SERVER["HTTP_HOST"] : $_SERVER["SERVER_NAME"];
+if (!empty($hostname) && !stristr($hostname,'localhost')) {
+	$hostname = str_ireplace('www.','',$hostname);
+	
+	if (strstr($hostname,':'))
+		$hostname = substr($hostname,0,strpos($hostname,':'));
+	
+	$hostname_parts = explode('.',$hostname);
+	$c = count($hostname_parts);
+
+	if ($c > 2) {
+		if ((strlen($hostname_parts[($c - 1)]) == 2 && strlen($hostname_parts[($c - 2)]) == 3) || (strlen($hostname_parts[($c - 1)]) == 2 && strlen($hostname_parts[($c - 2)]) == 2)) {
+			if ($c > 3) {
+				print_ar($hostname_parts);
+				$hostname_parts = array_slice($hostname_parts,($c - 3));
+				$hostname = implode('.',$hostname_parts);
+			}
+		}
+		else {
+			$hostname_parts = array_slice($hostname_parts,($c - 2));
+			$hostname = implode('.',$hostname_parts);
+		}
+	}
+	
+	ini_set('session.cookie_domain','.'.$hostname);
+}
+
 if (!empty($_SERVER["HTTPS"]))
 	ini_set('session.cookie_secure',1);
 
