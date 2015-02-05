@@ -247,7 +247,6 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
 	$warm_wallet_a['address'] = $havelock_warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
-	$bitcoin->settxfee(0.00);
 	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 	$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
 	$transferred = 0;
