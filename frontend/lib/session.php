@@ -193,12 +193,10 @@ class SecureSession {
     {
     	$cookie_param = session_get_cookie_params();
         $sess_file = $this->_path . $this->_name . "_$id";
-        setcookie($this->_keyName,array(),time() - 3600,$cookie_param['path'],$cookie_param['domain'],$cookie_param['secure'],$cookie_param['httponly']);
-        setcookie($this->_keyName,array(),time() - 3600,'/','');
-        setcookie($this->_name,array(),time() - 3600,$cookie_param['path'],$cookie_param['domain'],$cookie_param['secure'],$cookie_param['httponly']);
-        setcookie($this->_name,array(),time() - 3600,'/','');
+        setcookie($this->_keyName,'',time() - 3600,$cookie_param['path'],$cookie_param['domain'],$cookie_param['secure'],$cookie_param['httponly']);
+        setcookie($this->_name,'',time() - 3600,$cookie_param['path'],$cookie_param['domain'],$cookie_param['secure'],$cookie_param['httponly']);
         unset($_COOKIE);
-	return(@unlink($sess_file));
+		return(@unlink($sess_file));
     }
     /**
      * Garbage Collector
