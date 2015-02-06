@@ -22,6 +22,7 @@ class User {
 		global $CFG;
 		
 		// IP throttling
+		/*
 		$login_attempts = 0;
 		$ip_int = ip2long($CFG->client_ip);
 		if ($ip_int) {
@@ -43,6 +44,7 @@ class User {
 			
 			db_insert('ip_access_log',array('ip'=>$ip_int,'timestamp'=>date('Y-m-d H:i:s')));
 		}
+		*/
 
 		if (!($CFG->session_id > 0))
 			return array('message'=>'not-logged-in','attempts'=>$login_attempts);
