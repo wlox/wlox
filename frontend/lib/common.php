@@ -53,6 +53,9 @@ API::add('User','verifyLogin');
 API::add('Settings','get');
 $query = API::send();
 
+if (empty($ajax))
+	API::apiUpdateNonce();
+
 /* Assign Settings To CFG */
 Settings::assign($query['Settings']['get']['results'][0]);
 

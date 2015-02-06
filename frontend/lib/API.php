@@ -48,6 +48,7 @@ class API{
 			$commands['nonce'] = ($nonce > 0) ? $nonce : $_SESSION['nonce'];
 			openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
 			$commands['signature'] = bin2hex($signature);
+			$commands['update_nonce'] = API::$api_update_nonce;
 		}
 		
 		if (API::$api_key) {
