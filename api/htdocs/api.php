@@ -30,13 +30,13 @@ $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) 
 // authenticate session
 if ($session_id1) {
 	$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
-	if ($result && $result[0]['nonce'] >= ($nonce1 + 5) && $result[0]['nonce'] <= ($nonce1 - 5)) {
+	if ($result && ($nonce1 >= ($result[0]['nonce'] + 5) || $nonce1 <= ($result[0]['nonce'] - 5))) {
 		$return['error'] = 'invalid-nonce';
 	}
 	elseif (!empty($result)) {
 		if (!empty($_POST['commands']) && openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 			User::setInfo($result[0]);
-			$update_nonce = true;
+			$update_nonce = $_POST['update_nonce'];
 			
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
 				$return['error'] = 'account-locked-or-deactivated';
