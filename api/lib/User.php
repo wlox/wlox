@@ -22,8 +22,8 @@ class User {
 		global $CFG;
 		
 		// IP throttling
-		/*
 		$login_attempts = 0;
+		/*
 		$ip_int = ip2long($CFG->client_ip);
 		if ($ip_int) {
 			$timeframe = (!empty($CFG->cloudflare_blacklist_timeframe)) ? $CFG->cloudflare_blacklist_timeframe : 15;
