@@ -120,8 +120,11 @@ class User {
 			API::add('User','logOut',array($_SESSION['session_id']));
 			API::send();
 			
+			$lang = $_SESSION['language'];
 			unset($_SESSION);
 			session_destroy();
+			session_start();
+			$_SESSION['language'] = $lang;
 			
 			self::$logged_in = false;
 			self::$info = false;
