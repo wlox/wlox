@@ -44,6 +44,13 @@
 .price-green{color:#0DD84D !important;}
 .price-red{color:#FF5151 !important;}
 
+.mobilebanner{background:url(../images/bg1.jpg) no-repeat left bottom !important;display:none;padding: 20px 0px;}
+.mobilebanner h1{color: #fff;font-family: "Open Sans",sans;font-size:45px;font-weight: bold;letter-spacing: 0;margin: 0 10px 0px 10px;padding: 0;text-shadow: none;text-transform: uppercase;}
+.mobilebanner .line{background: url("../../../../images/opacity-line.png") repeat-x scroll left top rgba(0, 0, 0, 0);height: 1px;}
+.mobilebanner .text{color: #fff;font-size: 15px;margin: 15px 10px 20px 10px;}
+
+.tp-caption.large_text_two.caption_ru {font-size: 48px;}
+
 /*------------------*/
 /*	SITE STRUCTURE
 /*------------------------------------------------------*/

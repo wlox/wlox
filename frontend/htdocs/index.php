@@ -75,11 +75,19 @@ if (!User::isLoggedIn()) {
 
                                 <!--  div class="caption lft big_white"  data-x="10" data-y="90" data-speed="900" data-start="700" data-easing="easeOutExpo">Business, Corporate, Creative &amp; Onepage Websites</div -->
                                 
-								<h1 class="caption lft large_text_two"  data-x="10" data-y="149" data-speed="900" data-start="1300" data-easing="easeOutExpo"><?= $content['title'] ?></h1>
+								<h1 class="caption lft large_text_two <?= ($CFG->language == 'ru') ? 'caption_ru' : false ?>"  data-x="10" data-y="149" data-speed="900" data-start="1300" data-easing="easeOutExpo"><?= $content['title'] ?></h1>
                                 
                                 <div class="caption lfb h_line"  data-x="10" data-y="214" data-speed="900" data-start="2000" data-easing="easeOutExpo"></div>
-                                
-                                <p class="caption lfb small_text"  data-x="10" data-y="238" data-speed="900" data-start="2700" data-easing="easeOutExpo"><?= wordwrap(strip_tags($content['content']),80,'<br/>') ?></p>
+
+                                <?php 
+                                if ($CFG->language == 'en' || $CFG->language == 'es' || empty($CFG->language))
+                                	$wordwrap = 80;
+                                elseif ($CFG->language == 'ru')
+                                	$wordwrap = 150;
+                                elseif ($CFG->language == 'zh')
+                                	$wordwrap = 150;
+                                ?>
+                                <p class="caption lfb small_text"  data-x="10" data-y="238" data-speed="900" data-start="2700" data-easing="easeOutExpo"><?= wordwrap(strip_tags($content['content']),$wordwrap,'<br/>') ?> <a class="morestuff" href="<?= Lang::url('about.php') ?>">>></a></p>
                                 
                                 <div class="caption lfb h_line"  data-x="10" data-y="344" data-speed="900" data-start="3400" data-easing="easeOutExpo"></div>
                                 

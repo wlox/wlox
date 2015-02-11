@@ -1154,8 +1154,14 @@ $(document).ready(function() {
 	
 	$('#language_selector').bind("keyup change", function(){
 		var lang = $(this).val();
-		var url = $('#url_'+'index_php'+'_'+lang).val();
-		window.location.href = url;
+		var alternate = $('[hreflang="'+lang+'"][rel="alternate"]').attr('href');
+		
+		if (typeof alternate == 'undefined') {
+			var url = window.location.pathname;
+			alternate = url.substring(url.lastIndexOf('/')+1)+'?lang='+lang;
+		}
+
+		window.location.href = alternate;
 	});
 	
 	$('#currency_selector').bind("keyup change", function(){
