@@ -13,6 +13,7 @@ $settings_change_id1 = (!empty($_POST['settings_change_id'])) ? $_REQUEST['setti
 $request_id1 = (!empty($_POST['request_id'])) ? $_REQUEST['request_id'] : false;
 $api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']) : false;
 $api_signature1 = (!empty($_POST['api_signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']) : false;
+$raw_params_json = (!empty($_POST['raw_params_json'])) ? $_POST['raw_params_json'] : false;
 $update_nonce = false;
 
 $CFG->language = (!empty($_POST['lang']) && in_array(strtolower($_POST['lang']),array('en','es','ru','zh'))) ? strtolower($_POST['lang']) : false;
@@ -30,6 +31,7 @@ $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) 
 // authenticate session
 if ($session_id1) {
 	$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+	$return['session'] = $session_id1;
 	if ($result && ($nonce1 >= ($result[0]['nonce'] + 5) || $nonce1 <= ($result[0]['nonce'] - 5))) {
 		$return['error'] = 'invalid-nonce';
 	}
@@ -60,7 +62,14 @@ if ($session_id1) {
 if ($api_key1 && $api_signature1) {
 	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'" AND api_keys.nonce <= '.$nonce1);
 	if ($result) {
-		$hash = hash_hmac('sha256',$nonce1.$result[0]['user'].$result[0]['api_key'],$result[0]['secret']);
+		if ($raw_params_json) {
+			$decoded = json_decode($raw_params_json,1);
+			$decoded['api_key'] = $result[0]['api_key'];
+			$decoded['nonce'] = intval($decoded['nonce']);
+			unset($decoded['signature']);
+		}
+		
+		$hash = hash_hmac('sha256',json_encode($decoded,JSON_NUMERIC_CHECK),$result[0]['secret']);
 		if ($api_signature1 == $hash) {
 			User::setInfo($result[0]);
 			
@@ -133,7 +142,7 @@ if ($CFG->language == 'en')
 elseif ($CFG->language == 'es')
 $CFG->lang_table_key = 'esp';
 
-if (is_array($commands)) {
+if (is_array($commands) && empty($return['error'])) {
 	foreach ($commands as $classname => $methods_arr) {
 		if (in_array($classname,$system_classes))
 			continue;
