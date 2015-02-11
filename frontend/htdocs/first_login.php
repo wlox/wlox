@@ -14,10 +14,10 @@ if (User::$info['no_logins'] != 'Y' && !$_REQUEST['settings']) {
 }
 
 if ($_REQUEST['settings']) {
-	$match = preg_match_all("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/",$_REQUEST['settings']['pass'],$matches);
-	$_REQUEST['settings']['pass'] = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_]/", "",$_REQUEST['settings']['pass']);
+	$match = preg_match_all($CFG->pass_regex,$_REQUEST['settings']['pass'],$matches);
+	$_REQUEST['settings']['pass'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass']);
 }
-
+print_ar($_REQUEST);
 API::add('User','getInfo',array($_SESSION['session_id']));
 $query = API::send();
 

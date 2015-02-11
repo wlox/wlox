@@ -56,8 +56,8 @@ if (!empty($_REQUEST['settings'])) {
 		$_REQUEST['settings']['pass2'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass2']);
 	}
 	
-	$_REQUEST['settings']['first_name'] = preg_replace("/[^\da-z  ]/i", "",$_REQUEST['settings']['first_name']);
-	$_REQUEST['settings']['last_name'] = preg_replace("/[^\da-z ]/i", "",$_REQUEST['settings']['last_name']);
+	$_REQUEST['settings']['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['settings']['first_name']);
+	$_REQUEST['settings']['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['settings']['last_name']);
 	$_REQUEST['settings']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['settings']['country']);
 	$_REQUEST['settings']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['settings']['email']);
 }
