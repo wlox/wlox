@@ -61,6 +61,31 @@ if ($result) {
 }
 db_commit();
 
+// notify pending withdrawals
+if ($CFG->email_notify_fiat_withdrawals == 'Y') {
+	$sql = 'SELECT 1 FROM requests WHERE notified = 0 AND request_type = '.$CFG->request_widthdrawal_id.' AND currency != '.$CFG->btc_currency_id.' AND request_status = '.$CFG->request_pending_id.' AND done != \'Y\' LIMIT 0,1';
+	$result = db_query_array($sql);
+	
+	if ($result) {
+		$sql = 'SELECT ROUND(SUM(requests.amount),2) AS amount, LOWER(currencies.currency) AS currency FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done != \'Y\' GROUP BY requests.currency';
+		$result = db_query_array($sql);
+		
+		if ($result) {
+			$info['pending_withdrawals'] = '';
+			foreach ($result as $row) {
+				$info['pending_withdrawals'] .= strtoupper($row['currency']).': '.$row['amount'].'<br/>';
+			}
+			
+			$CFG->language = 'en';
+			$email = SiteEmail::getRecord('pending-withdrawals');
+			Email::send($CFG->form_email,$CFG->contact_email,$email['title'],$CFG->form_email_from,false,$email['content'],$info);
+			
+			$sql = 'UPDATE requests SET notified = 1 WHERE notified = 0';
+			db_query($sql);
+		}
+	}
+}
+
 // subtract withdrawals
 db_start_transaction();
 $sql = 'SELECT site_users.*, requests.id AS request_id, requests.site_user AS site_user, LOWER(currencies.currency) AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users ON (site_users.id = requests.site_user) LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' FOR UPDATE';
