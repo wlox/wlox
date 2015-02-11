@@ -1,13 +1,31 @@
 <?php 
 include '../lib/common.php';
 
+$CFG->public_api = true;
+$post = ($_SERVER['REQUEST_METHOD'] == 'POST');
+$params_json = file_get_contents('php://input');
+
+// check if params sent as payload or http params
+if (!empty($params_json)) {
+	$decoded = json_decode($params_json,1);
+	
+	if (!empty($decoded) && is_array($decoded))
+		$_POST = $decoded;
+	
+	if (!empty($_REQUEST) && is_array($_REQUEST) && !empty($_POST) && is_array($_POST))
+		$_REQUEST = array_merge($_REQUEST,$_POST);
+	elseif (!empty($_POST))
+		$_REQUEST = $_POST;
+}
+else {
+	$params_json = json_encode($_POST,JSON_NUMERIC_CHECK);
+}
+
 $api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']) : false;
 $api_signature1 = (!empty($_POST['signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['signature']) : false;
 $nonce1 = (!empty($_POST['nonce'])) ? preg_replace("/[^0-9]/","",$_POST['nonce']) : false;
 $CFG->language = (!empty($_POST['lang'])) ? preg_replace("/[^a-z]/","",$_POST['lang']) : false;
 $currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^a-zA-Z]/","",$_REQUEST['currency']) : false;
-
-$post = ($_SERVER['REQUEST_METHOD'] == 'POST');
 $endpoint = $_REQUEST['endpoint'];
 
 $invalid_signature = false;
@@ -103,7 +121,7 @@ elseif ($endpoint == 'balances-and-info') {
 				API::add('FeeSchedule','getRecord',array(false,1));
 				API::add('Stats','getBTCTraded');
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
@@ -135,7 +153,7 @@ elseif ($endpoint == 'open-orders') {
 				API::add('Orders','get',array(false,false,false,strtolower($currency1),1,false,1,false,false,1,1));
 				API::add('Orders','get',array(false,false,false,strtolower($currency1),1,false,false,false,1,1,1));
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
@@ -168,7 +186,7 @@ elseif ($endpoint == 'user-transactions') {
 				
 				API::add('Transactions','get',array(false,false,$limit1,$currency1,1,false,strtolower($type1),false,false,1));
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
@@ -195,7 +213,7 @@ elseif ($endpoint == 'btc-deposit-address/get') {
 				
 				API::add('BitcoinAddresses','get',array(false,false,$limit1,false,false,false,1));
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 				
@@ -217,7 +235,7 @@ elseif ($endpoint == 'btc-deposit-address/new') {
 			if ($permissions['p_view'] == 'Y') {
 				API::add('BitcoinAddresses','get',array(false,false,1,1));
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				$query = API::send($nonce1);
 				$bitcoin_addresses = $query['BitcoinAddresses']['get']['results'][0];
 	
@@ -229,7 +247,7 @@ elseif ($endpoint == 'btc-deposit-address/new') {
 				if (empty($error)) {
 					API::add('BitcoinAddresses','getNew',array(1));
 					API::apiKey($api_key1);
-					API::apiSignature($api_signature1);
+					API::apiSignature($api_signature1,$params_json);
 					API::apiUpdateNonce();
 					$query = API::send($nonce1);
 					
@@ -265,7 +283,7 @@ elseif ($endpoint == 'deposits/get') {
 				if (empty($error)) {
 					API::add('Requests','get',array(false,false,$limit1,false,strtolower($currency1),$status1,1));
 					API::apiKey($api_key1);
-					API::apiSignature($api_signature1);
+					API::apiSignature($api_signature1,$params_json);
 					API::apiUpdateNonce();
 					$query = API::send($nonce1);
 					
@@ -298,7 +316,7 @@ elseif ($endpoint == 'withdrawals/get') {
 				
 				API::add('Requests','get',array(false,false,$limit1,1,strtolower($currency1),$status1,1));
 				API::apiKey($api_key1);
-				API::apiSignature($api_signature1);
+				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
 				$query = API::send($nonce1);
 					
@@ -386,7 +404,7 @@ elseif ($endpoint == 'orders/new') {
 						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,false,false,1));
 						API::add('Status','get');
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
 						
 						if (!empty($query['error'])) {
@@ -460,7 +478,7 @@ elseif ($endpoint == 'orders/new') {
 						
 						API::add('Orders','executeOrder',array(($order['side'] == 'buy'),$order['limit_price'],$order['amount'],$order['currency'],false,($order['type'] == 'market'),false,false,false,$order['stop_price'],false,1));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						
 						if (count($orders) == $i)
 							API::apiUpdateNonce();
@@ -536,7 +554,7 @@ elseif ($endpoint == 'orders/edit') {
 						API::add('Orders','getRecord',array(false,$order['id']));
 						API::add('Status','get');
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
 						$orig_order = $query['Orders']['getRecord']['results'][0];
 						
@@ -578,7 +596,7 @@ elseif ($endpoint == 'orders/edit') {
 						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,1));
 						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,false,false,1));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
 		
 						$user_fee_both = (empty($user_fee_both)) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
@@ -642,7 +660,7 @@ elseif ($endpoint == 'orders/edit') {
 							
 						API::add('Orders','executeOrder',array(($order['side'] == 'buy'),$order['limit_price'],$order['amount'],$order['currency'],false,($order['type'] == 'market'),$order['order_id'],false,false,$order['stop_price'],false,1));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						
 						if (count($orders) == $i)
 							API::apiUpdateNonce();
@@ -693,7 +711,7 @@ elseif ($endpoint == 'orders/cancel') {
 							
 							API::add('Orders','getRecord',array(false,$order['id']));
 							API::apiKey($api_key1);
-							API::apiSignature($api_signature1);
+							API::apiSignature($api_signature1,$params_json);
 							$query = API::send($nonce1);
 							$orig_order = $query['Orders']['getRecord']['results'][0];
 							
@@ -709,7 +727,7 @@ elseif ($endpoint == 'orders/cancel') {
 							
 							API::add('Orders','delete',array($orig_order['id']));
 							API::apiKey($api_key1);
-							API::apiSignature($api_signature1);
+							API::apiSignature($api_signature1,$params_json);
 							
 							if (count($orders) == $i)
 								API::apiUpdateNonce();
@@ -730,7 +748,7 @@ elseif ($endpoint == 'orders/cancel') {
 				else {
 					API::add('Orders','deleteAll');
 					API::apiKey($api_key1);
-					API::apiSignature($api_signature1);
+					API::apiSignature($api_signature1,$params_json);
 					API::apiUpdateNonce();
 					$query = API::send($nonce1);
 					$return['orders-cancel'] = $query['Orders']['deleteAll']['results'][0];
@@ -764,7 +782,7 @@ elseif ($endpoint == 'orders/status') {
 						
 						API::add('Orders','getStatus',array($order['id']));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						
 						if (count($orders) == $i)
 							API::apiUpdateNonce();
@@ -814,7 +832,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						API::add('User','getAvailable');
 						API::add('BitcoinAddresses','validateAddress',array($address1));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
 						$user_available = $query['User']['getAvailable']['results'][0];
 						
@@ -841,7 +859,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						API::add('User','getAvailable');
 						API::add('Status','get');
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
 						$bank_account = $query['BankAccounts']['getRecord']['results'][0];
 						$bank_accounts = $query['BankAccounts']['get']['results'][0];
@@ -872,7 +890,7 @@ elseif ($endpoint == 'withdrawals/new') {
 					if (empty($error)) {
 						API::add('Requests','insert',array((strtolower($currency1) == 'btc'),$CFG->currencies[strtoupper($currency1)]['id'],$amount1,$address1,$account1));
 						API::apiKey($api_key1);
-						API::apiSignature($api_signature1);
+						API::apiSignature($api_signature1,$params_json);
 						API::apiUpdateNonce();
 						$query = API::send($nonce1);
 	

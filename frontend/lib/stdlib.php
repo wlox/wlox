@@ -48,13 +48,17 @@ function session_regenerate() {
 function session_readonly() {
 	$session_path = session_save_path();
 	$session_name = session_name();
-	$session_id = preg_replace('/[^\da-z]/i','',$_COOKIE[$session_name]);
 	$session_key = 'KEY_'.$session_name;
+	
+	if (empty($session_name) || empty($session_key) || empty($_COOKIE[$session_name]) || empty($_COOKIE[$session_key]))
+		return false;
+	
+	$session_id = preg_replace('/[^\da-z]/i','',$_COOKIE[$session_name]);
 	
 	$key = false;
 	$auth = false;
 	
-	if (!file_exists($session_path.'/'.$session_name.'_'.$session_id) || empty($_COOKIE[$session_name]) || empty($_COOKIE[$session_key]))
+	if (!file_exists($session_path.'/'.$session_name.'_'.$session_id))
 		return false;
 	
 	$encoded_data = file_get_contents($session_path.'/'.$session_name.'_'.$session_id);

@@ -47,8 +47,11 @@ class User {
 			return false;
 
 		if (!empty($result['error']) || !empty($query['error']) || !isset($result)) {
-			session_destroy();
-			$_SESSION = array();
+			$session_id = session_id();
+			if (!empty($session_id)) {
+				session_destroy();
+				$_SESSION = array();
+			}
 			return false;
 		}
 		

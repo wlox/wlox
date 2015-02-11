@@ -32,74 +32,109 @@ $code['usage_example_error'] = '// Example error response
 ';
 
 $code['api_sign_javascript'] = '// Javascript Example
+	
 // Uses http://crypto-js.googlecode.com/svn/tags/3.0.2/build/rollups/hmac-sha256.js
 // ...and http://crypto-js.googlecode.com/svn/tags/3.0.2/build/components/enc-base64-min.js
 
-var hash = CryptoJS.HmacSHA256(nonce + user_id + api_key, api_secret);
-var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
-document.write(hashInBase64);
+// we add our public key and nonce to whatever parameters we are sending
+var params = {};
+params.currency = "eur";
+params.price = 200;
+params.api_key = api_key;
+params.nonce = Math.round(new Date().getTime() / 1000);
+	
+// create the signature
+var hash = CryptoJS.HmacSHA256(JSON.stringify(data), api_secret);
+var hashInBase64 = CryptoJS.enc.Hex.stringify(hash);
+	
+// add signature to request parameters
+params.signature = hashInBase64;
 ';
 
 $code['api_sign_php'] = '// PHP Example
-$signature = hash_hmac(\'sha256\', $nonce.$user_id.$api_key, $api_secret);';
+	
+// we add our public key and nonce to whatever parameters we are sending
+$commands[\'side\'] = \'sell\';
+$commands[\'type\'] = \'stop\';
+$commands[\'api_key\'] = $api_key;
+$commands[\'nonce\'] = time();
+	
+// create the signature
+$signature = hash_hmac(\'sha256\', json_encode($commands), $api_secret);
+	
+// add signature to request parameters
+$commands[\'signature\'] = $signature;
+';
 
 $code['api_sign_python'] = '# Python Example
+	
 import hashlib
 import hmac
-import base64
+	
+// we add our public key and nonce to whatever parameters we are sending
+params = {\'currency\': \'eur\', \'price\': 200, \'api_key\': api_key, \'nonce\': time.time()}
 
-message = bytes(nonce + user_id + api_key).encode(\'utf-8\')
-secret = bytes(api_secrets).encode(\'utf-8\')
-
-signature = base64.b64encode(hmac.new(secret, message, digestmod=hashlib.sha256).digest())';
+// create the signature
+message = bytes(json.dumps(params)).encode(\'utf-8\')
+secret = bytes(api_secret).encode(\'utf-8\')
+signature = hmac.new(secret, message, digestmod=hashlib.sha256).hexdigest()
+	
+// add signature to request parameters	
+params[\'signature\'] = signature	
+';
 
 $code['api_sign_c#'] = '// C# Example
+	
 using System.Security.Cryptography;
 
-namespace Test
+// we add our public key and nonce to whatever parameters we are sending
+var params1 = new List<KeyValuePair<string, int>>();
+params1.Add(new KeyValuePair<string, string>("api_key", api_key));
+params1.Add(new KeyValuePair<string, int>("nonce", (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds));
+	
+// create the signature
+JavaScriptSerializer serializer = new JavaScriptSerializer();
+var message = serializer.Serialize(params1);
+	
+secret = secret ?? "";
+var encoding = new System.Text.ASCIIEncoding();
+byte[] keyByte = encoding.GetBytes(secret);
+byte[] messageBytes = encoding.GetBytes(message);
+using (var hmacsha256 = new HMACSHA256(keyByte))
 {
-  public class MyHmac
-  {
-    private string CreateToken(string message, string secret)
-    {
-      secret = secret ?? "";
-      var encoding = new System.Text.ASCIIEncoding();
-      byte[] keyByte = encoding.GetBytes(secret);
-      byte[] messageBytes = encoding.GetBytes(message);
-      using (var hmacsha256 = new HMACSHA256(keyByte))
-      {
-        byte[] hashmessage = hmacsha256.ComputeHash(messageBytes);
-        return Convert.ToBase64String(hashmessage);
-      }
-    }
-  }
+	byte[] hashmessage = hmacsha256.ComputeHash(messageBytes);
+	var signature = BitConverter.ToString(hashmessage);
+	signature = signature.Replace("-", "");
+	
+	// add signature to request parameters
+	params1.Add(new KeyValuePair<string, string>("signature", signature));
 }
 ';
 
 $code['api_sign_java'] = '/* Java Example */
+	
 /* Dependent on Apache Commons Codec to encode in base64. */
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 
-public class ApiSecurityExample {
-  public static void main(String[] args) {
-    try {
-     String secret = "secret";
-     String message = "Message";
+/* we add our public key and nonce to whatever parameters we are sending */
+Map<String, String> params = new HashMap<String, String>();
+params.put("api_key", "demo");
+params.put("nonce", ((int) (System.currentTimeMillis() / 1000L)));
+	
+/* create the signature */
+String secret = "secret";
+String message = new JSONObject(params).toString();
 
-     Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
-     SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
-     sha256_HMAC.init(secret_key);
+Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
+SecretKeySpec secret_key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+sha256_HMAC.init(secret_key);
 
-     String hash = Base64.encodeBase64String(sha256_HMAC.doFinal(message.getBytes()));
-     System.out.println(hash);
-    }
-    catch (Exception e){
-     System.out.println("Error");
-    }
-   }
-}
+String hash = Hex.encodeHexString(sha256_HMAC.doFinal(message.getBytes()));
+
+/* add signature to request parameters */
+params.put("signature", hash);
 		
 ';
 
@@ -111,9 +146,10 @@ if ($code) {
 		$content = str_replace('['.$key.']',$sample,$content);
 	}
 }
-$content = str_replace('language-url','language-http',$content);
+//$content = str_replace('language-url','language-http',$content);
 $content = str_replace('GET','<span class="token property">GET</span>',$content);
 $content = str_replace('POST','<span class="token property">POST</span>',$content);
+$content = str_replace('PAYLOAD','<span class="token property">PAYLOAD</span>',$content);
 $content = str_replace('language-js','language-javascript',$content);
 $content = str_replace('(float)','<u>(float)</u>',$content);
 $content = str_replace('(int)','<u>(int)</u>',$content);

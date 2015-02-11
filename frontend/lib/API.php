@@ -1,6 +1,6 @@
 <?php 
 class API{
-	private static $commands,$nonce,$token,$settings_change_id,$request_id,$api_signature,$api_key,$api_update_nonce;
+	private static $commands,$nonce,$token,$settings_change_id,$request_id,$api_signature,$api_key,$api_update_nonce,$raw_params_json;
 	
 	static public function add($classname,$method,$arguments=false) {
 		API::$commands[$classname][][$method] = $arguments;
@@ -22,8 +22,9 @@ class API{
 		API::$api_key = $api_key;
 	}
 	
-	static public function apiSignature($api_signature) {
+	static public function apiSignature($api_signature,$raw_params_json) {
 		API::$api_signature = $api_signature;
+		API::$raw_params_json = $raw_params_json;
 	}
 	
 	static public function apiUpdateNonce() {
@@ -43,7 +44,7 @@ class API{
 		$commands['request_id'] = API::$request_id;
 		$commands['ip'] = self::getUserIp();
 
-		if (isset($_SESSION['session_key'])) {
+		if (isset($_SESSION['session_key']) && empty($CFG->public_api)) {
 			$commands['session_id'] = $_SESSION['session_id'];
 			$commands['nonce'] = ($nonce > 0) ? $nonce : $_SESSION['nonce'];
 			openssl_sign($commands['commands'],$signature,$_SESSION['session_key']);
@@ -55,6 +56,7 @@ class API{
 			$commands['nonce'] = $nonce;
 			$commands['api_key'] = API::$api_key;
 			$commands['api_signature'] = API::$api_signature;
+			$commands['raw_params_json'] = API::$raw_params_json;
 			$commands['api_update_nonce'] = API::$api_update_nonce;
 		}
 		
