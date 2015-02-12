@@ -291,8 +291,10 @@ class User {
 	}
 	
 	public static function disableNeverLoggedIn($pass) {
+		global $CFG;
+		
 		$pass = preg_replace($CFG->pass_regex, "",$pass);
-		if (strlen($pass) < $CFG->pass_min_chars)
+		if (!$CFG->session_active || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
 			return false;
 		
 		$pass = Encryption::hash($pass);
@@ -303,8 +305,7 @@ class User {
 		global $CFG;
 		
 		$pass = preg_replace($CFG->pass_regex, "",$pass);
-		
-		if (!$CFG->session_active || strlen($pass) < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
+		if (!$CFG->session_active || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
 			return false;
 		
 		$pass = Encryption::hash($pass);
@@ -515,7 +516,7 @@ class User {
 		if (!$update['pass'])
 			unset($update['pass']);
 
-		if (($update['pass'] && strlen($update['pass']) < $CFG->pass_min_chars) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
+		if (($update['pass'] && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
 		
 		if ($CFG->session_id) {
