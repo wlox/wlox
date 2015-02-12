@@ -48,7 +48,7 @@ else {
 if (!empty($_REQUEST['settings'])) {
 	if (!empty($_REQUEST['settings']['pass'])) {
 		$match = preg_match_all($CFG->pass_regex,$_REQUEST['settings']['pass'],$matches);
-		$too_few_chars = (strlen($_REQUEST['settings']['pass']) < $CFG->pass_min_chars);
+		$too_few_chars = (mb_strlen($_REQUEST['settings']['pass'],'utf-8') < $CFG->pass_min_chars);
 	}
 	
 	if (!empty($_REQUEST['settings']['pass'])) {

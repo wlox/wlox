@@ -13,11 +13,12 @@ if (User::$info['no_logins'] != 'Y' && !$_REQUEST['settings']) {
 	Link::redirect('account.php');
 }
 
-if ($_REQUEST['settings']) {
+if (!empty($_REQUEST['settings'])) {
 	$match = preg_match_all($CFG->pass_regex,$_REQUEST['settings']['pass'],$matches);
 	$_REQUEST['settings']['pass'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass']);
+	$too_few_chars = (mb_strlen($_REQUEST['settings']['pass'],'utf-8') < $CFG->pass_min_chars);
 }
-print_ar($_REQUEST);
+
 API::add('User','getInfo',array($_SESSION['session_id']));
 $query = API::send();
 
@@ -25,13 +26,15 @@ $personal = new Form('settings',false,false,'form1','site_users');
 $personal->verify();
 $personal->get($query['User']['getInfo']['results'][0]);
 
-if ($_REQUEST['settings'] && $_SESSION['firstlogin_uniq'] != $_REQUEST['settings']['uniq'])
+if (!empty($_REQUEST['settings']) && $_SESSION['firstlogin_uniq'] != $_REQUEST['settings']['uniq'])
 		$personal->errors[] = 'Page expired.';
 
-if ($match)
+if (!empty($match))
 	$personal->errors[] = htmlentities(str_replace('[characters]',implode(',',array_unique($matches[0])),Lang::string('login-pass-chars-error')));
+if (!empty($too_few_chars))
+	$personal->errors[] = Lang::string('login-password-error');
 
-if ($_REQUEST['settings'] && is_array($personal->errors)) {
+if (!empty($_REQUEST['settings']) && !empty($personal->errors)) {
 	$errors = array();
 	foreach ($personal->errors as $key => $error) {
 		if (stristr($error,'login-required-error')) {
@@ -46,7 +49,7 @@ if ($_REQUEST['settings'] && is_array($personal->errors)) {
 	}
 	Errors::$errors = $errors;
 }
-elseif (($_REQUEST['settings']) && !is_array($personal->errors)) {
+elseif (!empty($_REQUEST['settings']) && empty($personal->errors)) {
 	API::add('User','disableNeverLoggedIn',array($personal->info['pass']));
 	API::send();
 	
