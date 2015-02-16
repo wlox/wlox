@@ -39,7 +39,7 @@ class SiteEmail{
 		if (User::$info['id'] > 0)
 			$contact_info['user_id'] = User::$info['id'];
 		
-		return Email::send($contact_info['email'],'contact@1btcxe.com',$email['title'],$CFG->form_email_from,false,$email['content'],$contact_info);
+		return Email::send($contact_info['email'],$CFG->contact_email,$email['title'],$CFG->form_email_from,false,$email['content'],$contact_info);
 	}
 }
 ?>
