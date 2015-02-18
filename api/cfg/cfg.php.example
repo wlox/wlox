@@ -1,86 +1,8 @@
 <?php
-class object {
-}
-
+class object {}
 $CFG = new object ( );
-
 $CFG->dbhost = "";
 $CFG->dbname = "";
 $CFG->dbuser = "";
 $CFG->dbpass = "";
-
-$CFG->dirroot = "";
-$CFG->libdir = "../lib/";
-$CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
-
-require_once ("../shared2/autoload.php");
-
-/* debugging */
-$DB_DEBUG = true;
-$DB_DIE_ON_FAIL = true;
-
-db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
-
-/* Load settings and timezone */
-Settings::assign ($CFG);
-date_default_timezone_set($CFG->default_timezone);
-$dtz = new DateTimeZone($CFG->default_timezone);
-$dtz1 = new DateTime('now', $dtz);
-$CFG->timezone_offset = $dtz->getOffset($dtz1);
-$CFG->pass_regex = '/[\p{L}!@#$%&*?+-_.=| ]{8,}/';
-
-/* Currencies */
-$CFG->currencies = Currencies::get();
-
-/* Constants */
-$CFG->exchange_name = 'WLOX';
-$CFG->btc_currency_id = 28;
-$CFG->order_type_bid = 1;
-$CFG->order_type_ask = 2;
-$CFG->transactions_buy_id = 1;
-$CFG->transactions_sell_id = 2;
-$CFG->request_widthdrawal_id = 1;
-$CFG->request_pending_id = 1;
-$CFG->request_deposit_id = 2;
-$CFG->request_awaiting_id = 4;
-$CFG->request_withdrawal_id = 1;
-$CFG->request_pending_id = 1;
-$CFG->request_completed_id = 2;
-$CFG->request_cancelled_id = 3;
-$CFG->deposit_bitcoin_desc = 4;
-$CFG->withdraw_fiat_desc = 1;
-$CFG->withdraw_btc_desc = 2;
-$CFG->default_fee_schedule_id = 1;
-$CFG->mcrypt_key = '7QQvcT9Ga7R6QC3';
-$CFG->history_login_id = 1;
-$CFG->history_buy_id = 2;
-$CFG->history_sell_id = 3;
-$CFG->history_deposit_id = 4;
-$CFG->history_withdraw_id = 5;
-$CFG->cross_currency_trades = 0;
-$CFG->currency_conversion_fee = 0.025;
-
-/* Emails */
-$CFG->accounts_email = '';
-$CFG->support_email = '';
-$CFG->email_smtp_host = 'smtp.yourhost.com';
-$CFG->email_smtp_port = 465;
-$CFG->email_smtp_security = 'ssl';
-$CFG->email_smtp_username = "notifications@yourdomain.com";
-$CFG->email_smtp_password = "";
-$CFG->email_smtp_send_from = "notifications@yourdomain.com";
-
-/* Bitcoin */
-$CFG->bitcoin_username = '';
-$CFG->bitcoin_accountname = '';
-$CFG->bitcoin_passphrase = '';
-$CFG->bitcoin_host = '';
-$CFG->bitcoin_port = 8332;
-$CFG->bitcoin_protocol = 'http';
-
-/* API Keys */
-$CFG->quandl_api_key = '';
-$CFG->authy_api_key = '';
-
-
 ?>

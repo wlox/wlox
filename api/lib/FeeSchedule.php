@@ -1,6 +1,6 @@
 <?php
 class FeeSchedule {
-	function get($currency=false) {
+	public static function get($currency=false) {
 		global $CFG;
 		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
@@ -10,7 +10,7 @@ class FeeSchedule {
 		return db_query_array($sql);
 	}
 	
-	function getRecord($braket_id=false,$user=false) {
+	public static function getRecord($braket_id=false,$user=false) {
 		global $CFG;
 		
 		$braket_id = preg_replace("/[^0-9]/", "",$braket_id);

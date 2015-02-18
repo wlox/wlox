@@ -1,6 +1,6 @@
 <?php
 class Requests{
-	function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false,$public_api=false,$id=false) {
+	public static function get($count=false,$page=false,$per_page=false,$withdrawals=false,$currency=false,$status=false,$public_api=false,$id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -9,7 +9,7 @@ class Requests{
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
-		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$type = ($withdrawals) ? $CFG->request_withdrawal_id : $CFG->request_deposit_id;
 		$id = preg_replace("/[^0-9]/", "",$id);
 		
@@ -58,7 +58,7 @@ class Requests{
 			return $result[0]['total'];
 	}
 	
-	function insert($is_btc=false,$bank_account_currency=false,$amount=false,$btc_address=false,$account_number=false) {
+	public static function insert($is_btc=false,$bank_account_currency=false,$amount=false,$btc_address=false,$account_number=false) {
 		global $CFG;
 		
 		$bank_account_currency = preg_replace("/[^0-9]/", "",$bank_account_currency);
@@ -90,8 +90,8 @@ class Requests{
 				return false;
 			
 			$status = (User::$info['confirm_withdrawal_email_btc'] == 'Y' && !($CFG->token_verified || $CFG->session_api)) ? $CFG->request_awaiting_id : $CFG->request_pending_id;
-			$request_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>User::$info['id'],'currency'=>$CFG->btc_currency_id,'amount'=>$amount,'description'=>$CFG->withdraw_btc_desc,'request_status'=>$status,'request_type'=>$CFG->request_withdrawal_id,'send_address'=>$btc_address));
-			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_withdraw_id,'site_user'=>User::$info['id'],'request_id'=>$request_id,'bitcoin_address'=>$btc_address));
+			$request_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>User::$info['id'],'currency'=>$CFG->btc_currency_id,'amount'=>$amount,'description'=>$CFG->withdraw_btc_desc,'request_status'=>$status,'request_type'=>$CFG->request_withdrawal_id,'send_address'=>$btc_address,'fee'=>$CFG->bitcoin_sending_fee,'net_amount'=>($amount - $CFG->bitcoin_sending_fee)));
+			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_withdraw_id,'site_user'=>User::$info['id'],'request_id'=>$request_id,'bitcoin_address'=>$btc_address,'balance_before'=>User::$info['btc'],'balance_after'=>(User::$info['btc'] - $amount)));
 			
 			if (User::$info['confirm_withdrawal_email_btc'] == 'Y' && !($CFG->token_verified || $CFG->session_api) && $request_id > 0) {
 				$status = DB::getRecord('status',1,0,1);
@@ -104,14 +104,23 @@ class Requests{
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
 			}
+			elseif (User::$info['notify_withdraw_btc'] == 'Y') {
+		        $info['amount'] = $amount;
+		        $info['currency'] = 'BTC';
+		        $info['first_name'] = User::$info['first_name'];
+		        $info['last_name'] = User::$info['last_name'];
+		        $info['id'] = $request_id;
+		        $email = SiteEmail::getRecord('new-withdrawal');
+		        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',$amount,str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+			}
 		}
 		else {
 			if (((User::$info['verified_authy'] == 'Y'|| User::$info['verified_google'] == 'Y') && User::$info['confirm_withdrawal_2fa_bank'] == 'Y') && !($CFG->token_verified || $CFG->session_api))
 				return false;
 				
 			$status = (User::$info['confirm_withdrawal_email_bank'] == 'Y' && !($CFG->token_verified || $CFG->session_api)) ? $CFG->request_awaiting_id : $CFG->request_pending_id;
-			$request_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>User::$info['id'],'currency'=>$bank_account_currency,'amount'=>$amount,'description'=>$CFG->withdraw_fiat_desc,'request_status'=>$status,'request_type'=>$CFG->request_withdrawal_id,'account'=>$account_number));
-			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_withdraw_id,'site_user'=>User::$info['id'],'request_id'=>$request_id));
+			$request_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>User::$info['id'],'currency'=>$bank_account_currency,'amount'=>$amount,'description'=>$CFG->withdraw_fiat_desc,'request_status'=>$status,'request_type'=>$CFG->request_withdrawal_id,'account'=>$account_number,'fee'=>$CFG->fiat_withdraw_fee,'net_amount'=>($amount - $CFG->fiat_withdraw_fee)));
+			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>$CFG->client_ip,'history_action'=>$CFG->history_withdraw_id,'site_user'=>User::$info['id'],'request_id'=>$request_id,'balance_before'=>User::$info[strtolower($currency_info['currency'])],'balance_after'=>(User::$info[strtolower($currency_info['currency'])] - $amount)));
 			
 			if (User::$info['confirm_withdrawal_email_bank'] == 'Y' && !($CFG->token_verified || $CFG->session_api) && $request_id > 0) {
 				$vars = User::$info;
@@ -119,6 +128,15 @@ class Requests{
 			
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
+			}
+			elseif (User::$info['notify_withdraw_bank'] == 'Y') {
+			    $info['amount'] = number_format($amount,2);
+			    $info['currency'] = $currency_info['currency'];
+			    $info['first_name'] = User::$info['first_name'];
+			    $info['last_name'] = User::$info['last_name'];
+			    $info['id'] = $request_id;
+			    $email = SiteEmail::getRecord('new-withdrawal');
+			    Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($amount,2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 			}
 		}
 		
@@ -130,7 +148,7 @@ class Requests{
 			return $request_id;
 	}
 	
-	function emailValidate($authcode) {
+	public static function emailValidate($authcode) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -143,6 +161,16 @@ class Requests{
 			return false;
 		
 		if ($request_id > 0) {
+		    if (User::$info['notify_withdraw_bank'] == 'Y') {
+		        $currency_info = DB::getRecord('currencies',$request['currency'],0,1);
+		        $info['amount'] = $request['amount'];
+		        $info['currency'] = $currency_info['currency'];
+		        $info['first_name'] = User::$info['first_name'];
+		        $info['last_name'] = User::$info['last_name'];
+		        $info['id'] = $request_id;
+		        $email = SiteEmail::getRecord('new-withdrawal');
+		        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($request['amount'],2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+		    }
 			return db_update('requests',$request_id,array('request_status'=>$CFG->request_pending_id));
 		}
 	}

@@ -1,6 +1,6 @@
 <?php
 class BankAccounts{
-	function get($currency_id=false) {
+	public static function get($currency_id=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -19,11 +19,12 @@ class BankAccounts{
 			foreach ($result as $row) {
 				$return[$row['account_number']] = $row;
 			}
+			return $return;
 		}
-		return $return;
+		return false;
 	}
 	
-	function getRecord($id=false,$account_number=false) {
+	public static function getRecord($id=false,$account_number=false) {
 		global $CFG;
 		
 		$id = preg_replace("/[^0-9]/", "",$id);
@@ -41,7 +42,7 @@ class BankAccounts{
 			return false;
 	}
 	
-	function find($account_number) {
+	public static function find($account_number) {
 		global $CFG;
 		
 		if (!$CFG->session_active || !$account_number)
@@ -56,7 +57,7 @@ class BankAccounts{
 			return $result[0];
 	}
 	
-	function insert($account,$currency,$description=false) {
+	public static function insert($account,$currency,$description=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -69,10 +70,15 @@ class BankAccounts{
 		db_insert('bank_accounts',array('account_number'=>$account,'currency'=>$currency,'description'=>$description,'site_user'=>User::$info['id']));
 	}
 	
-	function delete($remove_id) {
+	public static function delete($remove_id) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
+			return false;
+		
+		$sql = 'SELECT id FROM bank_accounts WHERE id = '.$remove_id.' AND site_user = '.User::$info['id'];
+		$result = db_query_array($sql);
+		if (!$result)
 			return false;
 		
 		$remove_id = preg_replace("/[^0-9]/", "",$remove_id);
