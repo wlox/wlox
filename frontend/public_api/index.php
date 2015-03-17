@@ -460,7 +460,7 @@ elseif ($endpoint == 'orders/new') {
 							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-ask') : Lang::string('sell-stop-higher-bid'),'code'=>'ORDER_STOP_IN_MARKET');
 							continue;
 						}
-						elseif (($order['side'] == 'buy' && $order['type'] == 'stop' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price']) && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
+						elseif ((($order['side'] == 'buy' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price'])) && $order['type'] == 'stop' && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
 							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-price') : Lang::string('sell-stop-lower-price'),'code'=>'ORDER_STOP_OVER_LIMIT');
 							continue;
 						}
@@ -642,7 +642,7 @@ elseif ($endpoint == 'orders/edit') {
 							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-ask') : Lang::string('sell-stop-higher-bid'),'code'=>'ORDER_STOP_IN_MARKET');
 							continue;
 						}
-						elseif (($order['side'] == 'buy' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price']) && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
+						elseif ((($order['side'] == 'buy' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price'])) && $order['type'] == 'stop' && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
 							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-price') : Lang::string('sell-stop-lower-price'),'code'=>'ORDER_STOP_OVER_LIMIT');
 							continue;
 						}
