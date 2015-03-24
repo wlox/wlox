@@ -1,5 +1,5 @@
 <?php 
-include '../cfg/cfg.php';
+include '../lib/common.php';
 
 $api_key1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_key']);
 $api_signature1 = preg_replace("/[^0-9a-zA-Z]/","",$_POST['signature']);
