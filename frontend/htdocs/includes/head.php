@@ -32,7 +32,7 @@
     <!-- ######### CSS STYLES ######### -->
 	
     <link rel="stylesheet" href="css/reset.css" type="text/css" />
-	<link rel="stylesheet" href="css/style.css?v=24032015" type="text/css" />
+	<link rel="stylesheet" href="css/style.css?v=23032015" type="text/css" />
     
     <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
     

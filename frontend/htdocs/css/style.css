@@ -3,9 +3,6 @@
 /*------------------------------------------------------*/
 
 /* ----------- Logo ----------- */
-
-
-
 #trueHeader #logo{
 	float:left;
 	display:block;
@@ -13,7 +10,7 @@
 	height:34px;
 	margin-top:20px;
 	text-indent:-999em;
-	background:url(../images/logo1.png) no-repeat left bottom !important;
+	background:url(../images/logo3.png) no-repeat left bottom !important;
 }
 
 .clear{clear:both;}
