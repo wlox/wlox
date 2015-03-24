@@ -22,7 +22,7 @@ if ($_REQUEST['users_form']) {
 		if (!$response || !is_array($response1))
 			Errors::merge(Lang::string('security-com-error'));
 		
-		if ($response1['success'] == 'false')
+		if ($response1['success'] == 'false' || !$response1['success'])
 			Errors::merge($response1['errors']);
 		
 		if (!is_array(Errors::$errors)) {

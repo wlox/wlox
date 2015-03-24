@@ -70,7 +70,7 @@ if ($_REQUEST['authy_form']) {
 		if (!$response || !is_array($response1))
 			Errors::merge('Authy communication error.');
 
-		if ($response1['success'] === false)
+		if (!empty($response1['errors']) || $response1['success'] === false || $response1['success'] === 'false')
 			Errors::merge($response1['errors']);
 
 		if (!is_array(Errors::$errors)) {
