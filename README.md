@@ -173,7 +173,7 @@ When that is ready, we need to set up each file to be run by the server's cron t
 - **get_stats.php** - Every 10 minutes.
 - **maintenance.php** - Every 5 minutes.
 - **monthly_stats.php** - 0 min, 0 hrs (the very start) of the first day of every month.
-- **receive.sh** - Every minute.
+- **process_bitcoin.sh** - Every minute.
 
 
 Setting up the Bitcoind Server
