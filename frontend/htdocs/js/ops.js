@@ -1165,19 +1165,21 @@ $(document).ready(function() {
 	});
 	
 	$('#currency_selector').bind("keyup change", function(){
-		window.location.href = 'index.php?currency='+$(this).val();
+		var lang = $('#language_selector').val();
+		var url = $('#url_'+'index_php'+'_'+lang).val();
+		window.location.href = url+'?currency='+$(this).val();
 	});
 	
 	$('#fee_currency').bind("keyup change", function(){
-		window.location.href = 'fee-schedule.php?currency='+$(this).val();
-	});
-	
-	$('#language_selector').bind("keyup change", function(){
-		window.location.href = 'index.php?lang='+$(this).val();
+		var lang = $('#language_selector').val();
+		var url = $('#url_'+'fee-schedule_php'+'_'+lang).val();
+		window.location.href = url+'?currency='+$(this).val();
 	});
 	
 	$('#ob_currency').bind("keyup change", function(){
-		window.location.href = 'order-book.php?currency='+$(this).val();
+		var lang = $('#language_selector').val();
+		var url = $('#url_'+'order-book_php'+'_'+lang).val();
+		window.location.href = url+'?currency='+$(this).val();
 	});
 	
 	if ($("#transactions_timestamp").length > 0) {
