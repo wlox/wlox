@@ -60,8 +60,14 @@ if ($session_id1) {
 
 // verify api key
 if ($api_key1 && $api_signature1) {
-	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'" AND api_keys.nonce <= '.$nonce1);
-	if ($result) {
+	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'"');
+	if ($result && $nonce1 <= ($result[0]['nonce'] - 5)) {
+		$return['error'] = 'AUTH_INVALID_NONCE';
+	}
+	elseif ($result && !($result[0]['id'] > 0)) {
+		$return['error'] = 'AUTH_USER_NOT_FOUND';
+	}
+	elseif (!empty($result)) {
 		if ($raw_params_json) {
 			$decoded = json_decode($raw_params_json,1);
 			$decoded['api_key'] = $result[0]['api_key'];
