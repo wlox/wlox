@@ -67,7 +67,10 @@ class APIKeys {
 		
 		$sql = 'SELECT api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw FROM api_keys WHERE api_keys.key = "'.$api_key.'"';
 		$result = db_query_array($sql);
-		return $result[0];
+		if ($result)
+			return $result[0];
+		else
+			return array('p_view'=>'Y','p_orders'=>'Y','p_withdraw'=>'Y');
 	}
 }
 ?>
