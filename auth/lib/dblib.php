@@ -4,33 +4,56 @@ if (! isset ( $CFG->db_debug )) {
 	$CFG->db_debug = false;
 }
 
+$db_retries = 5;
+$db_timeout = 400; //milliseconds
+$db_transaction = array();
+
 function db_connect($dbhost, $dbname, $dbuser, $dbpass) {
-	global $CFG;
+	global $CFG,$dbh;
 	
-	if (! $dbh = mysql_connect ( $dbhost, $dbuser, $dbpass )) {
-		if ($CFG->db_debug == 'Y') {
-			$output = "Can't connect to $dbhost as $dbuser";
-			$output .= "MySQL Error: ".mysql_error ();
-			trigger_error($output,E_USER_ERROR);
-		} else {
-			$output = "Database error encountered";
-			trigger_error($output,E_USER_WARNING);
+	if (class_exists('PDO')) {
+		try {
+			$dbh = new PDO('mysql:host='.$dbhost.';dbname='.$dbname.';charset=utf8', $dbuser, $dbpass,array(PDO::ATTR_EMULATE_PREPARES => false,PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+		} 
+		catch (PDOException $e) {
+			if ($CFG->db_debug == 'Y') {
+				$output = "Can't connect to $dbhost as $dbuser \n";
+				$output .= "MySQL Error: ".$e->getMessage();
+				trigger_error($output,E_USER_ERROR);
+			}
+			else {
+				$output = "Database error encountered";
+				trigger_error($output,E_USER_WARNING);
+			}
+			return false;
 		}
 	}
-	
-	if (! mysql_select_db ( $dbname )) {
-		if ($CFG->db_debug == 'Y') {
-			$output = "Can't select database $dbname";
-			$output .= "MySQL Error: ".mysql_error ();
-			trigger_error($output,E_USER_ERROR);
-		} else {
-			$output = "Database error encountered";
-			trigger_error($output,E_USER_WARNING);
+	else {
+		if (! $dbh = mysql_connect ( $dbhost, $dbuser, $dbpass )) {
+			if ($CFG->db_debug == 'Y') {
+				$output = "Can't connect to $dbhost as $dbuser";
+				$output .= "MySQL Error: ".mysql_error ();
+				trigger_error($output,E_USER_ERROR);
+			} else {
+				$output = "Database error encountered";
+				trigger_error($output,E_USER_WARNING);
+			}
 		}
+		
+		if (! mysql_select_db ( $dbname )) {
+			if ($CFG->db_debug == 'Y') {
+				$output = "Can't select database $dbname";
+				$output .= "MySQL Error: ".mysql_error ();
+				trigger_error($output,E_USER_ERROR);
+			} else {
+				$output = "Database error encountered";
+				trigger_error($output,E_USER_WARNING);
+			}
+		}
+		
+		mysql_set_charset('utf8');
+		return $dbh;
 	}
-	
-	mysql_set_charset('utf8');
-	return $dbh;
 }
 
 function db_select_db($dbname) {
@@ -38,36 +61,101 @@ function db_select_db($dbname) {
 }
 
 function db_disconnect() {
-	/* disconnect from the database, we normally don't have to call this function
-	* because PHP will handle it */ 
-	
 	mysql_close ();
 }
 
-function db_query($query, $debug = false, $die_on_debug = true, $silent = false, $unbuffered = false) {
-	global $CFG;
+function db_query($query, $debug = false, $die_on_debug = true, $silent = false, $unbuffered = false,$return_resource=false) {
+	global $CFG,$dbh,$db_transaction,$db_retries,$db_timeout;
 	
-	if ($unbuffered)
-		$qid = mysql_unbuffered_query ( $query );
-	else
-		$qid = mysql_query ( $query );
-	
-	if (! $qid && ! $silent) {
-		if ($CFG->db_debug == 'Y') {
-			$output = "Can't execute query";
-			$output .= "<pre>".$query."</pre>";
-			$output .= "MySQL Error: ".mysql_error ();
-			$output .= "Debug: ";
-			$output .= print_r(debug_backtrace (),true);
-			trigger_error($output,E_USER_ERROR);
-		} else {
-			$output = "Database error: ";
-			$output .= mysql_error();
-			$output .= ' '.$query;
-			trigger_error($output,E_USER_WARNING);
+	if (class_exists('PDO')) {
+		try {
+			$qid = $dbh->query($query);
+			if ($dbh->inTransaction() && !$return_resource)
+				$db_transaction[] = $query;
 		}
+		catch (PDOException $e) {
+			if ($dbh->inTransaction()) {
+				for ($i = 1; $i <= $db_retries; $i++) {
+					usleep($db_timeout);
+					trigger_error('Transaction failed. Retrying...',E_USER_WARNING);
+					$dbh->rollBack();
+					$dbh->beginTransaction();
+					
+					try {
+						foreach ($db_transaction as $i_query) {
+							$dbh->query($i_query);
+						}
+						
+						$qid = $dbh->query($query);
+						break;
+					}
+					catch (PDOException $e) {
+						if ($i < $db_retries)
+							continue;
+						
+						db_log_error($e,$query);
+						return false;
+					}
+				}
+			}
+			else {
+				if (db_is_syntax_error()) {
+					db_log_error($e,$query);
+					return false;
+				}
+				
+				for ($i = 1; $i <= $db_retries; $i++) {
+					usleep($db_timeout);
+					trigger_error('Single query failed. Retrying...',E_USER_WARNING);
+					
+					try {
+						$qid = $dbh->query($query);
+						break;
+					}
+					catch (PDOException $e) {
+						if ($i < $db_retries)
+							continue;
+					
+						db_log_error($e,$query);
+						return false;
+					}
+				}
+			}
+		}
+		
+		if ($return_resource)
+			return $qid;
+		else {
+			if ($dbh->lastInsertId() > 0)
+				return $dbh->lastInsertId();
+			else
+				return $qid->rowCount();
+		}
+			
 	}
-	return $qid;
+	else {
+		if ($unbuffered)
+			$qid = mysql_unbuffered_query ( $query );
+		else
+			$qid = mysql_query ( $query );
+		
+		if (! $qid && ! $silent) {
+			if ($CFG->db_debug == 'Y') {
+				$output = "Can't execute query";
+				$output .= "<pre>".$query."</pre>";
+				$output .= "MySQL Error: ".mysql_error ();
+				$output .= "Debug: ";
+				$output .= print_r(debug_backtrace (),true);
+				trigger_error($output,E_USER_ERROR);
+			} else {
+				$output = "Database error: ";
+				$output .= mysql_error();
+				$output .= ' '.$query;
+				trigger_error($output,E_USER_WARNING);
+			}
+		}
+		return $qid;
+	}
 }
 
 function db_fetch_array($qid, $type = MYSQL_BOTH) {
@@ -96,42 +184,59 @@ function db_free_result($qid) {
 function db_query_array($query, $key = '', $first_record = false, $unbuffered = false, $val_field = '') {
 	global $CFG;
 	
-	$result = db_query ( $query, false, true, false, $unbuffered );
-	
-	if (!is_resource($result))
-		return false;
-	
-	$amt = db_num_rows ( $result );
-	
-	if ($amt > 100000) {
-		$params = func_get_args ();
+	if (class_exists('PDO')) {
+		$result = db_query($query,false,true,false,$unbuffered,true);
+		if (!$result)
+			return false;
 		
-		if ($CFG->db_debug == 'Y') {
-			$output = "$_SERVER[HTTP_HOST] DB Overload $amt ROWS";
-			$output .= "<pre>$query\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ) . '</pre>';
-			trigger_error($output,E_USER_ERROR);
-		}
+		$amt = $result->rowCount();
+		if (!($amt > 0))
+			return false;
+		
+		$return_arr = $result->fetchAll(PDO::FETCH_ASSOC);
+		$result->closeCursor();
+		
+		if (!empty($return_arr))
+			return $return_arr;
+		else
+			return false;
 	}
-
-	if ($key && ! $first_record)
-		while ( $row = db_fetch_array ( $result, MYSQL_ASSOC ) )
-			$return_arr [$row [$key]] = ($val_field) ? $row [$val_field] : $row;
-	else
-		while ( $row = db_fetch_array ( $result, MYSQL_ASSOC ) )
-			$return_arr [] = ($val_field) ? $row [$val_field] : $row;
-	db_free_result ( $result ); // clear memory
+	else {
+		$result = db_query($query,false,true,false,$unbuffered);
+		if (!is_resource($result))
+			return false;
+		
+		$amt = db_num_rows($result);
+		
+		if ($amt > 100000) {
+			$params = func_get_args ();
+			
+			if ($CFG->db_debug == 'Y') {
+				$output = "$_SERVER[HTTP_HOST] DB Overload $amt ROWS";
+				$output .= "<pre>$query\r\nIn " . __FILE__ . ' on Line ' . __LINE__ . "\r\n_SERVER dump:\r\n" . print_r ( $_SERVER, true ) . "\r\n_POST dump:\r\n" . print_r ( $_POST, true ) . "\r\n_GET dump:\r\n" . print_r ( $_GET, true ) . "\r\nfunc_args dump:\r\n" . print_r ( $params, true ) . "\r\ndebug_backtrace dump:\r\n" . print_r ( debug_backtrace (), true ) . '</pre>';
+				trigger_error($output,E_USER_ERROR);
+			}
+		}
 	
-
-	if ($first_record && isset ( $return_arr [0] ))
-		return $return_arr [0];
-	else if (! $first_record)
-		return @$return_arr;
-	else
-		return false;
+		if ($key && ! $first_record)
+			while ( $row = db_fetch_array ( $result, MYSQL_ASSOC ) )
+				$return_arr [$row [$key]] = ($val_field) ? $row [$val_field] : $row;
+		else
+			while ( $row = db_fetch_array ( $result, MYSQL_ASSOC ) )
+				$return_arr [] = ($val_field) ? $row [$val_field] : $row;
+		db_free_result ( $result ); // clear memory
+		
+	
+		if ($first_record && isset ( $return_arr [0] ))
+			return $return_arr [0];
+		else if (! $first_record)
+			return @$return_arr;
+		else
+			return false;
+	}
 }
 
 function db_insert($table, $info, $date = '', $ignore = false, $silent = false, $echo_sql = false, $return_bool = false, $delayed = false) {
-	
 	$ignore = ($ignore) ? 'IGNORE' : '';
 	$delayed = ($delayed) ? 'DELAYED' : '';
 	
@@ -148,22 +253,21 @@ function db_insert($table, $info, $date = '', $ignore = false, $silent = false, 
 		$vals .= 'NOW(),';
 	}
 	
-	// remove the trailing commas
 	$sql = substr ( $sql, 0, - 1 );
 	$vals = substr ( $vals, 0, - 1 );
 	$sql .= "$vals)";
-	if (! $silent) {
-		$return_val = db_query ( $sql );
-	} else {
-		$return_val = db_query ( $sql, false, false, true );
-		if (! $return_val)
-			return $return_val;
+	
+	if (class_exists('PDO')) {
+		$result = db_query($sql);
+		return $result;
 	}
-	
-	if ($return_bool)
-		return $return_val;
-	
-	return db_insert_id ();
+	else {
+		$return_val = db_query($sql);
+		if ($return_bool)
+			return $return_val;
+		
+		return db_insert_id ();
+	}
 }
 
 function db_update($table, $id, $info, $pk = 'id', $date = '') {
@@ -191,9 +295,15 @@ function db_update($table, $id, $info, $pk = 'id', $date = '') {
 		
 		$sql = substr ( $sql, 0, - 3 );
 	}
-	db_query ( $sql );
-
-	return db_affected_rows ();
+	
+	if (class_exists('PDO')) {
+		$result = db_query($sql);
+		return $result;
+	}
+	else {
+		db_query($sql);
+		return db_affected_rows ();
+	}
 }
 
 function db_delete($table, $id, $pk = 'id') {
@@ -209,159 +319,75 @@ function db_delete($table, $id, $pk = 'id') {
 		
 		$where = substr ( $where, 0, - 3 );
 	}
-	db_query ( "DELETE FROM $table WHERE $where" );
 	
-	return db_affected_rows ();
-}
-
-function db_split_keywords($keywords, $fields, $modifier = 'AND', $partial = false, $use_begin_only = false) {
-	if ($keywords) {
-		$quoted = explode ( "\\\"", $keywords );
-		
-		$ct = count ( $quoted );
-		for($i = 0; $i < $ct; $i ++) {
-			if ($i == 0 && ! $quoted [$i]) {
-				//quote came at beginning of string
-				$begin = true;
-				$i ++;
-			}
-			if ($begin) {
-				$words [] = $quoted [$i];
-			} else {
-				$phrase = explode ( " ", $quoted [$i] );
-				$ct2 = count ( $phrase );
-				for($n = 0; $n < $ct2; $n ++) {
-					if ($phrase [$n]) {
-						$words [] = $phrase [$n];
-					}
-				}
-			}
-			$begin = ! $begin;
-		}
-		
-		$ct = count ( $words );
-		for($i = 0; $i < $ct; $i ++) {
-			if ($words [$i]) {
-				$words [$i] = strtolower ( addslashes ( $words [$i] ) );
-				
-				if (($words [$i] == 'and' || $words [$i] == 'or' || $words [$i] == 'not') && $i < ($ct - 1)) {
-					if ($words [$i] == 'not') {
-						$i ++;
-						if ($sql_out) {
-							$sql_out .= " $modifier ";
-						}
-						
-						$ct2 = count ( $fields );
-						for($x = 0; $x < $ct2; $x ++) {
-							if ($x == 0) {
-								$sql_out .= "(";
-							}
-							if (! $partial) {
-								$sql_out .= "REPLACE(CONCAT(' ',$fields[$x],' '),',',' ')" . " NOT LIKE '% " . $words [$i] . " %'";
-							} else {
-								$sql_out .= "$fields[$x] NOT LIKE '" . (! $use_begin_only ? '%' : '') . $words [$i] . "%'";
-							}
-							if ($x < $ct2 - 1) {
-								$sql_out .= " $modifier ";
-							} else {
-								$sql_out .= ")";
-							}
-						}
-					} else if ($i > 0) {
-						$sql_out .= " " . strtoupper ( $words [$i] ) . " ";
-						$boolean = true;
-					}
-				} else {
-					if ($sql_out && ! $boolean) {
-						$sql_out .= " $modifier ";
-					}
-					
-					$ct2 = count ( $fields );
-					for($x = 0; $x < $ct2; $x ++) {
-						if ($x == 0) {
-							$sql_out .= "(";
-						}
-						if (! $partial) {
-							$sql_out .= "REPLACE(REPLACE(CONCAT(' ',$fields[$x],' '),'~',' '),',',' ')" . " LIKE '% " . $words [$i] . " %'";
-						} else {
-							$sql_out .= "$fields[$x] LIKE '" . (! $use_begin_only ? '%' : '') . $words [$i] . "%'";
-						}
-						if ($x < $ct2 - 1) {
-							$sql_out .= " OR ";
-						} else {
-							$sql_out .= ")";
-						}
-					}
-					$boolean = false;
-				}
-			}
-		}
+	$sql = "DELETE FROM $table WHERE $where";
+	if (class_exists('PDO')) {
+		$result = db_query($sql);
+		return $result;
 	}
-	return $sql_out;
-}
-
-function db_date($date_str, $str_format = 'm/d/Y', $invalid = '-') {
-	/* takes mysql date and/or time in the following format:
-	yyyy-mm-dd hh:mm:ss
-	and formats using the php date function
-	*/
-	if ($date_str == '' || $date_str == '0000-00-00' || $date_str == '0000-00-00 00:00:00')
-		return $invalid;
-	
-	list ( $date, $time ) = explode ( ' ', $date_str );
-	list ( $year, $month, $day ) = explode ( '-', $date );
-	list ( $hour, $minute, $second ) = explode ( ':', $time );
-	
-	return date ( $str_format, db_mktime ( ( int ) $hour, ( int ) $minute, ( int ) $second, ( int ) $month, ( int ) $day, ( int ) $year ) );
-}
-
-function db_mktime() {
-	$objArgs = func_get_args ();
-	$nCount = count ( $objArgs );
-	if ($nCount < 7) {
-		$objDate = getdate ();
-		if ($nCount < 1)
-			$objArgs [] = $objDate ["hours"];
-		if ($nCount < 2)
-			$objArgs [] = $objDate ["minutes"];
-		if ($nCount < 3)
-			$objArgs [] = $objDate ["seconds"];
-		if ($nCount < 4)
-			$objArgs [] = $objDate ["mon"];
-		if ($nCount < 5)
-			$objArgs [] = $objDate ["mday"];
-		if ($nCount < 6)
-			$objArgs [] = $objDate ["year"];
-		if ($nCount < 7)
-			$objArgs [] = - 1;
+	else {
+		db_query($sql);
+		return db_affected_rows ();
 	}
-	$nYear = $objArgs [5];
-	$nOffset = 0;
-	if ($nYear < 1970) {
-		if ($nYear < 1902)
-			return 0;
-		else if ($nYear < 1952) {
-			$nOffset = - 2650838400;
-			$objArgs [5] += 84;
-			// Apparently dates before 1942 were never DST
-			if ($nYear < 1942)
-				$objArgs [6] = 0;
-		} else {
-			$nOffset = - 883612800;
-			$objArgs [5] += 28;
-		}
-	}
-	
-	return call_user_func_array ( "mktime", $objArgs ) + $nOffset;
 }
 
 function db_start_transaction() {
-	$sql = "START TRANSACTION";
-	db_query($sql);
+	global $dbh;
+	
+	if (class_exists('PDO')) {
+		//$dbh->query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+		$dbh->query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
+		$dbh->beginTransaction();
+		$db_transaction = array();
+	}
+	else {
+		$sql = "SET TRANSACTION ISOLATION LEVEL READ COMMITTED";
+		db_query($sql);
+		$sql = "START TRANSACTION";
+		db_query($sql);
+	}
 }
 
 function db_commit() {
-	$sql = "COMMIT";
-	db_query($sql);
+	global $dbh,$db_transaction;
+	
+	if (class_exists('PDO')) {
+		$dbh->commit();
+		$db_transaction = array();
+	}
+	else {
+		$sql = "COMMIT";
+		db_query($sql);
+	}
+}
+
+function db_log_error($e,$query) {
+	global $CFG;
+	
+	if ($CFG->db_debug == 'Y') {
+		$output = "Can't execute query";
+		$output .= "<pre>".$query."</pre>";
+		$output .= "MySQL Error: ".$e->getMessage();
+		$output .= "Debug: ";
+		$output .= print_r(debug_backtrace (),true);
+		trigger_error($output,E_USER_ERROR);
+	}
+	else {
+		$output = "Database error: ";
+		$output .= $e->getMessage();
+		$output .= ' '.$query;
+		trigger_error($output,E_USER_WARNING);
+	}
+}
+
+function db_is_syntax_error() {
+	global $dbh;
+	
+	$errors = array('42S02','42000');
+	$e = $dbh->errorCode();
+	if (!$e)
+		return false;
+	
+	return in_array($e,$errors);
 }
 ?>
