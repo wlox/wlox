@@ -16,7 +16,6 @@ require_once ("lib/Email.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
-mysql_set_charset('utf8');
 
 /* Currencies */
 $CFG->currencies = Currencies::get();
