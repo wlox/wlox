@@ -390,6 +390,7 @@ class Orders {
 				".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)."
 				$executed_sql
 				AND orders.btc_price > 0
+				AND orders.site_user != ".User::$info['id']."
 				ORDER BY fiat_price $order_asc, orders.id ASC";
 	
 		if ($for_update)
