@@ -11,7 +11,6 @@ class BitcoinAddresses{
 		$page = preg_replace("/[^0-9]/", "",$page);
 		$per_page = preg_replace("/[^0-9]/", "",$per_page);
 		
-		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		$user = User::$info['id'];
