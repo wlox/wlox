@@ -1,4 +1,4 @@
-var plot;
+var plot = false;
 
 var ajax_active = false;
 $(document).ajaxStop(function() {
@@ -106,20 +106,29 @@ function graphOrders() {
 	
 	while (!ajax_active) {
 		$.getJSON("includes/ajax.graph.php?action=orders&currency="+currency,function(json_data) {
-			plot = $.plot($("#graph_orders"),[
-	            	{
-	            	 data: json_data.bids,
-	                 lines: { show: true, fill: true },
-	                 points: { show: false, fill: false },
-	                 color: '#17D6D6'
-	            	},
-	            	{
-	             	 data: json_data.asks,
-	                 lines: { show: true, fill: true },
-	                 points: { show: false, fill: false },
-	                 color: '#53DB80'
-	            	}
-	     	],
+			var series = [
+			    {
+            	 data: json_data.bids,
+                 lines: { show: true, fill: true },
+                 points: { show: false, fill: false },
+                 color: '#17D6D6'
+            	},
+            	{
+             	 data: json_data.asks,
+                 lines: { show: true, fill: true },
+                 points: { show: false, fill: false },
+                 color: '#53DB80'
+            	}
+	     	];
+			
+			if (plot) {
+				plot.setData(series);
+				plot.setupGrid();
+				plot.draw();
+				return false;
+			}
+			 
+			plot = $.plot($("#graph_orders"),series,
 	     	{
 	     		xaxis: {
 	     			tickLength: 0
