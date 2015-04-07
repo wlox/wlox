@@ -375,8 +375,8 @@ class User {
 			$result = db_query_array($sql);
 			
 			$pass1 = self::randomPassword(12);
-			$info['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$info['first_name']);
-			$info['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$info['last_name']);
+			$info['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
+			$info['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
 			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 			$info['user'] = $new_id;
 			$info['pass'] = Encryption::hash($pass1);
@@ -508,8 +508,8 @@ class User {
 			return false;
 
 		$update['pass'] = preg_replace($CFG->pass_regex, "",$info['pass']);
-		$update['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$info['first_name']);
-		$update['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$info['last_name']);
+		$update['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
+		$update['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 		$update['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
 		
