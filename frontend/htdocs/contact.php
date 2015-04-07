@@ -1,12 +1,12 @@
 <?php
 include '../lib/common.php';
 
-$_REQUEST['contact']['first_name'] = (!empty($_REQUEST['contact']['first_name'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['first_name']) : false;
-$_REQUEST['contact']['last_name'] = (!empty($_REQUEST['contact']['last_name'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['last_name']) : false;
-$_REQUEST['contact']['company'] = (!empty($_REQUEST['contact']['company'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['company']) : false;
+$_REQUEST['contact']['first_name'] = (!empty($_REQUEST['contact']['first_name'])) ? preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['contact']['first_name']) : false;
+$_REQUEST['contact']['last_name'] = (!empty($_REQUEST['contact']['last_name'])) ? preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['contact']['last_name']) : false;
+$_REQUEST['contact']['company'] = (!empty($_REQUEST['contact']['company'])) ? preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['contact']['company']) : false;
 $_REQUEST['contact']['email'] = (!empty($_REQUEST['contact']['email'])) ? preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['contact']['email']) : false;
 $_REQUEST['contact']['country'] = (!empty($_REQUEST['contact']['country'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']) : false;
-$_REQUEST['contact']['subject'] = (!empty($_REQUEST['contact']['subject'])) ? preg_replace("/[^\da-z ]/i", "",$_REQUEST['contact']['subject']) : false;
+$_REQUEST['contact']['subject'] = (!empty($_REQUEST['contact']['subject'])) ? preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['contact']['subject']) : false;
 
 if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret))
 	$_REQUEST['is_caco'] = (!empty($_REQUEST['form_name']) && empty($_REQUEST['is_caco'])) ? array('contact'=>1) : (!empty($_REQUEST['is_caco']) ? $_REQUEST['is_caco'] : false);

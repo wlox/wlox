@@ -10,7 +10,7 @@ elseif (!User::isLoggedIn())
 
 $account1 = (!empty($_REQUEST['account'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['account']) : false;
 $currency1 = (!empty($_REQUEST['currency'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['currency']) : false;
-$description1 = (!empty($_REQUEST['description'])) ? preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-\_ ]/", "",$_REQUEST['description']) : false;
+$description1 = (!empty($_REQUEST['description'])) ? preg_replace("/[^\pL 0-9a-zA-Z!@#$%&*?\.\-\_ ]/u", "",$_REQUEST['description']) : false;
 $remove_id1 = (!empty($_REQUEST['remove_id'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['remove_id']) : false;
 
 if ($account1 > 0 || $remove_id1 > 0) {
