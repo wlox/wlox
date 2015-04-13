@@ -148,7 +148,7 @@ if ($CFG->language == 'en')
 elseif ($CFG->language == 'es')
 $CFG->lang_table_key = 'esp';
 
-if (is_array($commands) && empty($return['error'])) {
+if (is_array($commands)) {
 	foreach ($commands as $classname => $methods_arr) {
 		if (in_array($classname,$system_classes))
 			continue;
