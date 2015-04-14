@@ -12,12 +12,33 @@ $result = db_query_array($sql);
 $total_btc_traded = ($result[0]['total_btc_traded']) ? $result[0]['total_btc_traded'] : '0';
 
 // determine users' monthly volume
-$sql = 'UPDATE site_users s1 JOIN transactions ON (s1.id = transactions.site_user OR s1.id = transactions.site_user1) SET s1.fee_schedule = (SELECT IF(fee_schedule.from_usd >= fee_schedule1.from_usd,fee_schedule.id, fee_schedule1.id) AS id FROM (SELECT ROUND(SUM(transactions.btc * transactions.btc_price * currencies.usd_ask),2) AS volume, site_users.id AS user_id FROM site_users LEFT JOIN transactions ON (site_users.id = transactions.site_user OR site_users.id = transactions.site_user1) LEFT JOIN currencies ON (currencies.id = transactions.currency) WHERE transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) GROUP BY site_users.id) AS volumes LEFT JOIN fee_schedule ON (volumes.volume >= fee_schedule.from_usd AND (volumes.volume <= fee_schedule.to_usd OR fee_schedule.to_usd = 0)) LEFT JOIN (SELECT id, global_btc, from_usd FROM fee_schedule WHERE global_btc <= '.$total_btc_traded.' ORDER BY global_btc DESC, from_usd ASC LIMIT 0,1) AS fee_schedule1 ON (fee_schedule1.global_btc <= '.$total_btc_traded.') WHERE volumes.user_id = s1.id GROUP BY volumes.volume)';
-$result = db_query($sql);
-$sql = 'SELECT id FROM fee_schedule ORDER BY from_usd ASC LIMIT 0,1';
+$sql = 'SELECT id, global_btc, from_usd, to_usd FROM fee_schedule ORDER BY global_btc ASC, from_usd ASC';
 $result = db_query_array($sql);
-$sql = 'UPDATE site_users SET fee_schedule = '.$result[0]['id'].' WHERE fee_schedule = 0';
-$result = db_query($sql);
+if ($result && count($result) > 1) {
+	$sql = 'SELECT ROUND(SUM(IF(transactions.id IS NOT NULL,transactions.btc * transactions.btc_price * currencies.usd_ask,transactions1.btc * transactions1.btc_price * currencies1.usd_ask)),2) AS volume, site_users.id AS user_id
+		FROM site_users
+		LEFT JOIN transactions ON (transactions.site_user = site_users.id AND transactions.date >= DATE_SUB(CURDATE(),INTERVAL 1 MONTH))
+		LEFT JOIN transactions transactions1 ON (transactions1.site_user1 = site_users.id AND transactions1.date >= DATE_SUB(CURDATE(),INTERVAL 1 MONTH))
+		LEFT JOIN currencies ON (currencies.id = transactions.currency)
+		LEFT JOIN currencies currencies1 ON (currencies1.id = transactions1.currency)
+		WHERE transactions.id IS NOT NULL OR transactions1.id IS NOT NULL
+		GROUP BY site_users.id';
+	$volumes = db_query_array($sql);
+	
+	$global_fc_id = false;
+	$fee_schedule = false;
+	if ($volumes) {
+		foreach ($volumes as $volume) {
+			foreach ($result as $row) {
+				$global_fc_id = ($row['global_btc'] <= $total_btc_traded) ? $row['id'] : $global_fc_id;
+				$fee_schedule = ($row['from_usd'] <= $volume['volume']) ? $row['id'] : $fee_schedule;
+			}
+			$fee_schedule = ($fee_schedule >= $global_fc_id) ? $fee_schedule : $global_fc_id;
+			$sql = 'UPDATE site_users JOIN transactions SET site_users.fee_schedule = '.$fee_schedule.' WHERE site_users.id = '.$volume['user_id'];
+			db_query($sql);
+		}
+	}
+}
 
 // expire settings change request
 $sql = 'DELETE FROM change_settings WHERE `date` <= ("'.date('Y-m-d H:i:s').'" - INTERVAL 1 DAY)';
