@@ -49,8 +49,8 @@ $sql = 'UPDATE requests SET request_status = '.$CFG->request_cancelled_id.' WHER
 $result = db_query($sql);
 
 // 30 day token don't ask
-$sql = 'UPDATE site_users SET dont_ask_30_days = "N" WHERE dont_ask_date <= (NOW() - INTERVAL 1 MONTH) AND dont_ask_30_days = "Y" ';
-$result = db_query($sql);
+//$sql = 'UPDATE site_users SET dont_ask_30_days = "N" WHERE dont_ask_date <= (NOW() - INTERVAL 1 MONTH) AND dont_ask_30_days = "Y" ';
+//$result = db_query($sql);
 
 // delete old sessions
 $sql = "DELETE FROM sessions WHERE session_time < ('".date('Y-m-d H:i:s')."' - INTERVAL 15 MINUTE) ";
