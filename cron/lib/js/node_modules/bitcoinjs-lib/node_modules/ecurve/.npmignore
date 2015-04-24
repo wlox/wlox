@@ -1,0 +1,6 @@
+.gitignore
+test/
+.DS_Store
+component.json
+bower.json
+coverage/
