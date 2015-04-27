@@ -6,7 +6,7 @@ ALTER TABLE app_configuration ADD `deposit_fiat_desc` VARCHAR( 255 ) NOT NULL;
 
 
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
-(2446, 'textInput', 'a:13:{s:4:"name";s:17:"crypto_capital_pk";s:7:"caption";s:26:"Crypto Capital Private Key";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 45, 269, 0),
+(2504, 'textInput', 'a:13:{s:4:"name";s:17:"crypto_capital_pk";s:7:"caption";s:26:"Crypto Capital Private Key";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 45, 269, 0),
 (2503, 'textInput', 'a:13:{s:4:"name";s:17:"deposit_fiat_desc";s:7:"caption";s:21:"Deposit Fiat Desc. ID";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 76, 269, 0);
 
 
