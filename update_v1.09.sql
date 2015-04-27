@@ -3,6 +3,7 @@ ALTER TABLE app_configuration ADD `crypto_capital_pk` VARCHAR( 255 ) NOT NULL;
 ALTER TABLE `orders` ADD INDEX (`market_price`);
 ALTER TABLE `requests` ADD INDEX (`notified`);
 ALTER TABLE app_configuration ADD `deposit_fiat_desc` VARCHAR( 255 ) NOT NULL;
+UPDATE `app_configuration` SET `deposit_fiat_desc` = '3' WHERE `id` = 1;
 
 
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
