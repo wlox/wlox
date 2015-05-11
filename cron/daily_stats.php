@@ -11,22 +11,11 @@ $sql = "INSERT INTO historical_data (`date`,usd) (SELECT '".(date('Y-m-d',strtot
 $result = db_query($sql);
 
 // get total of each currency
-$currencies = Currencies::get();
-foreach ($currencies as $currency) {
-	$totals[] = 'SUM('.strtolower($currency['currency']).' * '.$currency['usd_ask'].') AS '.strtolower($currency['currency']);
-}
-$sql = 'SELECT COUNT(id) AS total_users, SUM(btc) AS btc, '.implode(',',$totals).' FROM site_users';
+$sql = 'SELECT COUNT(DISTINCT site_users.id) AS total_users, SUM(IF(site_users_balances.currency = '.$CFG->btc_currency_id.',site_users_balances.balance,0)) AS btc, SUM(IF(site_users_balances.currency != '.$CFG->btc_currency_id.',site_users_balances.balance * currencies.usd_ask,0)) AS usd FROM site_users LEFT JOIN site_users_balances ON (site_users.id = site_users_balances.site_user) LEFT JOIN currencies ON (currencies.id = site_users_balances.currency)';
 $result = db_query_array($sql);
-if ($result[0]) {
-	$total_usd = 0;
-	foreach ($result[0] as $currency => $amount) {
-		if ($currency == 'total_users')
-			$total_users = $amount;
-		elseif ($currency == 'btc') 
-			$total_btc = $amount;
-		else
-			$total_usd += $amount;
-	}
+if ($result) {
+	$total_btc = $result[0]['btc'];
+	$total_usd = $result[0]['usd'];
 	$btc_per_user = $total_btc / $total_users;
 	$usd_per_user = $total_usd / $total_users;
 }

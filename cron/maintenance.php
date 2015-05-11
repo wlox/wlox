@@ -67,17 +67,8 @@ $sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
-		if ($row['order_type'] == $CFG->order_type_bid) {
-			$price = Orders::getCurrentAsk($row['currency']);
-			$buy = true;
-		}
-		else {
-			$price = Orders::getCurrentBid($row['currency']);
-			$buy = false;
-		}
-		
-		if ($price > 0)
-			$operations = Orders::executeOrder($buy,$price,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user'],1);
+		$buy = ($row['order_type'] == $CFG->order_type_bid);
+		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user'],1);
 	}
 }
 db_commit();
@@ -109,14 +100,14 @@ if ($CFG->email_notify_fiat_withdrawals == 'Y') {
 
 // subtract withdrawals
 db_start_transaction();
-$sql = 'SELECT site_users.*, requests.id AS request_id, requests.site_user AS site_user, LOWER(currencies.currency) AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users ON (site_users.id = requests.site_user) LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' FOR UPDATE';
+$sql = 'SELECT site_users_balances.balance AS balance, site_users_balances.id AS balance_id, requests.id AS request_id, requests.site_user AS site_user, requests.currency AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users_balances ON (site_users_balances.id = requests.site_user AND site_users_balances.currency = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' FOR UPDATE';
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		if (empty($old_balance[$row['site_user']][$row['currency']]))
 			$old_balance[$row['site_user']][$row['currency']] = $row[$row['currency']];
 		
-		$sql = 'UPDATE site_users SET '.$row['currency'].' = '.$row['currency'].' - '.$row['amount'].' WHERE id = '.$row['site_user'];
+		$sql = 'UPDATE site_users_balances SET balance = balance - '.$row['amount'].' WHERE id = '.$row['balance_id'];
 		db_query($sql);
 		
 		$sql = 'UPDATE history SET balance_before = '.$old_balance[$row['site_user']][$row['currency']].', balance_after = '.($old_balance[$row['site_user']][$row['currency']] - $row['amount']).' WHERE request_id = '.$row['request_id'];
