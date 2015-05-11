@@ -4,6 +4,14 @@ class User {
 	
 	public static function setInfo($info) {
 		User::$info = $info;
+		if (!empty($info['id'])) {
+			$balances = self::getBalances($info['id']);
+			if ($balances) {
+				foreach ($balances as $row) {
+					User::$info[strtolower($row['currency_abbr'])] = $row['balance'];
+				}
+			}
+		}
 	}
 	
 	public static function getInfo($session_id=false) {
@@ -16,6 +24,81 @@ class User {
 	
 		$result = db_query_array('SELECT site_users.first_name,site_users.last_name,site_users.country,site_users.email, site_users.default_currency FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id);
 		return $result[0];
+	}
+	
+	// currency_id can be array of ids
+	public static function getBalances($user_id,$currencies=false,$for_update=false) {
+		global $CFG;
+		
+		if (!($user_id > 0))
+			return false;
+		
+		$sql = 'SELECT site_users_balances.*, currencies.currency AS currency_abbr FROM site_users_balances LEFT JOIN currencies ON (site_users_balances.currency = currencies.id) WHERE site_users_balances.site_user = '.$user_id.' ';
+		if (!is_array($currencies) && $currencies > 0)
+			$sql .= ' AND site_users_balances.currency = '.$currencies;
+		else if (is_array($currencies)) {
+			$sub_sql = array();
+			foreach ($currencies as $id) {
+				$sub_sql[] = ' site_users_balances.currency = '.$id;
+			}
+			$sql .= ' AND ('.implode(' OR ',$sub_sql).')';
+		}
+		if ($for_update)
+			$sql .= ' FOR UPDATE';
+		
+		$result = db_query_array($sql);
+		if (!$result)
+			return false;
+		
+		if (!empty($currencies)) {
+			$sorted = array();
+			foreach ($result as $row) {
+				$sorted[strtolower($row['currency_abbr'])] = $row['balance'];
+			}
+			return $sorted;
+		}
+		else
+			return $result;
+	}
+	
+	public static function updateBalances($user_id,$currencies_balances) {
+		global $CFG;
+		
+		if (!($user_id > 0) || empty($currencies_balances) || !is_array($currencies_balances))
+			return false;
+		
+		$currencies_str = '(CASE currency ';
+		$currency_ids = array();
+		foreach ($currencies_balances as $curr_abbr => $balance) {
+			$curr_info = $CFG->currencies[strtoupper($curr_abbr)];
+			$currencies_str .= ' WHEN '.$curr_info['id'].' THEN '.$balance.' ';
+			$currency_ids[] = $curr_info['id'];
+		}
+		$currencies_str .= ' END)';
+		
+		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
+		$result = db_query($sql);
+		
+		if ($result && $result < count($currencies_balances)) {
+			$sql = 'SELECT currency FROM site_users_balances WHERE site_user = '.$user_id;
+			$result = db_query_array($sql);
+			$existing = array();
+			if ($result) {
+				foreach ($result as $row) {
+					$existing[] = $row['currency'];
+				}
+			}
+			
+			foreach ($currencies_balances as $curr_abbr => $balance) {
+				$curr_info = $CFG->currencies[strtoupper($curr_abbr)];
+				if (in_array($curr_info['id'],$existing))
+					continue;
+				
+				$sql = 'INSERT INTO site_users_balances (balance,site_user,currency) VALUES ('.$balance.','.$user_id.','.$curr_info['id'].') ';
+				$result = db_query($sql);
+			}
+		}
+		return $result;
 	}
 	
 	public static function verifyLogin() {
@@ -114,18 +197,18 @@ class User {
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
-	public static function getOnHold($for_update=false,$user_id=false) {
+	public static function getOnHold($for_update=false,$user_id=false,$user_fee=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
 		
-		$user_info = ($user_id > 0) ? DB::getRecord('site_users',$user_id,0,1,false,false,false,$for_update) : User::$info;
-		$user_fee = FeeSchedule::getRecord($user_info['fee_schedule']);
-		$lock = ($for_update) ? 'FOR UPDATE' : '';
+		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
+		$user_fee = (is_array($user_fee)) ? $user_fee : FeeSchedule::getUserFees($user_id);
+		$lock = ($for_update) ? 'LOCK IN SHARE MODE' : '';
 		$on_hold = array();
 	
-		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_info['id']." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
+		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_id." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
@@ -141,7 +224,7 @@ class User {
 			}
 		}
 	
-		$sql = " SELECT currencies.currency AS currency, orders.fiat AS amount, orders.btc AS btc_amount, orders.order_type AS type FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE orders.site_user = ".$user_info['id']." ".$lock;
+		$sql = " SELECT currencies.currency AS currency, orders.fiat AS amount, orders.btc AS btc_amount, orders.order_type AS type FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE orders.site_user = ".$user_id." ".$lock;
 		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
@@ -185,6 +268,9 @@ class User {
 			$available['BTC'] = User::$info['btc'] - $on_hold;
 			$available['BTC'] = ($available['BTC'] < 0.00000001) ? 0 : $available['BTC'];
 			foreach ($CFG->currencies as $currency) {
+				if ($currency['currency'] == 'BTC')
+					continue;
+				
 				if (empty(User::$info[strtolower($currency['currency'])]))
 					continue;
 					
@@ -507,7 +593,7 @@ class User {
 		if (!is_array($info))
 			return false;
 
-		$update['pass'] = preg_replace($CFG->pass_regex, "",$info['pass']);
+		$update['pass'] = (!empty($info['pass'])) ? preg_replace($CFG->pass_regex, "",$info['pass']) : false;
 		$update['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
 		$update['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
 		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
