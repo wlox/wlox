@@ -13,6 +13,7 @@ require_once ("lib/Settings.php");
 require_once ("lib/SiteEmail.php");
 require_once ("lib/Email.php");
 require_once ("lib/FeeSchedule.php");
+require_once ("lib/Lang.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);

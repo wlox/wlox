@@ -93,7 +93,7 @@ class Orders {
 		
 	}
 	
-	public static function getRecord($order_id,$order_log_id=false) {
+	public static function getRecord($order_id,$order_log_id=false,$user_id=false,$for_update=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
@@ -101,14 +101,25 @@ class Orders {
 		
 		$order_id = preg_replace("/[^0-9]/", "",$order_id);
 		$order_log_id = preg_replace("/[^0-9]/", "",$order_log_id);
+		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
 		
 		if (!($order_id > 0 || $order_log_id > 0))
 			return false;
 		
-		if ($order_id > 0) 
-			$sql = "SELECT * FROM orders WHERE id = $order_id AND site_user = ".User::$info['id'];
-		else
-			$sql = "SELECT orders.*, currencies.currency AS currency_abbr FROM orders LEFT JOIN order_log ON (order_log.id = orders.log_id) LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE order_log.id = $order_log_id AND order_log.site_user = ".User::$info['id'];
+		if ($order_id > 0) {
+			$sql = "SELECT * FROM orders WHERE id = $order_id";
+			if ($user_id)
+				$sql .= ' AND site_user = '.$user_id;
+		}
+		else {
+			$sql = "SELECT orders.*, currencies.currency AS currency_abbr FROM orders LEFT JOIN order_log ON (order_log.id = orders.log_id) LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE order_log.id = $order_log_id ";
+			if ($user_id)
+				$sql .= ' AND order_log.site_user = '.$user_id;
+		}
+		
+		$sql .= ' LIMIT 0,1 ';
+		if ($for_update)
+			$sql .= ' FOR UPDATE';
 		
 		$result = db_query_array($sql);
 		
@@ -386,6 +397,82 @@ class Orders {
 		return $result;
 	}
 	
+	public static function checkUserOrders($buy,$currency_info,$user_id,$price,$stop_price,$fee) {
+		global $CFG;
+
+		$type = (!$buy) ? $CFG->order_type_bid : $CFG->order_type_ask;
+		$usd_field = 'usd_ask';
+		$comparison = ($buy) ? '<=' : '>=';
+		$conv_comp = (!$buy) ? '-' : '+';
+		$usd_info = $CFG->currencies['USD'];
+		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
+		
+		$sql = 'SELECT orders.currency,';
+		$sql .= (($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * $conversion),2)" : 'orders.btc_price')." AS price, ";
+		
+		if ($buy && $price > 0)
+			$sql .= (($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.stop_price,orders.stop_price * $conversion),2)" : 'orders.stop_price')." AS stop_price, ";
+		
+		$sql .= " 1 FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id)
+				WHERE orders.order_type = $type AND (";
+		
+		$conditions = array();
+		if ($price > 0)
+			$conditions[] = " (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion)),2)" : 'orders.btc_price')." $comparison $price AND orders.btc_price > 0) ";
+		if ($buy && $price > 0)
+			$conditions[] =	" (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.stop_price,orders.stop_price * $conversion),2)" : 'orders.stop_price')." >= $price AND orders.stop_price > 0) ";
+		elseif ($stop_price > 0)
+			$conditions[] = " (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion)),2)" : 'orders.btc_price')." <= $stop_price AND orders.btc_price > 0) ";
+		
+		$sql .= implode(' OR ',$conditions).") ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." AND orders.site_user = $user_id";
+		
+		$result = db_query_array($sql);
+		if ($result) {
+			if ($result[0]['price'] > 0 && (!$stop_price || $result[0]['price'] > $stop_price))
+				return array('error'=>array('message'=>Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $result[0]['currency']) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($result[0]['price'],2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_OUTBID_SELF'));
+			elseif ($buy && !empty($result[0]['stop_price']))
+				return array('error'=>array('message'=>Lang::string('buy-limit-under-stops').(($currency_info['id'] != $result[0]['currency']) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($result[0]['stop_price'],2),' '.Lang::string('limit-min-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS'));
+			elseif (!$buy && $result[0]['price'] > 0 && $stop_price && $result[0]['price'] <= $stop_price)
+				return array('error'=>array('message'=>Lang::string('sell-limit-under-stops').(($currency_info['id'] != $result[0]['currency']) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($result[0]['price'],2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS'));
+		}
+		
+		return false;
+	}
+	
+	public static function checkPreconditions($buy,$currency_info,$amount,$price,$stop_price,$fee,$user_available,$current_bid,$current_ask,$market_price,$user_id,$orig_order=false) {
+		global $CFG;
+		
+		$subtotal = $amount * (($stop_price > 0 && !($price) > 0) ? $stop_price : $price);
+		$fee_amount = ($fee * 0.01) * $subtotal;
+		$total = ($buy) ? $subtotal + $fee_amount : $subtotal - $fee_amount;
+		$edit_old_fiat = ($orig_order) ? ($orig_order['btc'] * $orig_order['btc_price']) + (($orig_order['btc'] * $orig_order['btc_price']) * ($fee * 0.01)) : 0; 
+		$edit_old_btc = ($orig_order) ? $orig_order['btc'] : 0;
+		
+		if (($buy && ($total - $edit_old_fiat) > $user_available) || (!$buy && ($amount - $edit_old_btc) > $user_available))
+			return array('error'=>array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW'));
+
+		if (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd)
+			return array('error'=>array('message'=>str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))),'code'=>'ORDER_UNDER_MINIMUM'));
+		
+		if ((($buy && $stop_price > 0 && $stop_price <= $current_ask) || (!$buy && $stop_price >= $current_bid)) && $stop_price > 0)
+			return array('error'=>array('message'=>($buy) ? Lang::string('buy-stop-lower-ask') : Lang::string('sell-stop-higher-bid'),'code'=>'ORDER_STOP_IN_MARKET'));
+
+		if ((($buy && $stop_price <= $price) || (!$buy && $stop_price >= $price)) && $stop_price > 0 && $price > 0)
+			return array('error'=>array('message'=>($buy) ? Lang::string('buy-stop-lower-price') : Lang::string('sell-stop-lower-price'),'code'=>'ORDER_STOP_OVER_LIMIT'));
+
+		if ($buy && !$stop_price && $price < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))))
+			return array('error'=>array('message'=>str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')),'code'=>'ORDER_TOO_FAR_UNDER_MARKET'));
+		
+		if ($market_price) {
+			$type = (!$buy) ? $CFG->order_type_bid : $CFG->order_type_ask;
+			$sql = 'SELECT id FROM orders WHERE order_type = '.$type.' AND site_user = '.$user_id.' LIMIT 0,1';
+			$result = db_query_array($sql);
+			if (!$result)
+				return array('error'=>array('message'=>Lang::string('buy-errors-no-compatible'),'code'=>'ORDER_MARKET_NO_COMPATIBLE'));
+		}
+		return false;
+	}
+	
 	public static function executeOrder($buy,$price,$amount,$currency1,$fee,$market_price,$edit_id=0,$this_user_id=0,$external_transaction=false,$stop_price=false,$use_maker_fee=false,$verbose=false) {
 		global $CFG;
 		
@@ -393,40 +480,52 @@ class Orders {
 			return false;
 		
 		$status = Status::get();
-		if ($status['trading_status'] == 'suspended')
-			return false;
+		if ($status['trading_status'] == 'suspended') {
+			db_commit();
+			return array('error'=>array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED'));
+		}
 		
 		$this_user_id = preg_replace("/[^0-9]/", "",$this_user_id);
 		$this_user_id = ($this_user_id > 0) ? $this_user_id : User::$info['id'];
-		if (!($this_user_id > 0))
-			return false;
+		if (!($this_user_id > 0)) {
+			db_commit();
+			return array('error'=>array('message'=>'Invalid authentication.','code'=>'AUTH_ERROR'));
+		}
 		
 		$amount = preg_replace("/[^0-9\.]/", "",$amount);
 		$orig_amount = $amount;
 		$price = preg_replace("/[^0-9\.]/", "",$price);
 		$stop_price = preg_replace("/[^0-9\.]/", "",$stop_price);
 		$currency1 = strtolower(preg_replace("/[^a-zA-Z]/", "",$currency1));
-		//$fee = preg_replace("/[^0-9\.]/", "",$fee);
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
-		$bid = self::getCurrentBid($currency1);
-		$ask = self::getCurrentAsk($currency1);
-		$bid = ($bid > $ask) ? $ask : $bid;
-		$price = ($market_price) ? (($buy) ? $ask : $bid) : $price;
 		
 		if (!$external_transaction)
 			db_start_transaction();
 		
+		$orig_order = false;
 		if ($edit_id > 0) {
-			$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
-			if ($orig_order['site_user'] != $this_user_id || !$orig_order)
-				return false;
+			if (!$CFG->session_api)
+				$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
+			else
+				$orig_order = self::getRecord(false,$edit_id,$this_user_id,true);
 			
+			if ($orig_order['site_user'] != $this_user_id || !$orig_order) {
+				db_commit();
+				return array('error'=>array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND'));
+			}
+			
+			$buy = ($orig_order['order_type'] == $CFG->order_type_bid);
 			$currency_info = $CFG->currencies[$orig_order['currency']];
 			$currency1 = strtolower($currency_info['currency']);
+			$edit_id = $orig_order['id'];
 		}
 		else 
 			$currency_info = $CFG->currencies[strtoupper($currency1)];
 		
+		$bid = self::getCurrentBid($currency1);
+		$ask = self::getCurrentAsk($currency1);
+		$bid = ($bid > $ask) ? $ask : $bid;
+		$price = ($market_price) ? (($buy) ? $ask : $bid) : $price;
 		$usd_info = $CFG->currencies['USD'];
 		$user_balances = User::getBalances($this_user_id,array($currency_info['id'],$CFG->btc_currency_id),true);
 		$user_fee = FeeSchedule::getUserFees($this_user_id);
@@ -468,6 +567,22 @@ class Orders {
 		else 
 			$this_fiat_on_hold = 0;
 			
+		
+		if ($CFG->session_api) {
+			$error = self::checkPreconditions($buy,$currency_info,$amount,$price,$stop_price,$fee,($buy ? $this_fiat_balance - $this_fiat_on_hold : $this_btc_balance - $this_btc_on_hold),$bid,$ask,$market_price,$this_user_id,$orig_order);
+			if ($error) {
+				db_commit();
+				return $error;
+			}
+			
+			if (!$market_price) {
+				$error = self::checkUserOrders($buy,$currency_info,$this_user_id,$price,$stop_price,$fee);
+				if ($error) {
+					db_commit();
+					return $error;
+				}
+			}
+		}
 		
 		if (!($edit_id > 0))
 			$order_log_id = db_insert('order_log',array('date'=>date('Y-m-d H:i:s'),'order_type'=>(($buy) ? $CFG->order_type_bid : $CFG->order_type_ask),'site_user'=>$this_user_id,'btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>$price,'market_price'=>(($market_price) ? 'Y' : 'N'),'stop_price'=>$stop_price,'status'=>'ACTIVE'));
@@ -938,10 +1053,14 @@ class Orders {
 			return $result;
 	}
 	
-	public static function delete($id) {
+	public static function delete($id=false,$order_log_id=false) {
 		global $CFG;
 		
 		$id = preg_replace("/[^0-9]/", "",$id);
+		$order_log_id = preg_replace("/[^0-9]/", "",$order_log_id);
+		
+		if (!($id > 0))
+			$id = $order_log_id;
 		
 		if (!($id > 0))
 			return false;
@@ -949,12 +1068,19 @@ class Orders {
 		if (!$CFG->session_active)
 			return false;
 		
-		$del_order = DB::getRecord('orders',$id,0,1);
+		if (!$order_log_id)
+			$del_order = DB::getRecord('orders',$id,0,1);
+		else
+			$del_order = self::getRecord(false,$order_log_id);
+		
+		if (!$del_order)
+			return array('error'=>array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND'));
+		
 		if ($del_order['site_user'] != User::$info['id'])
-			return false;
+			return array('error'=>array('message'=>'User mismatch.','code'=>'AUTH_NOT_AUTHORIZED'));
 		
 		self::setStatus(false,'CANCELLED_USER',$del_order['log_id'],$del_order['btc']);
-		db_delete('orders',$id);
+		db_delete('orders',$del_order['id']);
 		return self::getStatus($del_order['log_id']);
 	}
 	
