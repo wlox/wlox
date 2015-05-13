@@ -16,5 +16,25 @@ class Lang {
 		}
 		return $lang_table;
 	}
+	
+	public static function string($key=false) {
+		global $CFG;
+	
+		if (empty($key))
+			return false;
+		
+		$lang = (empty($CFG->language)) ? 'eng' : $CFG->language;
+		if ($lang == 'en')
+			$lang = 'eng';
+		else if ($lang == 'es')
+			$lang = 'esp';
+			
+		$sql = 'SELECT '.$lang.' AS line FROM lang WHERE `key` = "'.$key.'" LIMIT 0,1';
+		$result = db_query_array($sql);
+		if ($result)
+			return $result[0]['line'];
+		else
+			return false;
+	}
 }
 ?>
