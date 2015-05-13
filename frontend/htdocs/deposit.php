@@ -26,11 +26,10 @@ $total = $query['Requests']['get']['results'][0];
 $requests = $query['Requests']['get']['results'][1];
 $bank_instructions = ($bank_account) ? $query['Content']['getRecord']['results'][0] : $query['Content']['getRecord']['results'][1];
 
-API::add('Currencies','getRecord',array($bank_account['currency']));
 API::add('Transactions','pagination',array('deposit.php',$page1,$total,15,5,false));
 $query = API::send();
 
-$bank_account_currency = $query['Currencies']['getRecord']['results'][0];
+$bank_account_currency = $CFG->currencies[$bank_account['currency']];
 $pagination = $query['Transactions']['pagination']['results'][0];
 
 $page_title = Lang::string('deposit');

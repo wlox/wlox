@@ -110,11 +110,11 @@ include 'includes/head.php';
 					?>
 					<div class="one_half">
                 		<div class="label"><?= $currency.' '.Lang::string('account-on-order') ?>:</div>
-                		<div class="amount"><?= (!empty($CFG->currencies[$currency]['fa_symbol']) ? $CFG->currencies[$currency]['fa_symbol'] : '').(!empty($balance['order']) ? number_format($balance['order'],$decimals) : '0.00') ?></div>
+                		<div class="amount"><?= (($CFG->currencies[$currency]['fa_symbol'] != 'BTC') ? $CFG->currencies[$currency]['fa_symbol'] : '').(!empty($balance['order']) ? number_format($balance['order'],$decimals) : '0.00') ?></div>
                 	</div>
                 	<div class="one_half last">
                 		<div class="label"><?= $currency.' '.Lang::string('account-on-widthdrawal') ?>:</div>
-                		<div class="amount"><?= (!empty($CFG->currencies[$currency]['fa_symbol']) ? $CFG->currencies[$currency]['fa_symbol'] : '').(!empty($balance['withdrawal']) ? number_format($balance['withdrawal'],$decimals) : '0.00') ?></div>
+                		<div class="amount"><?= (($CFG->currencies[$currency]['fa_symbol'] != 'BTC') ? $CFG->currencies[$currency]['fa_symbol'] : '').(!empty($balance['withdrawal']) ? number_format($balance['withdrawal'],$decimals) : '0.00') ?></div>
                 	</div>
 					<?
 						} 

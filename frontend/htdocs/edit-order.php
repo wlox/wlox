@@ -98,6 +98,7 @@ if ($order_info['is_bid']) {
 	$buy_stop_price1 = (!empty($_REQUEST['buy_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : $order_info['stop_price'];
 	$buy_stop = ($buy_stop_price1 > 0);
 	$buy_limit = ($buy_price1 > 0 && !$buy_market_price1 && !$buy_stop) ? 1 : !empty($_REQUEST['buy_limit']);
+	$old_fiat = ($order_info['btc'] * $order_info['btc_price']) + (($order_info['btc'] * $order_info['btc_price']) * ($user_fee_bid * 0.01));
 }
 else {
 	$sell_amount1 = (!empty($_REQUEST['sell_amount'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']) : $order_info['btc'];
@@ -112,9 +113,10 @@ else {
 	$sell_stop_price1 = (!empty($_REQUEST['sell_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']) : $order_info['stop_price'];
 	$sell_stop = ($sell_stop_price1 > 0);
 	$sell_limit = ($sell_price1 > 0 && !$sell_market_price1 && !$sell_stop) ? 1 : !empty($_REQUEST['sell_limit']);
+	$old_btc = $order_info['btc'];
 }
 
-if ($status['trading_status'] == 'suspended')
+if ($CFG->trading_status == 'suspended')
 	Errors::add(Lang::string('buy-trading-disabled'));
 
 if (!empty($_REQUEST['buy'])) {
@@ -129,7 +131,7 @@ if (!empty($_REQUEST['buy'])) {
 		Errors::add(Lang::string('buy-errors-no-amount'));
 	if (!($_REQUEST['buy_price'] > 0) && ($buy_limit || $buy_market_price1))
 		Errors::add(Lang::string('buy-errors-no-price'));
-	if ($buy_subtotal1 > $user_available[strtoupper($currency1)])
+	if (($buy_subtotal1 - $old_fiat) > $user_available[strtoupper($currency1)])
 		Errors::add(Lang::string('buy-errors-balance-too-low'));
 	if (!$asks && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
@@ -189,7 +191,7 @@ if (!empty($_REQUEST['sell'])) {
 		Errors::add(Lang::string('sell-errors-no-amount'));
 	if (!($_REQUEST['sell_price'] > 0) && ($sell_limit || $sell_market_price1))
 		Errors::add(Lang::string('sell-errors-no-price'));
-	if ($sell_amount1 > $user_available['BTC'])
+	if (($sell_amount1 - $old_btc) > $user_available['BTC'])
 		Errors::add(Lang::string('sell-errors-balance-too-low'));
 	if (!$bids && $buy_market_price1)
 		Errors::add(Lang::string('buy-errors-no-compatible'));
@@ -290,7 +292,10 @@ if (!$bypass) {
 								<select id="buy_currency" name="currency" disabled="disabled">
 								<?
 								if ($CFG->currencies) {
-									foreach ($CFG->currencies as $currency) {
+									foreach ($CFG->currencies as $key => $currency) {
+										if (is_numeric($key) || $currency['currency'] == 'BTC')
+											continue;
+										
 										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	
@@ -379,7 +384,10 @@ if (!$bypass) {
 								<select id="sell_currency" name="currency" disabled="disabled">
 								<?
 								if ($CFG->currencies) {
-									foreach ($CFG->currencies as $currency) {
+									foreach ($CFG->currencies as $key => $currency) {
+										if (is_numeric($key) || $currency['currency'] == 'BTC')
+											continue;
+										
 										echo '<option '.(($currency['id'] == $order_info['currency']) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	

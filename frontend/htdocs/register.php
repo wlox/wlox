@@ -81,11 +81,21 @@ include 'includes/head.php';
                 </h3>
                 <div class="clear"></div>
                 <?
-                $register->textInput('first_name',Lang::string('settings-first-name'),1);
+                $currencies_list = array();
+                if ($CFG->currencies) {
+                	foreach ($CFG->currencies as $key => $currency) {
+                		if (is_numeric($key) || $currency['currency'] == 'BTC')
+                			continue;
+                		
+                		$currencies_list[$key] = $currency;
+                	}
+                }
+                
+				$register->textInput('first_name',Lang::string('settings-first-name'),1);
                 $register->textInput('last_name',Lang::string('settings-last-name'),1);
                 $register->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $register->textInput('email',Lang::string('settings-email'),'email');
-                $register->selectInput('default_currency',Lang::string('default-currency'),1,false,$CFG->currencies,false,array('currency'));
+                $register->selectInput('default_currency',Lang::string('default-currency'),1,false,$currencies_list,false,array('currency'));
                 $register->checkBox('terms',Lang::string('settings-terms-accept'),false,false,false,false,false,false,'checkbox_label');
                 $register->captcha(Lang::string('settings-capcha'));
                 $register->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('home-register').'" class="but_user" /></div>');

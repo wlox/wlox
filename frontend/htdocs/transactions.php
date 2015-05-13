@@ -61,7 +61,10 @@ if (!$bypass) {
 							<option value=""><?= Lang::string('transactions-any') ?></option>
 							<? 
 							if ($CFG->currencies) {
-								foreach ($CFG->currencies as $currency) {
+								foreach ($CFG->currencies as $key => $currency) {
+									if (is_numeric($key) || $currency['currency'] == 'BTC')
+										continue;
+									
 									echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 								}
 							}

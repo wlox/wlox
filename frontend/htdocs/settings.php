@@ -63,7 +63,8 @@ if (!empty($_REQUEST['settings'])) {
 }
 
 $personal = new Form('settings',false,false,'form1','site_users');
-$personal->get($query['User']['getInfo']['results'][0]);
+if (!empty($query['User']['getInfo']['results'][0]))
+	$personal->get($query['User']['getInfo']['results'][0]);
 
 if (!$personal->info['email'])
 	unset($personal->info['email']);
@@ -119,24 +120,26 @@ if (!empty($_REQUEST['settings']) && is_array($personal->errors)) {
 	$request_2fa = false;
 }
 elseif (!empty($_REQUEST['settings']) && !is_array($personal->errors)) {
-	if (!$no_token && !$request_2fa) {
+	if (empty($no_token) && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','updatePersonalInfo',array($personal->info));
 		$query = API::send();
 
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+			
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+			
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
+			
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}
 		
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-		
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
-		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
-
 		if (!is_array(Errors::$errors)) {
 			Link::redirect('settings.php?message=settings-personal-message');
 		}
@@ -175,18 +178,19 @@ if (!empty($_REQUEST['prefs'])) {
 		API::add('User','updateSettings',array($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1));
 		$query = API::send();
 			
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+				
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+				
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
 			
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-			
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
-		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
-			
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}	
 		if (!is_array(Errors::$errors)) {
 			Link::redirect('settings.php?message=settings-settings-message');
 		}
@@ -211,17 +215,19 @@ if (!empty($_REQUEST['deactivate_account'])) {
 			API::add('User','deactivateAccount');
 			$query = API::send();
 			
-			if ($query['error'] == 'security-com-error')
-				Errors::add(Lang::string('security-com-error'));
-			
-			if ($query['error'] == 'authy-errors')
-				Errors::merge($query['authy_errors']);
-			
-			if ($query['error'] == 'request-expired')
-				Errors::add(Lang::string('settings-request-expired'));
-			
-			if ($query['error'] == 'security-incorrect-token')
-				Errors::add(Lang::string('security-incorrect-token'));
+			if (!empty($query['error'])) {
+				if ($query['error'] == 'security-com-error')
+					Errors::add(Lang::string('security-com-error'));
+				
+				if ($query['error'] == 'authy-errors')
+					Errors::merge($query['authy_errors']);
+				
+				if ($query['error'] == 'request-expired')
+					Errors::add(Lang::string('settings-request-expired'));
+				
+				if ($query['error'] == 'security-incorrect-token')
+					Errors::add(Lang::string('security-incorrect-token'));
+			}
 			
 			if (!is_array(Errors::$errors)) {
 				Link::redirect('settings.php?message=settings-account-deactivated');
@@ -239,18 +245,20 @@ if (!empty($_REQUEST['reactivate_account'])) {
 		API::add('User','reactivateAccount');
 		$query = API::send();
 			
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+				
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+				
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
 			
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-			
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}
 		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
-			
 		if (!is_array(Errors::$errors)) {
 			Link::redirect('settings.php?message=settings-account-reactivated');
 		}
@@ -266,18 +274,20 @@ if (!empty($_REQUEST['lock_account'])) {
 		API::add('User','lockAccount');
 		$query = API::send();
 			
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+				
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+				
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
 			
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-			
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}
 		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
-			
 		if (!is_array(Errors::$errors)) {
 			Link::redirect('settings.php?message=settings-account-locked');
 		}
@@ -293,18 +303,20 @@ if (!empty($_REQUEST['unlock_account'])) {
 		API::add('User','unlockAccount');
 		$query = API::send();
 			
-		if ($query['error'] == 'security-com-error')
-			Errors::add(Lang::string('security-com-error'));
+		if (!empty($query['error'])) {
+			if ($query['error'] == 'security-com-error')
+				Errors::add(Lang::string('security-com-error'));
+				
+			if ($query['error'] == 'authy-errors')
+				Errors::merge($query['authy_errors']);
+				
+			if ($query['error'] == 'request-expired')
+				Errors::add(Lang::string('settings-request-expired'));
 			
-		if ($query['error'] == 'authy-errors')
-			Errors::merge($query['authy_errors']);
-			
-		if ($query['error'] == 'request-expired')
-			Errors::add(Lang::string('settings-request-expired'));
+			if ($query['error'] == 'security-incorrect-token')
+				Errors::add(Lang::string('security-incorrect-token'));
+		}
 		
-		if ($query['error'] == 'security-incorrect-token')
-			Errors::add(Lang::string('security-incorrect-token'));
-			
 		if (!is_array(Errors::$errors)) {
 			Link::redirect('settings.php?message=settings-account-unlocked');
 		}

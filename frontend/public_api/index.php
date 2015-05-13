@@ -361,7 +361,11 @@ elseif ($endpoint == 'orders/new') {
 						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
 						
 						// preliminary validation
-						if ($order['side'] != 'buy' && $order['side'] != 'sell') {
+						if ($CFG->trading_status == 'suspended') {
+							$return['errors'][] = array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED');
+							break;
+						}
+						elseif ($order['side'] != 'buy' && $order['side'] != 'sell') {
 							$return['errors'][] = array('message'=>'Invalid order side (must be buy or sell).','code'=>'ORDER_INVALID_SIDE');
 							continue;
 						}
@@ -386,97 +390,6 @@ elseif ($endpoint == 'orders/new') {
 							continue;
 						}
 						
-						// get things to check against
-						if ($order['side'] == 'buy' && $order['type'] != 'market') {
-							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency']));
-							API::add('Orders','checkOutbidStops',array($order['limit_price'],$order['currency']));
-						}
-						elseif ($order['side'] == 'sell' && $order['type'] != 'market') {
-							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency'],1));
-							API::add('Orders','checkStopsOverBid',array($order['stop_price'],$order['currency']));
-						}
-						if (empty($user_fee_both))
-							API::add('FeeSchedule','getRecord',array(false,1));
-						
-						API::add('User','getAvailable');
-						API::add('Orders','getCurrentBid',array($order['currency']));
-						API::add('Orders','getCurrentAsk',array($order['currency']));
-						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,1));
-						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,false,false,1));
-						API::add('Status','get');
-						API::apiKey($api_key1);
-						API::apiSignature($api_signature1,$params_json);
-						$query = API::send($nonce1);
-						
-						if (!empty($query['error'])) {
-							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
-							break;
-						}
-						
-						if ($query['Status']['get']['results'][0]['trading_status'] == 'suspended') {
-							$return['errors'][] = array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED');
-							break;
-						}
-							
-						$user_fee_both = (empty($user_fee_both)) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
-						$user_available = $query['User']['getAvailable']['results'][0];
-						$current_bid = $query['Orders']['getCurrentBid']['results'][0];
-						$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
-						$bids = $query['Orders']['get']['results'][0];
-						$asks = $query['Orders']['get']['results'][1];
-						$self_orders = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
-						$self_stops = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['price'] : false;
-						$self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['price'] : false;
-						$self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
-						$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
-						$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
-						$order['limit_price'] = ($order['type'] == 'market') ? (($order['side'] == 'buy') ? $current_ask : $current_bid) : $order['limit_price'];
-
-						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
-						$user_fee_bid = (($asks && $order['limit_price'] >= $asks[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$user_fee_ask = (($bids && $order['limit_price'] <= $bids[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$subtotal = $order['amount'] * (($order['type'] == 'stop' && !($order['limit_price']) > 0) ? $order['stop_price'] : $order['limit_price']);
-						$fee_amount = ($order['side'] == 'buy') ? ($user_fee_bid * 0.01) * $subtotal : ($user_fee_ask * 0.01) * $subtotal;
-						$total = ($order['side'] == 'buy') ? $subtotal + $fee_amount : $subtotal - $fee_amount;
-						
-						// advanced validation
-						if (($order['side'] == 'buy' && $total > $user_available[strtoupper($order['currency'])]) || ($order['side'] == 'sell' && $order['amount'] > $user_available['BTC'])) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW');
-							continue;
-						}
-						elseif ($order['type'] == 'market' && (($order['side'] == 'buy' && !$asks) || ($order['side'] == 'sell' && !$bids))) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-no-compatible'),'code'=>'ORDER_MARKET_NO_COMPATIBLE');
-							continue;
-						}
-						elseif (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd) {
-							$return['errors'][] = array('message'=>str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))),'code'=>'ORDER_UNDER_MINIMUM');
-							continue;
-						}
-						elseif ($self_orders) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_OUTBID_SELF');
-							continue;
-						}
-						elseif ((($order['side'] == 'buy' && $order['type'] == 'stop' && $order['stop_price'] <= $current_ask) || ($order['side'] == 'sell' && $order['stop_price'] >= $current_bid)) && $order['type'] == 'stop') {
-							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-ask') : Lang::string('sell-stop-higher-bid'),'code'=>'ORDER_STOP_IN_MARKET');
-							continue;
-						}
-						elseif ((($order['side'] == 'buy' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price'])) && $order['type'] == 'stop' && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
-							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-price') : Lang::string('sell-stop-lower-price'),'code'=>'ORDER_STOP_OVER_LIMIT');
-							continue;
-						}
-						elseif ($order['side'] == 'buy' && $order['limit_price'] < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent)))) {
-							$return['errors'][] = array('message'=>str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')),'code'=>'ORDER_TOO_FAR_UNDER_MARKET');
-							continue;
-						}
-						elseif ($self_stops) {
-							$return['errors'][] = array('message'=>Lang::string('buy-limit-under-stops').(($currency_info['id'] != $self_stops_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_stops,2),' '.Lang::string('limit-min-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS');
-							continue;
-						}	
-						elseif ($self_limits) {
-							$return['errors'][] = array('message'=>Lang::string('sell-limit-under-stops').(($currency_info['id'] != $self_limits_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_limits,2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS');
-							continue;
-						}
-						
 						API::add('Orders','executeOrder',array(($order['side'] == 'buy'),$order['limit_price'],$order['amount'],$order['currency'],false,($order['type'] == 'market'),false,false,false,$order['stop_price'],false,1));
 						API::apiKey($api_key1);
 						API::apiSignature($api_signature1,$params_json);
@@ -487,7 +400,7 @@ elseif ($endpoint == 'orders/new') {
 						$query = API::send($nonce1);
 						$result = $query['Orders']['executeOrder']['results'][0];
 						
-						if ($result) {
+						if ($result && empty($result['error'])) {
 							unset($result['order_info']['comp_orig_prices']);
 							unset($result['order_info']['replaced']);
 							unset($result['edit_order']);
@@ -495,9 +408,12 @@ elseif ($endpoint == 'orders/new') {
 							
 							if ($order['limit_price'] > 0 && $order['stop_price'] > 0 && $order['type'] == 'stop')
 								$result['order_info']['oco'] = true;
+							
+							$return['orders-new'][] = ($result) ? $result : array();
 						}
+						else
+							$return['errors'][] = $result['error'];
 						
-						$return['orders-new'][] = ($result) ? $result : array();
 						$i++;
 					}
 				}
@@ -534,7 +450,15 @@ elseif ($endpoint == 'orders/edit') {
 						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
 						
 						// preliminary validation
-						if ($order['type'] != 'market' && $order['type'] != 'limit' && $order['type'] != 'stop') {
+						if ($CFG->trading_status == 'suspended') {
+							$return['errors'][] = array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED');
+							break;
+						}
+						elseif (empty($order['id']) || !($order['id'] > 0)) {
+							$return['errors'][] = array('message'=>'Invalid order id.','code'=>'ORDER_INVALID_ID');
+							continue;
+						}
+						elseif ($order['type'] != 'market' && $order['type'] != 'limit' && $order['type'] != 'stop') {
 							$return['errors'][] = array('message'=>'Invalid order type (must be market, limit or stop).','code'=>'ORDER_INVALID_TYPE');
 							continue;
 						}
@@ -550,116 +474,8 @@ elseif ($endpoint == 'orders/edit') {
 							$return['errors'][] = array('message'=>Lang::string('buy-errors-no-stop'),'code'=>'ORDER_INVALID_STOP_PRICE');
 							continue;
 						}
-						
-						// get the original order
-						API::add('Orders','getRecord',array(false,$order['id']));
-						API::add('Status','get');
-						API::apiKey($api_key1);
-						API::apiSignature($api_signature1,$params_json);
-						$query = API::send($nonce1);
-						$orig_order = $query['Orders']['getRecord']['results'][0];
-						
-						if (!empty($query['error'])) {
-							$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
-							break;
-						}
-						
-						if ($query['Status']['get']['results'][0]['trading_status'] == 'suspended') {
-							$return['errors'][] = array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED');
-							break;
-						}
-						
-						if (empty($orig_order['id'])) {
-							$return['errors'][] = array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND');
-							continue;
-						}
-						else {
-							$order['side'] = ($orig_order['is_bid']) ? 'buy' : 'sell';
-							$order['currency'] = strtolower($orig_order['currency_abbr']);
-							$order['order_id'] = $orig_order['id'];
-						}
 							
-						// get things to check against
-						if ($order['side'] == 'buy' && $order['type'] != 'market') {
-							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency']));
-							API::add('Orders','checkOutbidStops',array($order['limit_price'],$order['currency']));
-						}
-						elseif ($order['side'] == 'sell' && $order['type'] != 'market') {
-							API::add('Orders','checkOutbidSelf',array($order['limit_price'],$order['currency'],1));
-							API::add('Orders','checkStopsOverBid',array($order['stop_price'],$order['currency']));
-						}
-						if (empty($user_fee_both))
-							API::add('FeeSchedule','getRecord',array(false,1));
-							
-						API::add('User','getAvailable');
-						API::add('Orders','getCurrentBid',array($order['currency']));
-						API::add('Orders','getCurrentAsk',array($order['currency']));
-						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,1));
-						API::add('Orders','get',array(false,false,10,$order['currency'],false,false,false,false,1));
-						API::apiKey($api_key1);
-						API::apiSignature($api_signature1,$params_json);
-						$query = API::send($nonce1);
-		
-						$user_fee_both = (empty($user_fee_both)) ? $query['FeeSchedule']['getRecord']['results'][0] : $user_fee_both;
-						$user_available = $query['User']['getAvailable']['results'][0];
-						$current_bid = $query['Orders']['getCurrentBid']['results'][0];
-						$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
-						$bids = $query['Orders']['get']['results'][0];
-						$asks = $query['Orders']['get']['results'][1];
-						$self_orders = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
-						$self_stops = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['price'] : false;
-						$self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['price'] : false;
-						$self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
-						$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
-						$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
-						$order['limit_price'] = ($order['type'] == 'market') ? (($order['side'] == 'buy') ? $current_ask : $current_bid) : $order['limit_price'];
-		
-						$currency_info = $CFG->currencies[strtoupper($order['currency'])];
-						$user_fee_bid = (($asks && $order['limit_price'] >= $asks[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$user_fee_ask = (($bids && $order['limit_price'] <= $bids[0]['btc_price']) || $order['type'] == 'market') ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-						$subtotal = $order['amount'] * (($order['type'] == 'stop' && !($order['limit_price']) > 0) ? $order['stop_price'] : $order['limit_price']);
-						$fee_amount = ($order['side'] == 'buy') ? ($user_fee_bid * 0.01) * $subtotal : ($user_fee_ask * 0.01) * $subtotal;
-						$total = ($order['side'] == 'buy') ? $subtotal + $fee_amount : $subtotal - $fee_amount;
-						
-						// advanced validation
-						if (($order['side'] == 'buy' && $total > $user_available[strtoupper($order['currency'])]) || ($order['side'] == 'sell' && $order['amount'] > $user_available['BTC'])) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW');
-							continue;
-						}
-						elseif ($order['type'] == 'market' && (($order['side'] == 'buy' && !$asks) || ($order['side'] == 'sell' && !$bids))) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-no-compatible'),'code'=>'ORDER_MARKET_NO_COMPATIBLE');
-							continue;
-						}
-						elseif (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd) {
-							$return['errors'][] = array('message'=>str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))),'code'=>'ORDER_UNDER_MINIMUM');
-							continue;
-						}
-						elseif ($self_orders) {
-							$return['errors'][] = array('message'=>Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_OUTBID_SELF');
-							continue;
-						}
-						elseif ((($order['side'] == 'buy' && $order['stop_price'] <= $current_ask) || ($order['side'] == 'sell' && $order['stop_price'] >= $current_bid)) && $order['type'] == 'stop') {
-							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-ask') : Lang::string('sell-stop-higher-bid'),'code'=>'ORDER_STOP_IN_MARKET');
-							continue;
-						}
-						elseif ((($order['side'] == 'buy' && $order['stop_price'] <= $order['limit_price']) || ($order['side'] == 'sell' && $order['stop_price'] >= $order['limit_price'])) && $order['type'] == 'stop' && $order['stop_price'] > 0 && $order['limit_price'] > 0) {
-							$return['errors'][] = array('message'=>($order['side'] == 'buy') ? Lang::string('buy-stop-lower-price') : Lang::string('sell-stop-lower-price'),'code'=>'ORDER_STOP_OVER_LIMIT');
-							continue;
-						}
-						elseif ($order['side'] == 'buy' && $order['limit_price'] < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent)))) {
-							$return['errors'][] = array('message'=>str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')),'code'=>'ORDER_TOO_FAR_UNDER_MARKET');
-							continue;
-						}
-						elseif ($self_stops) {
-							$return['errors'][] = array('message'=>Lang::string('buy-limit-under-stops').(($currency_info['id'] != $self_stops_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_stops,2),' '.Lang::string('limit-min-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS');
-							continue;
-						}
-						elseif ($self_limits) {
-							$return['errors'][] = array('message'=>Lang::string('sell-limit-under-stops').(($currency_info['id'] != $self_limits_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_limits,2),' '.Lang::string('limit-max-price')) : ''),'code'=>'ORDER_BUY_LIMIT_UNDER_STOPS');
-							continue;
-						}
-							
-						API::add('Orders','executeOrder',array(($order['side'] == 'buy'),$order['limit_price'],$order['amount'],$order['currency'],false,($order['type'] == 'market'),$order['order_id'],false,false,$order['stop_price'],false,1));
+						API::add('Orders','executeOrder',array(false,$order['limit_price'],$order['amount'],false,false,($order['type'] == 'market'),$order['id'],false,false,$order['stop_price'],false,1));
 						API::apiKey($api_key1);
 						API::apiSignature($api_signature1,$params_json);
 						
@@ -669,16 +485,19 @@ elseif ($endpoint == 'orders/edit') {
 						$query = API::send($nonce1);
 						$result = $query['Orders']['executeOrder']['results'][0];
 							
-						if ($result) {
+						if ($result && empty($result['error'])) {
 							unset($result['order_info']['comp_orig_prices']);
 							unset($result['new_order']);
 							unset($result['executed']);
 							
 							if ($order['limit_price'] > 0 && $order['stop_price'] > 0 && $order['type'] == 'stop')
 								$result['order_info']['oco'] = true;
-						}
 							
-						$return['orders-edit'][] = ($result) ? $result : array();
+							$return['orders-edit'][] = ($result) ? $result : array();
+						}
+						else
+							$return['errors'][] = $result['error'];
+							
 						$i++;
 					}
 				}
@@ -706,27 +525,15 @@ elseif ($endpoint == 'orders/cancel') {
 						$orders[] = array('id'=>((!empty($_POST['id'])) ? $_POST['id'] : false));
 			
 					if (is_array($orders)) {
-						$i++;
+						$i = 1;
 						foreach ($orders as $order) {
-							$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
-							
-							API::add('Orders','getRecord',array(false,$order['id']));
-							API::apiKey($api_key1);
-							API::apiSignature($api_signature1,$params_json);
-							$query = API::send($nonce1);
-							$orig_order = $query['Orders']['getRecord']['results'][0];
-							
-							if (!empty($query['error'])) {
-								$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
+							if ($CFG->trading_status == 'suspended') {
+								$return['errors'][] = array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED');
 								break;
 							}
 							
-							if (empty($orig_order)) {
-								$return['errors'][] = array('message'=>'Order not found.','code'=>'ORDER_NOT_FOUND');
-								continue;
-							}
-							
-							API::add('Orders','delete',array($orig_order['id']));
+							$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
+							API::add('Orders','delete',array(false,$order['id']));
 							API::apiKey($api_key1);
 							API::apiSignature($api_signature1,$params_json);
 							
@@ -829,7 +636,6 @@ elseif ($endpoint == 'withdrawals/new') {
 					$return['errors'][] = array('message'=>Lang::string('withdraw-no-account'),'code'=>'WITHDRAW_INVALID_ACCOUNT');
 				else {				
 					if (strtolower($currency1) == 'btc') {
-						API::add('Status','get');
 						API::add('User','getAvailable');
 						API::add('BitcoinAddresses','validateAddress',array($address1));
 						API::apiKey($api_key1);
@@ -837,7 +643,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						$query = API::send($nonce1);
 						$user_available = $query['User']['getAvailable']['results'][0];
 						
-						if ($query['Status']['get']['results'][0]['withdrawals_status'] == 'suspended') {
+						if ($CFG->withdrawals_status == 'suspended') {
 							$return['errors'][] = array('message'=>Lang::string('withdrawal-suspended'),'code'=>'WITHDRAWALS_SUSPENDED');
 							$error = true;
 						}
@@ -858,7 +664,6 @@ elseif ($endpoint == 'withdrawals/new') {
 						API::add('BankAccounts','getRecord',array(false,$account1));
 						API::add('BankAccounts','get',array($CFG->currencies[strtoupper($currency1)]['id']));
 						API::add('User','getAvailable');
-						API::add('Status','get');
 						API::apiKey($api_key1);
 						API::apiSignature($api_signature1,$params_json);
 						$query = API::send($nonce1);
@@ -866,7 +671,7 @@ elseif ($endpoint == 'withdrawals/new') {
 						$bank_accounts = $query['BankAccounts']['get']['results'][0];
 						$user_available = $query['User']['getAvailable']['results'][0];
 						
-						if ($query['Status']['get']['results'][0]['withdrawals_status'] == 'suspended') {
+						if ($CFG->withdrawals_status == 'suspended') {
 							$return['errors'][] = array('message'=>Lang::string('withdrawal-suspended'),'code'=>'WITHDRAWALS_SUSPENDED');
 							$error = true;
 						}

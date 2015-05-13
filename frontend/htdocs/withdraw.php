@@ -99,7 +99,7 @@ else {
 $user_available = $query['User']['getAvailable']['results'][0];
 $pagination = $query['Transactions']['pagination']['results'][0];
 
-if ($status['withdrawals_status'] == 'suspended')
+if ($CFG->withdrawals_status == 'suspended')
 	Errors::add(Lang::string('withdrawal-suspended'));
 
 if (!empty($_REQUEST['bitcoins'])) {

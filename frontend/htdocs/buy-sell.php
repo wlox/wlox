@@ -89,7 +89,7 @@ $sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
 $sell_stop = false;
 $sell_stop_price1 = false;
 
-if ($status['trading_status'] == 'suspended')
+if ($CFG->trading_status == 'suspended')
 	Errors::add(Lang::string('buy-trading-disabled'));
 
 if (!empty($_REQUEST['buy'])) {
@@ -281,7 +281,10 @@ if (!$bypass) {
 								<select id="buy_currency" name="currency">
 								<?
 								if ($CFG->currencies) {
-									foreach ($CFG->currencies as $currency) {
+									foreach ($CFG->currencies as $key => $currency) {
+										if (is_numeric($key) || $currency['currency'] == 'BTC')
+											continue;
+										
 										echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	
@@ -369,7 +372,10 @@ if (!$bypass) {
 								<select id="sell_currency" name="currency">
 								<?
 								if ($CFG->currencies) {
-									foreach ($CFG->currencies as $currency) {
+									foreach ($CFG->currencies as $key => $currency) {
+										if (is_numeric($key) || $currency['currency'] == 'BTC')
+											continue;
+										
 										echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 									}
 								}	

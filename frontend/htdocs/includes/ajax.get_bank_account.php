@@ -10,10 +10,7 @@ $query = API::send();
 
 $bank_account = $query['BankAccounts']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
-
-API::add('Currencies','getRecord',array(false,$bank_account['currency']));
-$query = API::send();
-$bank_account_currency = $query['Currencies']['getRecord']['results'][0];
+$bank_account_currency = $CFG->currencies[$bank_account['currency']];
 
 $return['client_account'] = $bank_account['account_number'];
 $return['escrow_account'] = $bank_account_currency['account_number'];

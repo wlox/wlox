@@ -29,7 +29,7 @@ $page_title = Lang::string('bank-accounts');
 
 if ($account1 > 0) {
 	$exists = $query['BankAccounts']['find']['results'][0];
-	if ($bank_accounts[$account1])
+	if (!empty($bank_accounts[$account1]))
 		Errors::add(Lang::string('bank-accounts-already-exists'));
 	elseif ($exists)
 		Errors::add(Lang::string('bank-accounts-already-associated'));
@@ -44,7 +44,7 @@ if ($account1 > 0) {
 		
 		$_REQUEST['action'] = false;
 		API::add('BankAccounts','insert',array($account1,$currency1,$description1));
-		API::add('BankAccounts','get',array(User::$info['id']));
+		API::add('BankAccounts','get');
 		$query = API::send();
 		
 		Messages::add(Lang::string('bank-accounts-added-message'));
@@ -67,7 +67,7 @@ if ($remove_id1 > 0) {
 	
 	if (!is_array(Errors::$errors)) {
 		API::add('BankAccounts','delete',array($remove_id1));
-		API::add('BankAccounts','get',array(User::$info['id']));
+		API::add('BankAccounts','get');
 		$query = API::send();
 		
 		Messages::add(Lang::string('bank-accounts-removed-message'));

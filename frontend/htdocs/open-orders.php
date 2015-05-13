@@ -86,7 +86,10 @@ if (!$bypass) {
 							<option><?= Lang::string('all-currencies') ?></option>
 							<? 
 							if ($CFG->currencies) {
-								foreach ($CFG->currencies as $currency) {
+								foreach ($CFG->currencies as $key => $currency) {
+									if (is_numeric($key) || $currency['currency'] == 'BTC')
+										continue;
+									
 									echo '<option '.((strtolower($currency['currency']) == $currency1) ? 'selected="selected"' : '').' value="'.strtolower($currency['currency']).'">'.$currency['currency'].'</option>';
 								}
 							}
@@ -140,7 +143,7 @@ if (!$bypass) {
 							<td>'.$type.'</td>
 							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
-							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['fiat'],2).'</span></td>
+							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['btc'] * (($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price']),2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$bid['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$bid['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
 								if ($double) {
@@ -193,7 +196,7 @@ if (!$bypass) {
 							<td>'.$type.'</td>
 							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
-							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['fiat'],2).'</span></td>
+							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['btc'] * (($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price']),2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$ask['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$ask['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
 								
