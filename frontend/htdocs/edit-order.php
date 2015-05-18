@@ -34,10 +34,11 @@ $currency1 = strtolower($currency_info['currency']);
 
 if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price']) && !empty($_REQUEST['buy_price'])) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
-	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
+	if (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_price'] > 0)
+		API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
 }
 elseif (!empty($_REQUEST['sell']) && empty($_REQUEST['sell_market_price'])) {
-	if (!empty($_REQUEST['sell_price']))
+	if (!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0)
 		API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
 	if (!empty($_REQUEST['sell_stop_price']))
 		API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
@@ -87,32 +88,32 @@ if ($order_info['site_user'] != $order_info['user_id'] || empty($order_info['id'
 
 if ($order_info['is_bid']) {
 	$buy_amount1 = (!empty($_REQUEST['buy_amount'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : $order_info['btc'];
-	$buy_price1 = (!empty($_REQUEST['buy_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : (($order_info['btc_price'] > 0) ? $order_info['btc_price'] : $current_ask);
 	$buy_market_price1 = (!empty($_REQUEST['buy_market_price'])) ? $_REQUEST['buy_market_price'] : ($order_info['market_price'] == 'Y');
+	$buy_price1 = (!empty($_REQUEST['buy_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : (($order_info['btc_price'] > 0) ? $order_info['btc_price'] : ($buy_market_price1 ? $current_ask : 0));
+	$buy_stop_price1 = (!empty($_REQUEST['buy_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : $order_info['stop_price'];
 	$user_fee_bid = ($buy_price1 >= $asks[0]['btc_price'] || $buy_market_price1) ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-	$buy_subtotal1 = $buy_amount1 * $buy_price1;
+	$buy_subtotal1 = $buy_amount1 * (($buy_price1 > 0) ? $buy_price1 : $buy_stop_price1);
 	$buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 	$buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
 	$pre_fiat_available = (!empty($user_available[strtoupper($currency1)])) ? $user_available[strtoupper($currency1)] : false;
 	$user_available[strtoupper($currency1)] += ($order_info['btc'] * $order_info['btc_price']) + (($user_fee_bid * 0.01) * ($order_info['btc'] * $order_info['btc_price']));
-	$buy_stop_price1 = (!empty($_REQUEST['buy_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : $order_info['stop_price'];
 	$buy_stop = ($buy_stop_price1 > 0);
-	$buy_limit = ($buy_price1 > 0 && !$buy_market_price1 && !$buy_stop) ? 1 : !empty($_REQUEST['buy_limit']);
+	$buy_limit = ($buy_price1 > 0 && !$buy_market_price1) ? 1 : !empty($_REQUEST['buy_limit']);
 	$old_fiat = ($order_info['btc'] * $order_info['btc_price']) + (($order_info['btc'] * $order_info['btc_price']) * ($user_fee_bid * 0.01));
 }
 else {
 	$sell_amount1 = (!empty($_REQUEST['sell_amount'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']) : $order_info['btc'];
-	$sell_price1 = (!empty($_REQUEST['sell_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : (($order_info['btc_price'] > 0) ? $order_info['btc_price'] : $current_bid);
 	$sell_market_price1 = (!empty($_REQUEST['sell_market_price'])) ? $_REQUEST['sell_market_price'] : ($order_info['market_price'] == 'Y');
+	$sell_price1 = (!empty($_REQUEST['sell_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : (($order_info['btc_price'] > 0) ? $order_info['btc_price'] : ($buy_market_price1 ? $current_bid : 0));
+	$sell_stop_price1 = (!empty($_REQUEST['sell_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']) : $order_info['stop_price'];
 	$user_fee_ask = (($sell_price1 <= $bids[0]['btc_price']) || $sell_market_price1) ? $user_fee_both['fee'] : $user_fee_both['fee1'];
-	$sell_subtotal1 = $sell_amount1 * $sell_price1;
+	$sell_subtotal1 = $sell_amount1 * (($sell_price1 > 0) ? $sell_price1 : $sell_stop_price1);
 	$sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 	$sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
 	$pre_btc_available = $user_available['BTC'];
 	$user_available['BTC'] += $order_info['btc'];
-	$sell_stop_price1 = (!empty($_REQUEST['sell_stop_price'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']) : $order_info['stop_price'];
 	$sell_stop = ($sell_stop_price1 > 0);
-	$sell_limit = ($sell_price1 > 0 && !$sell_market_price1 && !$sell_stop) ? 1 : !empty($_REQUEST['sell_limit']);
+	$sell_limit = ($sell_price1 > 0 && !$sell_market_price1) ? 1 : !empty($_REQUEST['sell_limit']);
 	$old_btc = $order_info['btc'];
 }
 
@@ -121,11 +122,11 @@ if ($CFG->trading_status == 'suspended')
 
 if (!empty($_REQUEST['buy'])) {
 	$buy_market_price1 = (!empty($_REQUEST['buy_market_price']));
-	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
 	$buy_stop = (!empty($_REQUEST['buy_stop']));
 	$buy_stop_price1 = ($buy_stop) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : false;
 	$buy_limit = (!empty($_REQUEST['buy_limit']));
 	$buy_limit = (!$buy_stop && !$buy_market_price1) ? 1 : $buy_limit;
+	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
 
 	if (!($buy_amount1 > 0))
 		Errors::add(Lang::string('buy-errors-no-amount'));
@@ -145,7 +146,7 @@ if (!empty($_REQUEST['buy'])) {
 		Errors::add(Lang::string('buy-stop-lower-price'));
 	if ($buy_stop && !($buy_stop_price1 > 0))
 		Errors::add(Lang::string('buy-errors-no-stop'));
-	if ($buy_price1 < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))))
+	if ($buy_price1 < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))) && $buy_limit)
 		Errors::add(str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')));
 	if ($self_stops)
 		Errors::add(Lang::string('buy-limit-under-stops').(($currency_info['id'] != $self_stops_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_stops,2),' '.Lang::string('limit-min-price')) : ''));
@@ -181,11 +182,11 @@ if (!empty($_REQUEST['buy'])) {
 
 if (!empty($_REQUEST['sell'])) {
 	$sell_market_price1 = (!empty($_REQUEST['sell_market_price']));
-	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
 	$sell_stop = (!empty($_REQUEST['sell_stop']));
 	$sell_stop_price1 = ($sell_stop) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']) : false;
 	$sell_limit = (!empty($_REQUEST['sell_limit']));
 	$sell_limit = (!$sell_stop && !$sell_market_price1) ? 1 : $sell_limit;
+	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
 	
 	if (!($sell_amount1 > 0))
 		Errors::add(Lang::string('sell-errors-no-amount'));

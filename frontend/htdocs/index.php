@@ -240,7 +240,10 @@ else
         	<select id="currency_selector">
         	<? 
         	if ($currencies) {
-				foreach ($currencies as $currency) {
+				foreach ($currencies as $key => $currency) {
+					if (is_numeric($key) || $currency['currency'] == 'BTC')
+						continue;
+					
 					echo '<option value="'.strtolower($currency['currency']).'" '.(($currency1 == strtolower($currency['currency']) || (!$currency1 && strtolower($currency['currency']) == 'usd')) ? 'selected="selected"' : '').'>'.$currency['currency'].'</option>';
 				}
 			}
