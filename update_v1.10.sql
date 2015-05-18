@@ -10,7 +10,7 @@ CREATE TABLE site_users_balances (id INT( 10 ) UNSIGNED NOT NULL AUTO_INCREMENT 
 ALTER TABLE site_users_balances ADD `balance` DOUBLE(20,8) NOT NULL;
 ALTER TABLE site_users_balances ADD `site_user` INT( 10 ) NOT NULL;
 ALTER TABLE site_users_balances ADD `currency` INT( 10 ) NOT NULL;
-ALTER TABLE `site_users_balances` ADD INDEX ( `site_user` ) 
+ALTER TABLE `site_users_balances` ADD INDEX ( `site_user` ) ;
 ALTER TABLE `site_users_balances` ADD INDEX ( `currency` );
 
 INSERT INTO site_users_balances (site_user,balance,currency) 
