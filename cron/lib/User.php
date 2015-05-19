@@ -139,7 +139,7 @@ class User {
 			return false;
 		
 		
-		$sql = 'SELECT site_users_balances.* FROM site_users_balances WHERE site_users_balances.currency = '.$currency_id.' site_users_balances.site_user = '.$user_id.' ';
+		$sql = 'SELECT site_users_balances.* FROM site_users_balances WHERE site_users_balances.currency = '.$currency_id.' AND site_users_balances.site_user = '.$user_id.' ';
 		if ($for_update)
 			$sql .= ' FOR UPDATE';
 		
