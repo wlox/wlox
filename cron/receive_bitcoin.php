@@ -37,7 +37,7 @@ $addresses = array();
 $user_balances = array();
 
 foreach ($transactions as $t_id) {
-	if (!$t_id || $t_id == '.' || $t_id == '..')
+	if (!$t_id || $t_id == '.' || $t_id == '..' || $t_id == '.gitignore')
 		continue;
 	
 	$transaction = $bitcoin->gettransaction($t_id);
@@ -83,7 +83,7 @@ foreach ($transactions as $t_id) {
 			
 			// get user balance... no need to lock
 			if (empty($user_balances[$user_id])) {
-				$bal_info = User::getBalance($user_id,$currency_id);
+				$bal_info = User::getBalance($user_id,$CFG->btc_currency_id);
 				$user_balances[$user_id] = $bal_info['balance'];
 			}
 			
@@ -107,7 +107,7 @@ foreach ($transactions as $t_id) {
 					$updated = db_update('requests',$request_id,array('request_status'=>$CFG->request_completed_id));
 				
 				if ($updated > 0) {
-					User::updateBalances($user_id,array('btc'=>($user_balances[$user_id])),true);
+					User::updateBalances($user_id,array('btc'=>($detail['amount'])),true);
 					db_insert('bitcoind_log',array('transaction_id'=>$transaction['txid'],'amount'=>$detail['amount'],'date'=>date('Y-m-d H:i:s')));
 					
 					$unlink = unlink($transactions_dir.$t_id);
@@ -179,12 +179,6 @@ if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
 */
 
 if ($total_received > 0) {
-	if (!$status) {
-		echo 'Error: Could not get status.'.PHP_EOL;
-		db_commit();
-		exit;
-	}
-	
 	echo 'Total received: '.$total_received.PHP_EOL;
 	$update = Status::sumFields(array('hot_wallet_btc'=>$total_received,'total_btc'=>$total_received));
 	

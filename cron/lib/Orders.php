@@ -465,7 +465,7 @@ class Orders {
 		
 		if ($market_price) {
 			$type = (!$buy) ? $CFG->order_type_bid : $CFG->order_type_ask;
-			$sql = 'SELECT id FROM orders WHERE order_type = '.$type.' AND site_user = '.$user_id.' LIMIT 0,1';
+			$sql = 'SELECT id FROM orders WHERE order_type = '.$type.' AND site_user != '.$user_id.' LIMIT 0,1';
 			$result = db_query_array($sql);
 			if (!$result)
 				return array('error'=>array('message'=>Lang::string('buy-errors-no-compatible'),'code'=>'ORDER_MARKET_NO_COMPATIBLE'));
@@ -556,6 +556,8 @@ class Orders {
 		$executed_orders = array();
 		$executed_prices = array();
 		$executed_orig_prices = false;
+		$no_compatible = false;
+		$triggered_rows = false;
 		
 		if (!empty($on_hold['BTC']['total']))
 			$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];

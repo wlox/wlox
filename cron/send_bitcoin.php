@@ -12,7 +12,7 @@ if (!$result) {
 }
 
 $bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
-$status = DB::getRecord('status',1,0,1,false,false,false,1);
+$status = DB::getRecord('status',1,0,1);
 $available = $status['hot_wallet_btc'];
 $deficit = $status['deficit_btc'];
 $bitcoin->settxfee($CFG->bitcoin_sending_fee);
@@ -21,20 +21,10 @@ $transactions = array();
 $user_balances = array();
 $addresses = array();
 
-db_start_transaction();
 if ($result) {
 	$pending = 0;
 	
 	foreach ($result as $row) {
-		if (empty($user_balances[$row['site_user']])) {
-			$bal_info = User::getBalance($user_id,$currency_id,true);
-			$user_balances[$row['site_user']] = $bal_info['balance'];
-		}
-				
-		// check if user has enough available
-		if ((!empty($user_balances[$row['site_user']]) && !empty($users[$row['site_user']])) && bcadd($row['amount'],$users[$row['site_user']],8) > $user_balances[$row['site_user']])
-			continue;
-		
 		// check if user sending to himself
 		$addr_info = BitcoinAddresses::getAddress($row['send_address']);
 		if (!empty($addr_info['site_user']) && $addr_info['site_user'] == $row['site_user']) {
@@ -45,15 +35,18 @@ if ($result) {
 		// check if sending to another wlox user
 		if (!empty($addr_info['site_user'])) {
 			if (empty($user_balances[$addr_info['site_user']])) {
-				$bal_info = User::getBalance($user_id,$currency_id,true);
+				$bal_info = User::getBalance($addr_info['site_user'],$CFG->btc_currency_id,true);
 				$user_balances[$addr_info['site_user']] = $bal_info['balance'];
 			}
 			
 			User::updateBalances($row['site_user'],array('btc'=>(-1 * $row['amount'])),true);
 			User::updateBalances($addr_info['site_user'],array('btc'=>($row['amount'])),true);
 			db_update('requests',$row['id'],array('request_status'=>$CFG->request_completed_id));
-			db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$addr_info['site_user'],'currency'=>$CFG->btc_currency_id,'amount'=>$row['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id));
-			$user_balances[$row['site_user']] = $user_balances[$row['site_user']] - $row['amount'];
+			
+			$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$addr_info['site_user'],'currency'=>$CFG->btc_currency_id,'amount'=>$row['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id));
+			if ($rid)
+				db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$addr_info['site_user'],'request_id'=>$rid,'balance_before'=>$user_balances[$addr_info['site_user']],'balance_after'=>($user_balances[$addr_info['site_user']] + $row['amount']),'bitcoin_address'=>$row['send_address']));
+			
 			$user_balances[$addr_info['site_user']] = $user_balances[$addr_info['site_user']] + $row['amount'];
 			continue;
 		}
@@ -88,7 +81,9 @@ if (!empty($transactions)) {
 			$fees_charged += $CFG->bitcoin_sending_fee;
 		}
 		$response = $bitcoin->sendmany($CFG->bitcoin_accountname,json_decode(json_encode($json_arr)));
-		echo $bitcoin->error.PHP_EOL;
+		
+		if (!empty($bitcoin->error))
+			echo $bitcoin->error.PHP_EOL;
 	}
 	elseif (count($transactions) == 1) {
 		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
@@ -96,7 +91,9 @@ if (!empty($transactions)) {
 		foreach ($transactions as $address => $amount) {
 			$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$address,(float)bcsub($amount,$CFG->bitcoin_sending_fee,8));
 			$fees_charged += $CFG->bitcoin_sending_fee;
-			echo $bitcoin->error.PHP_EOL;
+			
+			if (!empty($bitcoin->error))
+				echo $bitcoin->error.PHP_EOL;
 		}
 	}
 }
@@ -110,9 +107,7 @@ if (!empty($response) && $users && !$bitcoin->error) {
 
 	foreach ($users as $site_user => $amount) {
 		$total += $amount;
-		$balance = $user_balances[$site_user] - $amount;
 		User::updateBalances($site_user,array('btc'=>(-1 * $amount)),true);
-		echo 'User '.$site_user.' from '.$user_balances[$site_user].' to '.$balance.PHP_EOL;
 	}
 	
 	foreach ($requests as $request_id) {
@@ -120,13 +115,11 @@ if (!empty($response) && $users && !$bitcoin->error) {
 	}
 	
 	if ($total > 0) {
-		$hot_wallet = $status['hot_wallet_btc'] - $total + $actual_fee_difference;
-		$total_btc = $status['total_btc'] - $total + $actual_fee_difference;
-		Status::sumFields(array('hot_wallet_btc'=>(0 - $total + $actual_fee_difference),'total_btc'=>(0 - $total + $actual_fee_difference),'btc_escrow'=>($actual_fee_difference)));
+		Status::sumFields(array('hot_wallet_btc'=>(0 - $total + $actual_fee_difference),'total_btc'=>(0 - $total + $actual_fee_difference)));
+		Status::updateEscrows(array($CFG->btc_currency_id=>$actual_fee_difference));
 		db_update('status',1,array('pending_withdrawals'=>($pending - $total)));
 	}
 }
-db_commit();
 
 if (empty($pending)) db_update('status',1,array('deficit_btc'=>'0'));
 
