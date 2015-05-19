@@ -556,6 +556,8 @@ class Orders {
 		$executed_orders = array();
 		$executed_prices = array();
 		$executed_orig_prices = false;
+		$no_compatible = false;
+		$triggered_rows = false;
 		
 		if (!empty($on_hold['BTC']['total']))
 			$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
