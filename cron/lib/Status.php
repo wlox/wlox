@@ -58,7 +58,7 @@ class Status{
 	
 		$set = array();
 		foreach ($fields as $field => $sum_amount) {
-			if (!is_numeric($sum_amount) || !($sum_amount > 0))
+			if (!is_numeric($sum_amount))
 				continue;
 				
 			$set[] = $field.' = '.$field.' + ('.$sum_amount.')';
