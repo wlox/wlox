@@ -117,6 +117,9 @@ ALTER TABLE `site_users`
   DROP `mur`,
   DROP `twd`;
 
+ALTER TABLE `status` DROP `trading_status`;
+ALTER TABLE `status` DROP `withdrawals_status`;
+
 CREATE TABLE status_escrows (id INT( 10 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ) ENGINE = InnoDB DEFAULT CHARSET=latin1;
 ALTER TABLE status_escrows ADD `balance` DOUBLE(20,8) NOT NULL;
 ALTER TABLE status_escrows ADD `currency` INT( 10 ) NOT NULL;
