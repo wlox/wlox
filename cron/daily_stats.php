@@ -14,6 +14,7 @@ $result = db_query($sql);
 $sql = 'SELECT COUNT(DISTINCT site_users.id) AS total_users, SUM(IF(site_users_balances.currency = '.$CFG->btc_currency_id.',site_users_balances.balance,0)) AS btc, SUM(IF(site_users_balances.currency != '.$CFG->btc_currency_id.',site_users_balances.balance * currencies.usd_ask,0)) AS usd FROM site_users LEFT JOIN site_users_balances ON (site_users.id = site_users_balances.site_user) LEFT JOIN currencies ON (currencies.id = site_users_balances.currency)';
 $result = db_query_array($sql);
 if ($result) {
+	$total_users = $result[0]['total_users'];
 	$total_btc = $result[0]['btc'];
 	$total_usd = $result[0]['usd'];
 	$btc_per_user = $total_btc / $total_users;

@@ -32,6 +32,7 @@ else {
 	var email_text_fail = null;
 	var smtp = null;
 	var statements = {};
+	var received = [];
 	
 	// check for pending requests
 	setInterval(function () {
@@ -80,7 +81,7 @@ else {
 			var offset = (new Date()).getTimezoneOffset() * 60;
 			for (acc_num in sys_bank_accounts) {
 				data.nonce = Date.now();
-				data.params = { accountId: String(acc_num), fromTime: String(Math.ceil(Date.now() / 1000) - 86400) };
+				data.params = { accountNumber: String(acc_num), fromTime: String(Math.ceil(Date.now() / 1000) - 86400) };
 				data.signed = bitcoin.Message.sign(bckey, data.key + data.nonce + JSON.stringify(data.params)).toString('base64');
 				socket.emit('statement', JSON.stringify(data));
 			}
@@ -147,6 +148,12 @@ else {
 		var amount = transfer.params.sendAmount;
 		var amount1 = transfer.params.receiveAmount;
 		
+		// check for double hooks
+		if (received.indexOf(transfer.params.id) >= 0)
+			return false;
+		else
+			logReceived(transfer.params.id);
+		
 		if (!currency_abbr || !currency_abbr1) {
 			if (!statement)
 				console.error('Could not parse transfer currency.');
@@ -173,7 +180,7 @@ else {
 					console.error('Could not parse withdrawal id.');
 				return false;
 			}
-			
+
 			db_query('SELECT requests.id AS request_id, requests.site_user AS user_id, site_users_balances.balance AS balance, site_users_balances.id AS balance_id FROM requests LEFT JOIN site_users_balances ON (requests.site_user = site_users_balances.site_user AND requests.currency = site_users_balances.currency) WHERE requests.id = '+req_id+' AND requests.request_status != '+cfg.request_completed_id+' LIMIT 0,1', function (error,results) {
 				if (!error && results[0]) {
 					db_query('UPDATE site_users_balances SET balance = balance - '+amount+' WHERE id = '+results[0].balance_id, function (error1,results1) {
@@ -203,12 +210,12 @@ else {
 				}
 			});
 		}
-		else {
+		else if (sys_bank_accounts[transfer.params.receiveAccount]) {
 			// if is deposit
 			db_query('SELECT id FROM requests WHERE crypto_id = '+transfer.params.id+' LIMIT 0,1', function (error,results) {
 				if (!error && !results[0]) {
-					db_query('SELECT bank_accounts.site_user AS user_id, bank_accounts.currency AS currency_id, bank_accounts1.currency AS currency_id1, bank_accounts1.account_number AS account_number1, currencies.currency AS currency, site_users.notify_deposit_bank AS notify_deposit_bank, site_users.first_name AS first_name, site_users.last_name AS last_name, site_users.email AS email, site_users.last_lang AS last_lang, site_users.notify_deposit_bank AS notify_deposit_bank, site_users_balances.balance AS cur_balance, site_users_balances.id AS balance_id FROM bank_accounts LEFT JOIN currencies ON (currencies.id = bank_accounts.currency) LEFT JOIN site_users ON (bank_accounts.site_user = site_users.id) LEFT JOIN currencies currencies1 ON (currencies1.currency = "'+transfer.params.receiveCurrency+'") LEFT JOIN bank_accounts bank_accounts1 ON (site_users.id = bank_accounts1.site_user AND bank_accounts1.currency = currencies1.id) LEFT JOIN site_users_balances ON (site_users.id = site_users_balances.site_user AND site_users_balances.currency = currencies1.id) WHERE bank_accounts.account_number = '+transfer.params.sendAccount+' LIMIT 0,1', function (error1,results1) {
-						if (!error1 && results1 && results1[0] && results1[0].balance_id && (results1[0].currency == transfer.params.receiveCurrency || (results1 && results1[0].currency_id1 && results1[0].account_number1))) {
+					db_query('SELECT bank_accounts.site_user AS user_id, bank_accounts.currency AS currency_id, currencies1.id AS currency_id1, bank_accounts1.account_number AS account_number1, currencies.currency AS currency, site_users.notify_deposit_bank AS notify_deposit_bank, site_users.first_name AS first_name, site_users.last_name AS last_name, site_users.email AS email, site_users.last_lang AS last_lang, site_users.notify_deposit_bank AS notify_deposit_bank, site_users_balances.balance AS cur_balance, site_users_balances.id AS balance_id FROM bank_accounts LEFT JOIN currencies ON (currencies.id = bank_accounts.currency) LEFT JOIN site_users ON (bank_accounts.site_user = site_users.id) LEFT JOIN currencies currencies1 ON (currencies1.currency = "'+transfer.params.receiveCurrency+'") LEFT JOIN bank_accounts bank_accounts1 ON (site_users.id = bank_accounts1.site_user AND bank_accounts1.currency = currencies1.id) LEFT JOIN site_users_balances ON (site_users.id = site_users_balances.site_user AND site_users_balances.currency = currencies1.id) WHERE bank_accounts.account_number = '+transfer.params.sendAccount+' LIMIT 0,1', function (error1,results1) {
+						if (!error1 && results1 && results1[0] && results1[0].currency_id1 && (results1[0].currency == transfer.params.receiveCurrency || (results1 && results1[0].currency_id1 && results1[0].account_number1))) {
 							if (results1[0].currency != transfer.params.receiveCurrency) {
 								results1[0].currency_id = results1[0].currency_id1;
 							}
@@ -216,15 +223,20 @@ else {
 							db_query('INSERT INTO requests (`date`,site_user,currency,amount,net_amount,fee,description,request_type,request_status,account,crypto_id) VALUES ("'+mysqlDate()+'",'+results1[0]['user_id']+','+results1[0]['currency_id']+','+amount1+','+amount1+','+fee+','+cfg.deposit_fiat_desc+','+cfg.request_deposit_id+','+cfg.request_completed_id+','+transfer.params.sendAccount+','+transfer.params.id+')', function (error2,results2) {
 								if (!error2 && results2.affectedRows && results2.affectedRows > 0) {
 									db_query('UPDATE site_users_balances SET balance = balance + '+amount1+' WHERE id = '+results1[0].balance_id, function (error3,results3) {
-										if (!error3 && results3.affectedRows > 0) {
-											db_query('INSERT INTO history (`date`,history_action,site_user,request_id,balance_before,balance_after) VALUES ("'+mysqlDate()+'",'+cfg.history_deposit_id+','+results1[0]['user_id']+','+results2.insertId+','+results1[0].cur_balance+','+(parseFloat(results1[0].cur_balance) + parseFloat(amount1))+')', function (error4,results4) {
-												if (error4 || !results4.affectedRows || results4.affectedRows == 0)
-													console.error('Could not update deposit history.',error3);
+										if (!results3.affectedRows || results3.affectedRows == 0) {
+											db_query('INSERT INTO site_users_balances (balance,site_user,currency) VALUES ('+amount1+','+results1[0].user_id+','+results1[0].currency_id1+')', function (error,result) {
+												if (error)
+													console.error('Could\'t create user balance record.',error);
 											});
-											
-											if (results1[0].notify_deposit_bank && results1[0].notify_deposit_bank == 'Y')
-												sendMail(cfg.form_email_from+' <'+cfg.email_smtp_send_from+'>',results1[0].email,email_text,{ exchange_name: cfg.exchange_name, amount:amount1, first_name:results1[0].first_name, last_name: results1[0].last_name, currency:transfer.params.receiveCurrency, id:results2.insertId },results1[0].last_lang);
 										}
+
+										db_query('INSERT INTO history (`date`,history_action,site_user,request_id,balance_before,balance_after) VALUES ("'+mysqlDate()+'",'+cfg.history_deposit_id+','+results1[0]['user_id']+','+results2.insertId+','+results1[0].cur_balance+','+(parseFloat(results1[0].cur_balance) + parseFloat(amount1))+')', function (error4,results4) {
+											if (error4 || !results4.affectedRows || results4.affectedRows == 0)
+												console.error('Could not update deposit history.',error3);
+										});
+										
+										if (results1[0].notify_deposit_bank && results1[0].notify_deposit_bank == 'Y')
+											sendMail(cfg.form_email_from+' <'+cfg.email_smtp_send_from+'>',results1[0].email,email_text,{ exchange_name: cfg.exchange_name, amount:amount1, first_name:results1[0].first_name, last_name: results1[0].last_name, currency:transfer.params.receiveCurrency, id:results2.insertId },results1[0].last_lang);
 									});
 								}
 								else
@@ -232,13 +244,17 @@ else {
 							});
 						}
 						else {
-							var data = {key: bcpub, nonce: Date.now()};
-							data.params = { accountNumber: String(transfer.params.receiveAccount), beneficiary: String(transfer.params.sendAccount), currency: transfer.params.receiveCurrency, amount: transfer.params.receiveAmount, narrative: cfg.exchange_name + ' TID #'+transfer.params.id+' please link account'};
-							data.signed = bitcoin.Message.sign(bckey, data.key + data.nonce + JSON.stringify(data.params)).toString('base64');
-							socket.emit('transfer', JSON.stringify(data));
-							
-							notifyFailure(transfer);
-							console.error('Could not find deposit bank account.',error1);
+							db_query('INSERT INTO requests (`date`,amount,net_amount,description,request_type,request_status,account,crypto_id) VALUES ("'+mysqlDate()+'",'+amount1+','+amount1+','+cfg.deposit_fiat_desc+','+cfg.request_deposit_id+','+cfg.request_cancelled_id+','+transfer.params.sendAccount+','+transfer.params.id+')', function (error,result) {
+								if (!error && result.insertId) {
+									var data = {key: bcpub, nonce: Date.now()};
+									data.params = { accountNumber: String(transfer.params.receiveAccount), beneficiary: String(transfer.params.sendAccount), currency: transfer.params.receiveCurrency, amount: transfer.params.receiveAmount, narrative: cfg.exchange_name + ' TID #'+transfer.params.id+' please link account'};
+									data.signed = bitcoin.Message.sign(bckey, data.key + data.nonce + JSON.stringify(data.params)).toString('base64');
+									socket.emit('transfer', JSON.stringify(data));
+									
+									notifyFailure(transfer);
+									console.error('Could not find deposit bank account.',error1);
+								}
+							});
 						}
 					});
 				}
@@ -321,6 +337,14 @@ else {
 		
 		if (sent.length > 10000)
 			sent.pop();
+	}
+	
+	// keep log of received transactions
+	function logReceived(id) {
+		received.push(id);
+		
+		if (received.length > 10000)
+			received.pop();
 	}
 	
 	// date in mysql format
