@@ -79,7 +79,7 @@ class User {
 		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
 		$result = db_query($sql);
 		
-		if ($result && $result < count($currencies_balances)) {
+		if (!$result || $result < count($currencies_balances)) {
 			$sql = 'SELECT currency FROM site_users_balances WHERE site_user = '.$user_id;
 			$result = db_query_array($sql);
 			$existing = array();
