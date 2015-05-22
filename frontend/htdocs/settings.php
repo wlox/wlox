@@ -343,6 +343,16 @@ if (!empty($_REQUEST['message'])) {
 if (!empty($_REQUEST['notice']) && $_REQUEST['notice'] == 'email')
 	$notice = Lang::string('settings-change-notice');
 
+$cur_sel = array();
+if ($CFG->currencies) {
+	foreach ($CFG->currencies as $key => $currency) {
+		if (is_numeric($key) || $currency['currency'] == 'BTC')
+			continue;
+		
+		$cur_sel[$key] = $currency;
+	}
+}
+
 $page_title = Lang::string('settings');
 $_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 
@@ -377,7 +387,7 @@ include 'includes/head.php';
                 $personal->textInput('last_name',Lang::string('settings-last-name'),true);
                 $personal->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
                 $personal->textInput('email',Lang::string('settings-email'),'email');
-                $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$CFG->currencies,false,array('currency'));
+                $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$cur_sel,false,array('currency'));
                 $personal->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('settings-save-info').'" class="but_user" /></div><input type="hidden" name="submitted" value="1" />');
                 $personal->hiddenInput('uniq',1,$_SESSION["settings_uniq"]);
                 $personal->display();

@@ -160,7 +160,10 @@ include 'includes/head.php';
 								<select id="currency" name="currency">
 								<? 
 								if ($CFG->currencies) {
-									foreach ($CFG->currencies as $currency) {
+									foreach ($CFG->currencies as $key => $currency) {
+										if (is_numeric($key) || $currency['currency'] == 'BTC')
+											continue;
+										
 										echo '<option '.(($currency['id'] == $currency1 || (!$currency1 && $currency['currency'] == 'USD')) ? 'selected="selected"' : '').' value="'.$currency['id'].'">'.$currency['currency'].'</option>';
 									}
 								}
