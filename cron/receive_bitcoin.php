@@ -124,7 +124,8 @@ foreach ($transactions as $t_id) {
 					    $info['currency'] = 'BTC';
 					    $info['id'] = (!empty($request_id)) ? $request_id : $updated;
 					    $CFG->language = ($info['last_lang']) ? $info['last_lang'] : 'en';
-					    Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+					    trigger_error($email['title'],E_USER_WARNING);
+					    //Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 					}
 					
 					if (!$unlink)
@@ -148,7 +149,7 @@ foreach ($transactions as $t_id) {
 	if ($send && !$pending && !($hot_wallet_in > 0))
 		unlink($transactions_dir.$t_id);
 	elseif (!$send && ($hot_wallet_in > 0)) {
-		$update = Status::sumFields(array('hot_wallet_btc'=>$hot_wallet_in,'warm_wallet_btc'=>(-1 * ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>(-1 * $CFG->bitcoin_sending_fee)));
+		$updated = Status::sumFields(array('hot_wallet_btc'=>$hot_wallet_in,'warm_wallet_btc'=>(-1 * ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>(-1 * $CFG->bitcoin_sending_fee)));
 		echo 'Hot wallet received '.$hot_wallet_in.PHP_EOL;
 		if ($updated) {
 			unlink($transactions_dir.$t_id);
