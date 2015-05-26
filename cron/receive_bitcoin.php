@@ -148,10 +148,10 @@ foreach ($transactions as $t_id) {
 	if ($send && !$pending && !($hot_wallet_in > 0))
 		unlink($transactions_dir.$t_id);
 	elseif (!$send && ($hot_wallet_in > 0)) {
-		$update = Status::sumFields(array('hot_wallet_btc'=>$hot_wallet_in,'warm_wallet_btc'=>(-1 * ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>(-1 * $CFG->bitcoin_sending_fee)));
+		$updated = Status::sumFields(array('hot_wallet_btc'=>$hot_wallet_in,'warm_wallet_btc'=>(-1 * ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>(-1 * $CFG->bitcoin_sending_fee)));
 		echo 'Hot wallet received '.$hot_wallet_in.PHP_EOL;
 		if ($updated) {
-			unlink($transactions_dir.$t_id);
+			$unlink = unlink($transactions_dir.$t_id);
 			if (!$unlink && file_exists($unlink)) {
 				$unlink = unlink($transactions_dir.$t_id);
 			}
