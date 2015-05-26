@@ -52,7 +52,7 @@ while (file_exists($lock_file)) {
 		$last_notify = time();
 		
 		$content = 'Script '.$CFG->self.' has been waiting for'.(time() - $start_time).'s for '.$lock_file_info[0].' ('.(time() - $lock_file_info[1]).'s) to complete.';
-		Email::send($CFG->support_email,$CFG->support_email,'Cron Bottleneck @'.$CFG->self,$CFG->exchange_name.' Cron',false,$content);
+		//Email::send($CFG->support_email,$CFG->support_email,'Cron Bottleneck @'.$CFG->self,$CFG->exchange_name.' Cron',false,$content);
 		trigger_error($content,E_USER_WARNING);
 	}
 }
