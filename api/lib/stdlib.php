@@ -37,5 +37,14 @@ function print_ar($arr, $html_entities = false, $no_interpolation = false, $in_r
 	}
 }
 
+if (!function_exists('mb_strlen')) {
+	function mb_strlen($utf8string=false) {
+		if (empty($utf8string))
+			return false;
+
+		return preg_match_all("/.{1}/us",$utf8string,$dummy);
+	}
+}
+
 
 ?>
