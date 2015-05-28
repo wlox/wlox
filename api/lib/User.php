@@ -620,7 +620,7 @@ class User {
 	
 	public static function updateSettings($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1) {
 		global $CFG;
-		trigger_error($CFG->token_verified);
+		
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 			
