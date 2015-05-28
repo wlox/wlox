@@ -39,7 +39,7 @@ else {
 		if (!ready)
 			return false;
 		
-		db_query('SELECT requests.*, bank_accounts.id AS user_acc_id, currencies.account_number AS sys_acc_num, currencies.currency AS currency_abbr FROM requests LEFT JOIN bank_accounts ON (bank_accounts.account_number = requests.account AND bank_accounts.site_user = requests.site_user AND bank_accounts.currency = requests.currency) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE requests.request_status = '+cfg.request_pending_id+' AND requests.request_type = '+cfg.request_withdrawal_id+' AND requests.currency != '+cfg.btc_currency_id+' AND crypto_id != 1', function (error,results) {
+		db_query('SELECT requests.*, bank_accounts.id AS user_acc_id, currencies.account_number AS sys_acc_num, currencies.currency AS currency_abbr FROM requests LEFT JOIN bank_accounts ON (bank_accounts.account_number = requests.account AND bank_accounts.site_user = requests.site_user AND bank_accounts.currency = requests.currency) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE requests.request_status = '+cfg.request_pending_id+' AND requests.request_type = '+cfg.request_withdrawal_id+' AND requests.currency != '+cfg.btc_currency_id+' AND crypto_id != 1 AND requests.done != "Y"', function (error,results) {
 			if (!error && results.length > 0) {
 				for (i in results) {
 					if (sent.indexOf(results[i].id) >= 0)

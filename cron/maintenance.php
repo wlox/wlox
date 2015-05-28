@@ -62,7 +62,7 @@ $sql = "DELETE FROM ip_access_log WHERE `timestamp` < ('".date('Y-m-d H:i:s')."'
 db_query($sql);
 
 // set market price orders at market price
-$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,currencies.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC FOR UPDATE";
+$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,currencies.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC";
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
@@ -97,8 +97,7 @@ if ($CFG->email_notify_fiat_withdrawals == 'Y') {
 }
 
 // subtract withdrawals
-db_start_transaction();
-$sql = 'SELECT site_users_balances.balance AS balance, site_users_balances.id AS balance_id, requests.id AS request_id, requests.site_user AS site_user, requests.currency AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users_balances ON (site_users_balances.id = requests.site_user AND site_users_balances.currency = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' FOR UPDATE';
+$sql = 'SELECT site_users_balances.balance AS balance, site_users_balances.id AS balance_id, requests.id AS request_id, requests.site_user AS site_user, requests.currency AS currency, ROUND(requests.amount,2) AS amount FROM requests LEFT JOIN site_users_balances ON (site_users_balances.id = requests.site_user AND site_users_balances.currency = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\'';
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
@@ -116,13 +115,11 @@ if ($result) {
 	$sql = 'UPDATE requests SET request_status = '.$CFG->request_completed_id.' WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done = \'Y\' ';
 	db_query($sql);
 }
-db_commit();
 
 // currency ledger
 if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
-	db_start_transaction();
 	// check total fiat needed for withdrawals
-	$sql = "SELECT currency, SUM(amount) AS amount FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency != {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} GROUP BY currency FOR UPDATE";
+	$sql = "SELECT currency, SUM(amount) AS amount FROM requests WHERE requests.request_status = {$CFG->request_pending_id} AND currency != {$CFG->btc_currency_id} AND request_type = {$CFG->request_withdrawal_id} GROUP BY currency";
 	$result = db_query_array($sql);
 	if ($result) {
 		foreach ($result as $row) {
@@ -134,7 +131,7 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	//////////////////////////////////////////
 	
 	// get current currency ledger
-	$sql = 'SELECT * FROM conversions WHERE is_active != "Y" FOR UPDATE';
+	$sql = 'SELECT * FROM conversions WHERE is_active != "Y"';
 	$result = db_query_array($sql);
 	if ($result) {
 		foreach ($result as $row) {
@@ -143,7 +140,7 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	}
 	
 	// factor new transactions into ledger balances
-	$sql = 'SELECT IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1) AS currency, IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) AS currency1, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.btc_price * transactions.btc, transactions.orig_btc_price * transactions.btc )) AS amount, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.orig_btc_price * transactions.btc, transactions.btc_price * transactions.btc)) AS amount_needed FROM transactions WHERE factored != "Y" AND conversion = \'Y\' GROUP BY CONCAT(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) , \'-\', IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1)) FOR UPDATE';
+	$sql = 'SELECT IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1) AS currency, IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) AS currency1, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.btc_price * transactions.btc, transactions.orig_btc_price * transactions.btc )) AS amount, SUM(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', transactions.orig_btc_price * transactions.btc, transactions.btc_price * transactions.btc)) AS amount_needed FROM transactions WHERE factored != "Y" AND conversion = \'Y\' GROUP BY CONCAT(IF(transactions.transaction_type = '.$CFG->transactions_buy_id.', currency1, currency) , \'-\', IF( transactions.transaction_type = '.$CFG->transactions_buy_id.', currency, currency1))';
 	$result = db_query_array($sql);
 	if ($result) {
 		foreach ($result as $row) {
@@ -172,7 +169,6 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	
 	$sql = 'UPDATE transactions SET factored = "Y" WHERE factored != "Y"';
 	db_query($sql);
-	db_commit();
 }
 
 db_update('status',1,array('cron_maintenance'=>date('Y-m-d H:i:s')));
