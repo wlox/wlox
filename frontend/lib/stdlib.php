@@ -127,4 +127,13 @@ function unserialize_phpbinary($session_data) {
 	return $return_data;
 }
 
+if (!function_exists('mb_strlen')) {
+	function mb_strlen($utf8string=false) {
+		if (empty($utf8string))
+			return false;
+
+		return preg_match_all("/.{1}/us",$utf8string,$dummy);
+	}
+}
+
 ?>

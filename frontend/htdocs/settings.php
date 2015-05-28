@@ -10,17 +10,26 @@ $account_deactivated = (User::$info['deactivated'] == 'Y');
 $account_locked = (User::$info['locked'] == 'Y');
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
 $authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
+$email_auth = false;
 $match = false;
 $request_2fa = false;
 $too_few_chars = false;
+$expired = false;
+$no_token = false;
 
 API::add('User','getInfo',array($_SESSION['session_id']));
-API::add('User','getCountries');
+//API::add('User','getCountries');
 $query = API::send();
-$countries = $query['User']['getCountries']['results'][0];
+//$countries = $query['User']['getCountries']['results'][0];
 
-if (!empty($_REQUEST['ex_request']))
+if (!empty($_REQUEST['ex_request'])) {
+	$uniq = $_REQUEST['uniq'];
 	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
+	if ($_REQUEST['settings'])
+		$_REQUEST['settings']['uniq'] = $uniq;
+	else
+		$_REQUEST['uniq'] = $uniq;
+}
 
 if ($authcode1) {
 	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
@@ -29,6 +38,7 @@ if ($authcode1) {
 	if ($query['User']['getSettingsChangeRequest']['results'][0]) {
 		$_REQUEST = unserialize(base64_decode($query['User']['getSettingsChangeRequest']['results'][0]));
 		unset($_REQUEST['submitted']);
+		$email_auth = true;
 	}
 	else
 		Errors::add(Lang::string('settings-request-expired'));
@@ -46,6 +56,9 @@ else {
 }
 
 if (!empty($_REQUEST['settings'])) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['settings']['uniq']))
+		$expired = true;
+	
 	if (!empty($_REQUEST['settings']['pass'])) {
 		$match = preg_match_all($CFG->pass_regex,$_REQUEST['settings']['pass'],$matches);
 		$too_few_chars = (mb_strlen($_REQUEST['settings']['pass'],'utf-8') < $CFG->pass_min_chars);
@@ -56,9 +69,9 @@ if (!empty($_REQUEST['settings'])) {
 		$_REQUEST['settings']['pass2'] = preg_replace($CFG->pass_regex, "",$_REQUEST['settings']['pass2']);
 	}
 	
-	$_REQUEST['settings']['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['settings']['first_name']);
-	$_REQUEST['settings']['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['settings']['last_name']);
-	$_REQUEST['settings']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['settings']['country']);
+	//$_REQUEST['settings']['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['settings']['first_name']);
+	//$_REQUEST['settings']['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\._-\s]/u", "",$_REQUEST['settings']['last_name']);
+	//$_REQUEST['settings']['country'] = preg_replace("/[^0-9]/", "",$_REQUEST['settings']['country']);
 	$_REQUEST['settings']['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$_REQUEST['settings']['email']);
 }
 
@@ -71,12 +84,20 @@ if (!$personal->info['email'])
 
 $personal->verify();
 
+if ($expired)
+	$personal->errors[] = 'Page expired.';
 if ($match)
 	$personal->errors[] = htmlentities(str_replace('[characters]',implode(',',array_unique($matches[0])),Lang::string('login-pass-chars-error')));
 if ($too_few_chars)	
 	$personal->errors[] = Lang::string('login-password-error');
 
-if (!empty($_REQUEST['submitted']) && !$token1 && !is_array($personal->errors)) {
+
+if (!empty($_REQUEST['submitted']) && empty($_REQUEST['settings'])) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+}
+
+if (!empty($_REQUEST['submitted']) && !$token1 && !is_array($personal->errors) && !is_array(Errors::$errors)) {
 	if (!empty($_REQUEST['request_2fa'])) {
 		if (!($token1 > 0)) {
 			$no_token = true;
@@ -98,8 +119,8 @@ if (!empty($_REQUEST['submitted']) && !$token1 && !is_array($personal->errors)) 
 		API::add('User','settingsEmail2fa',array($_REQUEST));
 		$query = API::send();
 		
-		if ($query['User']['settingsEmail2fa']['results'][0])
-			Link::redirect('settings.php?notice=email');
+		$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
+		Link::redirect('settings.php?notice=email');
 	}
 }
 
@@ -141,6 +162,7 @@ elseif (!empty($_REQUEST['settings']) && !is_array($personal->errors)) {
 		}
 		
 		if (!is_array(Errors::$errors)) {
+			$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 			Link::redirect('settings.php?message=settings-personal-message');
 		}
 		else
@@ -172,7 +194,9 @@ else {
 }
 
 if (!empty($_REQUEST['prefs'])) {
-	if (!$no_token && !$request_2fa) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+	elseif (!$no_token && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','updateSettings',array($confirm_withdrawal_2fa_btc1,$confirm_withdrawal_email_btc1,$confirm_withdrawal_2fa_bank1,$confirm_withdrawal_email_bank1,$notify_deposit_btc1,$notify_deposit_bank1,$notify_login1,$notify_withdraw_btc1,$notify_withdraw_bank1));
@@ -192,6 +216,7 @@ if (!empty($_REQUEST['prefs'])) {
 				Errors::add(Lang::string('security-incorrect-token'));
 		}	
 		if (!is_array(Errors::$errors)) {
+			$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 			Link::redirect('settings.php?message=settings-settings-message');
 		}
 		else
@@ -200,9 +225,13 @@ if (!empty($_REQUEST['prefs'])) {
 }
 
 if (!empty($_REQUEST['deactivate_account'])) {
-	API::add('User','hasCurrencies');
-	$query = API::send();
-	$found = $query['User']['hasCurrencies']['results'][0];
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+	else {
+		API::add('User','hasCurrencies');
+		$query = API::send();
+		$found = $query['User']['hasCurrencies']['results'][0];
+	}
 	
 	if ($found) {
 		Errors::add(Lang::string('settings-deactivate-error'));
@@ -230,6 +259,7 @@ if (!empty($_REQUEST['deactivate_account'])) {
 			}
 			
 			if (!is_array(Errors::$errors)) {
+				$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 				Link::redirect('settings.php?message=settings-account-deactivated');
 			}
 			else
@@ -239,7 +269,9 @@ if (!empty($_REQUEST['deactivate_account'])) {
 }
 
 if (!empty($_REQUEST['reactivate_account'])) {
-	if (!$no_token && !$request_2fa) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+	elseif (!$no_token && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','reactivateAccount');
@@ -260,6 +292,7 @@ if (!empty($_REQUEST['reactivate_account'])) {
 		}
 		
 		if (!is_array(Errors::$errors)) {
+			$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 			Link::redirect('settings.php?message=settings-account-reactivated');
 		}
 		else
@@ -268,7 +301,9 @@ if (!empty($_REQUEST['reactivate_account'])) {
 }
 
 if (!empty($_REQUEST['lock_account'])) {
-	if (!$no_token && !$request_2fa) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+	elseif (!$no_token && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','lockAccount');
@@ -289,6 +324,7 @@ if (!empty($_REQUEST['lock_account'])) {
 		}
 		
 		if (!is_array(Errors::$errors)) {
+			$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 			Link::redirect('settings.php?message=settings-account-locked');
 		}
 		else
@@ -297,7 +333,9 @@ if (!empty($_REQUEST['lock_account'])) {
 }
 
 if (!empty($_REQUEST['unlock_account'])) {
-	if (!$no_token && !$request_2fa) {
+	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
+		Errors::add('Page expired.');
+	elseif (!$no_token && !$request_2fa) {
 		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','unlockAccount');
@@ -318,6 +356,7 @@ if (!empty($_REQUEST['unlock_account'])) {
 		}
 		
 		if (!is_array(Errors::$errors)) {
+			$_SESSION["settings_uniq"] = md5(uniqid(mt_rand(),true));
 			Link::redirect('settings.php?message=settings-account-unlocked');
 		}
 		else
@@ -383,9 +422,9 @@ include 'includes/head.php';
                 <?
                 $personal->passwordInput('pass',Lang::string('settings-pass'));
                 $personal->passwordInput('pass2',Lang::string('settings-pass-confirm'),false,false,false,false,false,false,'pass');
-                $personal->textInput('first_name',Lang::string('settings-first-name'),true);
-                $personal->textInput('last_name',Lang::string('settings-last-name'),true);
-                $personal->selectInput('country',Lang::string('settings-country'),1,false,$countries,false,array('name'));
+                //$personal->textInput('first_name',Lang::string('settings-first-name'));
+                //$personal->textInput('last_name',Lang::string('settings-last-name'));
+                //$personal->selectInput('country',Lang::string('settings-country'),false,false,$countries,false,array('name'));
                 $personal->textInput('email',Lang::string('settings-email'),'email');
                 $personal->selectInput('default_currency',Lang::string('default-currency'),0,$CFG->currencies['USD']['id'],$cur_sel,false,array('currency'));
                 $personal->HTML('<div class="form_button"><input type="submit" name="submit" value="'.Lang::string('settings-save-info').'" class="but_user" /></div><input type="hidden" name="submitted" value="1" />');
@@ -539,6 +578,7 @@ include 'includes/head.php';
 				<form id="enable_tfa" action="settings.php" method="POST">
 					<input type="hidden" name="request_2fa" value="1" />
 					<input type="hidden" name="ex_request" value="<?= urlencode(serialize($_REQUEST)) ?>" />
+					<input type="hidden" name="uniq" value="<?= $_SESSION["settings_uniq"] ?>" />
 					<div class="buyform">
 						<div class="one_half">
 							<div class="spacer"></div>
