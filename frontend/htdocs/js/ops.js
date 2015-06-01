@@ -100,121 +100,162 @@ function graphPriceHistory(timeframe,currency) {
 	}
 }
 
-function graphOrders() {
+var last_data = null;
+function graphOrders(json_data) {
 	$("#graph_orders").append('<div class="tp-loader"></div>');
 	var currency = $('#graph_orders_currency').val();
 	
-	while (!ajax_active) {
-		$.getJSON("includes/ajax.graph.php?action=orders&currency="+currency,function(json_data) {
-			var series = [
-			    {
-            	 data: json_data.bids,
-                 lines: { show: true, fill: true },
-                 points: { show: false, fill: false },
-                 color: '#17D6D6'
-            	},
-            	{
-             	 data: json_data.asks,
-                 lines: { show: true, fill: true },
-                 points: { show: false, fill: false },
-                 color: '#53DB80'
-            	}
-	     	];
-			
-			if (plot) {
-				plot.setData(series);
-				plot.setupGrid();
-				plot.draw();
-				return false;
-			}
-			 
-			plot = $.plot($("#graph_orders"),series,
-	     	{
-	     		xaxis: {
-	     			tickLength: 0
-	     		},
-	     		yaxis: {
-	     		},
-	     		grid: { 
-	     			backgroundColor: '#FFFFFF',
-	     			borderWidth: 1,
-	     			borderColor: '#aaaaaa',
-	     			hoverable: true
-	     		},
-	     		crosshair: {
-	     			mode:"x",
-	     		    color: "#aaaaaa",
-	     		    lineWidth: 1
-	     		}
-	     	});
-			
-			var date_options = { year: "numeric", month: "short",day: "numeric" };
-			axes = plot.getAxes();
-			dataset = plot.getData();
-			var left_offset = 30;
-			var bottom_offset = 50;
-			var flip;
-			var max_x;
-			var currency1 = currency.toUpperCase();
-			$("#graph_orders").bind("plothover", function (event, pos, item) {
-				plot.unhighlight();
-				latestPosition = pos;
-				
-				if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
-					$('#tooltip').css('display','none');
-					return false;
-				}
-				
-				if (!updateLegendTimeout) {
-					updateLegendTimeout = setTimeout(updateLegend, 50);
-				}
-	
-				var ask = false;
-				if (pos.x >= dataset[graph_i1].data[0][0]) {
-					graph_point = graph_point1;
-					graph_i = graph_i1;
-					graph_j = graph_j1;
-					ask = true;
-				}
-				
-				$('#tooltip').css('display','block');
-				$('#tooltip .price').html(currency1+' '+formatCurrency(graph_point[0]));
-		
-				if (!ask) {
-					$('#tooltip .bid span').html(graph_point[1]);
-					$('#tooltip .bid').css('display','block');
-					$('#tooltip .ask').css('display','none');
-				}
-				else {
-					$('#tooltip .ask span').html(graph_point[1]);
-					$('#tooltip .ask').css('display','block');
-					$('#tooltip .bid').css('display','none');
-				}
-				
-				var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
-				var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
-				max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
-	
-				if ((max_x - x_pix) < $('#tooltip').width())
-					flip = true;
-				else
-					flip = false;
-				
-				if (!flip) {
-					$('#tooltip').css('left',(x_pix+left_offset)+'px');
-					$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-				}
-				else {
-					$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
-					$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-				}
-				
-				plot.highlight(graph_i,graph_j);
-			}); 
-			
-			$("#graph_price_history").remove('.tp-loader');
-		});
+	if (!json_data) {
+		try {
+			json_data = static_data;
+		}
+		catch (e) {
+			console.log(e);
+		}
 	}
+	
+	if (last_data) {
+		if (last_data.bids && last_data.bids.length && last_data.bids.length > 30 && json_data.bids.length && json_data.bids.length >= 30) {
+			var c = (last_data.bids.length && last_data.bids.length > 0) ? last_data.bids.length : 0;
+			c = (c > 30) ? 29 : c - 1;
+			
+			var diff = (last_data.bids[c][1] && json_data.bids[c][1]) ? last_data.bids[c][1] - json_data.bids[c][1] : 0;
+			last_data.bids.splice(0,30);
+			
+			last_data.bids = last_data.bids.map(function(item) {
+				item[1] += diff;
+				return item;
+			});
+			
+			if (json_data.bids)
+				json_data.bids = json_data.bids.concat(last_data.bids);
+		}
+		if (last_data.asks && last_data.asks.length && last_data.asks.length > 30 && json_data.asks.length && json_data.asks.length >= 30) {
+			var c = (last_data.asks.length && last_data.asks.length > 0) ? last_data.asks.length : 0;
+			c = (c > 30) ? 29 : c - 1;
+			
+			var diff = (last_data.asks[c][1] && json_data.asks[c][1]) ? last_data.asks[c][1] - json_data.asks[c][1] : 0;
+			last_data.asks.splice(0,30);
+			
+			last_data.asks = last_data.asks.map(function(item) {
+				item[1] += diff;
+				return item;
+			});
+			
+			if (json_data.asks)
+				json_data.asks = json_data.asks.concat(last_data.asks);
+		}
+	}
+
+	last_data = json_data;
+	
+	var series = [
+	    {
+    	 data: json_data.bids,
+         lines: { show: true, fill: true },
+         points: { show: false, fill: false },
+         color: '#17D6D6'
+    	},
+    	{
+     	 data: json_data.asks,
+         lines: { show: true, fill: true },
+         points: { show: false, fill: false },
+         color: '#53DB80'
+    	}
+ 	];
+	
+	if (plot) {
+		plot.setData(series);
+		plot.setupGrid();
+		plot.draw();
+		return false;
+	}
+	 
+	plot = $.plot($("#graph_orders"),series,
+ 	{
+ 		xaxis: {
+ 			tickLength: 0
+ 		},
+ 		yaxis: {
+ 		},
+ 		grid: { 
+ 			backgroundColor: '#FFFFFF',
+ 			borderWidth: 1,
+ 			borderColor: '#aaaaaa',
+ 			hoverable: true
+ 		},
+ 		crosshair: {
+ 			mode:"x",
+ 		    color: "#aaaaaa",
+ 		    lineWidth: 1
+ 		}
+ 	});
+	
+	var date_options = { year: "numeric", month: "short",day: "numeric" };
+	axes = plot.getAxes();
+	dataset = plot.getData();
+	var left_offset = 30;
+	var bottom_offset = 50;
+	var flip;
+	var max_x;
+	var currency1 = currency.toUpperCase();
+	$("#graph_orders").bind("plothover", function (event, pos, item) {
+		plot.unhighlight();
+		latestPosition = pos;
+		
+		if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
+			$('#tooltip').css('display','none');
+			return false;
+		}
+		
+		if (!updateLegendTimeout) {
+			updateLegendTimeout = setTimeout(updateLegend, 50);
+		}
+
+		var ask = false;
+		if (pos.x >= dataset[graph_i1].data[0][0]) {
+			graph_point = graph_point1;
+			graph_i = graph_i1;
+			graph_j = graph_j1;
+			ask = true;
+		}
+		
+		$('#tooltip').css('display','block');
+		$('#tooltip .price').html(currency1+' '+formatCurrency(graph_point[0]));
+
+		if (!ask) {
+			$('#tooltip .bid span').html(graph_point[1]);
+			$('#tooltip .bid').css('display','block');
+			$('#tooltip .ask').css('display','none');
+		}
+		else {
+			$('#tooltip .ask span').html(graph_point[1]);
+			$('#tooltip .ask').css('display','block');
+			$('#tooltip .bid').css('display','none');
+		}
+		
+		var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
+		var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
+		max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
+
+		if ((max_x - x_pix) < $('#tooltip').width())
+			flip = true;
+		else
+			flip = false;
+		
+		if (!flip) {
+			$('#tooltip').css('left',(x_pix+left_offset)+'px');
+			$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+		}
+		else {
+			$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
+			$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+		}
+		
+		plot.highlight(graph_i,graph_j);
+	}); 
+	
+	$("#graph_price_history").remove('.tp-loader');
 }
 
 function graphControls() {
@@ -279,6 +320,7 @@ function updateTransactions() {
 		while (!ajax_active) {
 			var currency = (notrades) ? (($('#user_fee').length > 0) ? $('#buy_currency').val() : $('#graph_orders_currency').val()) : $('#graph_price_history_currency').val();
 			$.getJSON("includes/ajax.trades.php?currency="+currency+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '&last_price=1')+((get_10) ? '&get10=1' : ''),function(json_data) {
+				var depth_chart_data = {bids:[],asks: []}; 
 				if (!notrades && json_data.transactions[0] != null) {
 					var i = 0;
 					var insert_elem = ('#transactions_list tr:first');
@@ -336,7 +378,10 @@ function updateTransactions() {
 					$('#no_transactions').css('display','');
 				}
 				
-				$.each($('.bid_tr'),function() {
+				$.each($('.bid_tr'),function(index) {
+					if (index >= 30)
+						return false;
+					
 					var elem = this;
 					var elem_id = $(this).attr('id');
 					var order_id = elem_id.replace('bid_','');
@@ -352,8 +397,14 @@ function updateTransactions() {
 					if (!found)
 						$(elem).remove();
 				});
-				if (json_data.bids[0] != null) {				
+				if (json_data.bids[0] != null) {
+					var cum_btc = 0;
 					$.each(json_data.bids[0],function() {
+						if (this.btc && this.btc > 0) {
+							cum_btc += parseFloat(this.btc);
+							depth_chart_data.bids.push([this.btc_price,cum_btc]);
+						}
+						
 						var this_bid = $('#bid_'+this.id);
 						if (this_bid.length > 0) {
 							$(this_bid).find('.order_amount').html(this.btc);
@@ -471,7 +522,10 @@ function updateTransactions() {
 					$('#no_bids').css('display','');
 				}
 	
-				$.each($('.ask_tr'),function() {
+				$.each($('.ask_tr'),function(index) {
+					if (index >= 30)
+						return false;
+					
 					var elem = this;
 					var elem_id = $(this).attr('id');
 					var order_id = elem_id.replace('ask_','');
@@ -489,7 +543,13 @@ function updateTransactions() {
 				});
 				
 				if (json_data.asks[0] != null) {
+					var cum_btc = 0;
 					$.each(json_data.asks[0],function() {
+						if (this.btc && this.btc > 0) {
+							cum_btc += parseFloat(this.btc);
+							depth_chart_data.asks.push([this.btc_price,cum_btc]);
+						}
+						
 						var this_ask = $('#ask_'+this.id);
 						if (this_ask.length > 0) {
 							$(this_ask).find('.order_amount').html(this.btc);
@@ -606,6 +666,9 @@ function updateTransactions() {
 				else {
 					$('#no_asks').css('display','');
 				}
+				
+				if ($("#graph_orders").length > 0 && (depth_chart_data.bids.length > 0 || depth_chart_data.asks > 0))
+					graphOrders(depth_chart_data);
 				
 				if (parseFloat(json_data.last_price) && $('#last_price').length > 0) {
 					var lp_prev = $('#last_price').val();
@@ -1141,7 +1204,7 @@ $(document).ready(function() {
 	
 	if ($("#graph_orders").length > 0) {
 		graphOrders();
-		var update = setInterval(graphOrders,10000);
+		//var update = setInterval(graphOrders,10000);
 		updateTransactions();
 	}
 	

@@ -90,8 +90,8 @@ elseif ($endpoint == 'order-book') {
 	if (!$invalid_currency) {
 		$currency1 = (!$currency1) ? 'usd' : strtolower($currency1);
 		
-		API::add('Orders','get',array(false,false,false,$currency1,false,false,1,false,false,1,false,1));
-		API::add('Orders','get',array(false,false,false,$currency1,false,false,false,false,1,1,false,1));
+		API::add('Orders','get',array(false,false,50,$currency1,false,false,1,false,false,1,false,1));
+		API::add('Orders','get',array(false,false,50,$currency1,false,false,false,false,1,1,false,1));
 		$query = API::send();
 		
 		$return['order-book']['request_currency'] = strtoupper($currency1);

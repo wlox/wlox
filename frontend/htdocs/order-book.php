@@ -11,7 +11,7 @@ elseif (empty($_REQUEST) && empty($_SESSION['currency']) && empty(User::$info['d
 elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
 
-if (empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
+if (empty($_SESSION['currency']) || empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
 	$_SESSION['currency'] = 'usd';
 	
 $currency1 = strtolower($_SESSION['currency']);
@@ -89,7 +89,11 @@ include 'includes/head.php';
         			</tr>
         			<? 
         			if ($bids) {
+        				$i = 0;
 						foreach ($bids as $bid) {
+							$min_bid = (empty($min_bid) || $bid['btc_price'] < $min_bid) ? $bid['btc_price'] : $min_bid;
+							$max_bid = (empty($max_bid) || $bid['btc_price'] > $max_bid) ? $bid['btc_price'] : $max_bid;
+							
 							$mine = ($bid['mine']) ? '<a class="fa fa-user" href="open-orders.php?id='.$bid['id'].'" title="'.Lang::string('home-your-order').'"></a>' : '';
 							echo '
 					<tr id="bid_'.$bid['id'].'" class="bid_tr">
@@ -97,6 +101,7 @@ include 'includes/head.php';
 						<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 						<td>'.$currency_info['fa_symbol'].'<span class="order_value">'.number_format(($bid['btc_price'] * $bid['btc']),2).'</span></td>
 					</tr>';
+							$i++;
 						}
 					}
 					echo '<tr id="no_bids" style="'.(is_array($bids) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-bid').'</td></tr>';
@@ -115,7 +120,11 @@ include 'includes/head.php';
 					</tr>
         			<? 
         			if ($asks) {
+        				$i = 0;
 						foreach ($asks as $ask) {
+							$min_ask = (empty($min_ask) || $ask['btc_price'] < $min_ask) ? $ask['btc_price'] : $min_ask;
+							$max_ask = (empty($max_ask) || $ask['btc_price'] > $max_ask) ? $ask['btc_price'] : $max_ask;
+							
 							$mine = ($ask['mine']) ? '<a class="fa fa-user" href="open-orders.php?id='.$ask['id'].'" title="'.Lang::string('home-your-order').'"></a>' : '';
 							echo '
 					<tr id="ask_'.$ask['id'].'" class="ask_tr">
@@ -123,6 +132,7 @@ include 'includes/head.php';
 						<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
 						<td>'.$currency_info['fa_symbol'].'<span class="order_value">'.number_format(($ask['btc_price'] * $ask['btc']),2).'</span></td>
 					</tr>';
+							$i++;
 						}
 					}
 					echo '<tr id="no_asks" style="'.(is_array($asks) ? 'display:none;' : '').'"><td colspan="4">'.Lang::string('orders-no-ask').'</td></tr>';
@@ -133,4 +143,43 @@ include 'includes/head.php';
 		<div class="mar_top5"></div>
 	</div>
 </div>
+<script type="text/javascript">
+	<?php 
+	$bid_range = $max_bid - $min_bid;
+	$ask_range = $max_ask - $min_ask;
+	$c_bids = count($bids);
+	$c_asks = count($asks);
+	$lower_range = ($bid_range < $ask_range) ? $bid_range : $ask_range;
+	$vars = array('bids'=>array(),'asks'=>array());
+	
+	if ($bids) {
+		$cum_btc = 0;
+		foreach ($bids as $bid) {
+			if ($max_bid && $c_asks > 1 && (($max_bid - $bid['btc_price']) >  $lower_range))
+				continue;
+				
+			$cum_btc += $bid['btc'];
+			$vars['bids'][] = array($bid['btc_price'],$cum_btc);
+		}
+	
+		if ($max_bid && $c_asks > 1)
+			$vars['bids'][] = array(($max_bid - $lower_range),$cum_btc);
+	
+	}
+	if ($asks) {
+		$cum_btc = 0;
+		foreach ($asks as $ask) {
+			if ($min_ask && $c_bids > 1 && (($ask['btc_price'] - $min_ask) >  $lower_range))
+				continue;
+				
+			$cum_btc += $ask['btc'];
+			$vars['asks'][] = array($ask['btc_price'],$cum_btc);
+		}
+	
+		if ($min_ask && $c_bids > 1)
+			$vars['asks'][] = array(($min_ask + $lower_range),$cum_btc);
+	}
+	echo 'var static_data = '.json_encode($vars).';';
+	?>
+</script>
 <? include 'includes/foot.php'; ?>
