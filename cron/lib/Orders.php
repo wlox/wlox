@@ -131,7 +131,7 @@ class Orders {
 		return $result[0];
 	}
 	
-	public static function getCurrentBid($currency=false,$currency_id=false,$absolute=false) {
+	public static function getBidAsk($currency=false,$currency_id=false,$absolute=false) {
 		global $CFG;
 
 		if (empty($currency) && empty($currency_id))
@@ -146,71 +146,35 @@ class Orders {
 		$conversion2 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
 		$conversion3 = ($usd_info['id'] == $currency_info['id']) ? ' usd' : ' ROUND((usd /'.$currency_info['usd_ask'].'),2)';
 		
-		$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " - ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_bid} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price DESC LIMIT 0,1";
+		$sql = "SELECT ROUND(MAX(IF(orders.order_type = {$CFG->order_type_bid} AND orders.btc_price > 0,".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " - ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",NULL)),2) AS bid, ROUND(MIN(IF(orders.order_type = {$CFG->order_type_ask} AND orders.btc_price > 0,".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " + ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",NULL)),2) AS ask FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." LIMIT 0,1";
 		$result = db_query_array($sql);
+		$res = ($result[0]) ? $result[0] : array('bid'=>0,'ask'=>0);
 
-		if (!$result) {
-			$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " + ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_ask} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price ASC LIMIT 0,1";
+		if ($res['bid'] > 0 && !$res['ask'])
+			$res['ask'] = $res['bid'];
+		
+		if ($res['ask'] > 0 && !$res['bid'])
+			$res['bid'] = $res['ask'];
+
+		if (!$res['ask'] && !$res['bid']) {
+			$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.id DESC LIMIT 0,1";
 			$result = db_query_array($sql);
 			
 			if (!$result) {
-				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC, transactions.id DESC LIMIT 0,1";
+				$currency_info1 = $CFG->currencies['USD'];
+				$sql = "SELECT ROUND((btc_price/{$currency_info['usd_ask']}),2) AS fiat_price FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
 				$result = db_query_array($sql);
 				
 				if (!$result) {
-					$currency_info1 = $CFG->currencies['USD'];
-					$sql = "SELECT ROUND((btc_price/{$currency_info['usd_ask']}),2) AS fiat_price, '1' AS no_orders FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
+					$sql = 'SELECT '.$conversion3.' AS fiat_price FROM historical_data ORDER BY `date` DESC LIMIT 0,1';
 					$result = db_query_array($sql);
-					
-					if (!$result) {
-						$sql = 'SELECT '.$conversion3.' AS fiat_price FROM historical_data ORDER BY `date` DESC LIMIT 0,1';
-						$result = db_query_array($sql);
-					}
 				}
 			}
-		}
-		return $result[0]['fiat_price'];
-	}
-	
-	public static function getCurrentAsk($currency=false,$currency_id=false,$absolute=false) {
-		global $CFG;
-
-		if (empty($currency) && empty($currency_id))
-			return false;
-		
-		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
-		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
-		$usd_info = $CFG->currencies['USD'];
-		$currency_info = ($currency_id > 0) ? $CFG->currencies[$currency_id] : $CFG->currencies[strtoupper($currency)];
-		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
-		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
-		$conversion2 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
-		$conversion3 = ($usd_info['id'] == $currency_info['id']) ? ' usd' : ' ROUND((usd /'.$currency_info['usd_ask'].'),2)';
-		
-		$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " + ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_ask} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price ASC LIMIT 0,1";
-		$result = db_query_array($sql);
-		
-		if (!$result) {
-			$sql = "SELECT ROUND(".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion ".((!$absolute) ? " - ($conversion * {$CFG->currency_conversion_fee})" : '')."))" : 'orders.btc_price').",2) AS fiat_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.order_type = {$CFG->order_type_bid} AND orders.btc_price > 0 ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." ORDER BY fiat_price DESC LIMIT 0,1";
-			$result = db_query_array($sql);
 			
-			if (!$result) {
-				$sql = "SELECT ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS fiat_price FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = {$currency_info['id']}" : '')." ORDER BY transactions.date DESC, transactions.id DESC LIMIT 0,1";
-				$result = db_query_array($sql);
-			
-				if (!$result) {
-					$currency_info1 = $CFG->currencies['USD'];
-					$sql = "SELECT ROUND((btc_price/{$currency_info['usd_ask']}),2) AS fiat_price FROM transactions WHERE currency = {$currency_info1['id']} ORDER BY `date` DESC LIMIT 0,1";
-					$result = db_query_array($sql);
-					
-					if (!$result) {
-						$sql = 'SELECT '.$conversion3.' AS fiat_price FROM historical_data ORDER BY `date` DESC LIMIT 0,1';
-						$result = db_query_array($sql); 
-					}
-				}
-			}
+			if ($result)
+				$res = array('bid'=>$result[0]['fiat_price'],'ask'=>$result[0]['fiat_price']);
 		}
-		return $result[0]['fiat_price'];
+		return $res;
 	}
 	
 	public static function checkOutbidSelf($price,$currency,$find_bids=false) {
@@ -336,19 +300,12 @@ class Orders {
 		return db_query($sql);
 	}
 	
-	public static function getMarketOrders() {
-		global $CFG;
-		
-		$sql = 'SELECT orders.order_type, orders.btc_price AS orig_btc_price, orders.btc AS btc_outstanding, currencies.currency AS currency_abbr, orders.market_price AS is_market, orders.id, orders.site_user, orders.stop_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.market_price = "Y"';
-		return db_query_array($sql);
-	}
-
-	public static function getCompatible($type,$price,$currency,$for_update=false,$market_price=false,$executed_orders=false,$compare_with_conv_fees=false,$site_user=false,$get_all_market=false) {
+	public static function getCompatible($type,$price,$currency,$for_update=false,$market_price=false,$executed_orders=false,$compare_with_conv_fees=false,$site_user=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
-
+		
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$price = preg_replace("/[^0-9\.]/", "",$price);
 		$type = preg_replace("/[^0-9]/", "",$type);
@@ -367,8 +324,9 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
 		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' (1/currencies.'.$usd_field.')' : ' ('.$currency_info[$usd_field].' / IF(orders.currency = '.$usd_info['id'].',1,currencies.'.$usd_field.'))';
+		$executed_sql = '';
 
-		$sql = "SELECT orders.id, orders.market_price AS is_market, orders.order_type AS order_type,
+		$sql = "SELECT orders.id, orders.market_price AS is_market,
 				IF(orders.market_price = 'Y',$price,".(($CFG->cross_currency_trades) ? "IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee})))" : 'orders.btc_price').") AS fiat_price, 
 				orders.btc AS btc_outstanding, 
 				orders.site_user AS site_user, 
@@ -388,14 +346,12 @@ class Orders {
 				LEFT JOIN site_users ON (orders.site_user = site_users.id )
 				LEFT JOIN currencies ON (orders.currency = currencies.id)
 				LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id )
-				WHERE (
-					(orders.order_type = $type
-					".((!$market_price) ? " AND (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ".((!$compare_with_conv_fees) ? $conversion : "($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))").")" : 'orders.btc_price').",2) $comparison $price OR orders.market_price = 'Y') " : false)."
-					".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false).")
-					".(($get_all_market) ? " OR orders.market_price = 'Y' " : false)."
-				)
+				WHERE orders.order_type = $type
+				".((!$market_price) ? " AND (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ".((!$compare_with_conv_fees) ? $conversion : "($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))").")" : 'orders.btc_price').",2) $comparison $price OR orders.market_price = 'Y') " : false)."
+				".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)."
+				$executed_sql
 				AND orders.btc_price > 0
-				".((!$get_all_market) ? " AND orders.site_user != ".$site_user : false)."
+				AND orders.site_user != ".$site_user."
 				ORDER BY fiat_price $order_asc, orders.id ASC";
 	
 		if ($for_update)
@@ -488,7 +444,7 @@ class Orders {
 			return false;
 		
 		$status = Status::get();
-		if ($CFG->trading_status == 'suspended') {
+		if ($status['trading_status'] == 'suspended') {
 			db_commit();
 			return array('error'=>array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED'));
 		}
@@ -507,11 +463,12 @@ class Orders {
 		$currency1 = strtolower(preg_replace("/[^a-zA-Z]/", "",$currency1));
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		
-		db_start_transaction();
+		if (!$external_transaction)
+			db_start_transaction();
 		
 		$orig_order = false;
 		if ($edit_id > 0) {
-			if (empty($CFG->session_api) || $external_transaction)
+			if (!$CFG->session_api)
 				$orig_order = DB::getRecord('orders',$edit_id,0,1,false,false,false,1);
 			else
 				$orig_order = self::getRecord(false,$edit_id,$this_user_id,true);
@@ -525,18 +482,13 @@ class Orders {
 			$currency_info = $CFG->currencies[$orig_order['currency']];
 			$currency1 = strtolower($currency_info['currency']);
 			$edit_id = $orig_order['id'];
-			$use_maker_fee = ($use_maker_fee && $orig_order['market_price'] != 'Y');
-			
-			if ($external_transaction) {
-				$amount = $orig_order['btc'];
-				$orig_amount = $amount;
-			}
 		}
 		else 
 			$currency_info = $CFG->currencies[strtoupper($currency1)];
 		
-		$bid = self::getCurrentBid($currency1);
-		$ask = self::getCurrentAsk($currency1);
+		$bid_ask = self::getBidAsk($currency1);
+		$bid = $bid_ask['bid'];
+		$ask = $bid_ask['ask'];
 		$bid = ($bid > $ask) ? $ask : $bid;
 		$price = ($market_price) ? (($buy) ? $ask : $bid) : $price;
 		$usd_info = $CFG->currencies['USD'];
@@ -563,7 +515,7 @@ class Orders {
 		$compatible = false;
 		$trans_total = 0;
 		$this_funds_finished = false;
-		$hidden_executions = array();
+		$hidden_executions = false;
 		$max_price = 0;
 		$min_price = 0;
 		$executed_orders = array();
@@ -583,7 +535,7 @@ class Orders {
 			$this_fiat_on_hold = 0;
 			
 		
-		if (!empty($CFG->session_api)) {
+		if ($CFG->session_api) {
 			$error = self::checkPreconditions($buy,$currency_info,$amount,$price,$stop_price,$fee,($buy ? $this_fiat_balance - $this_fiat_on_hold : $this_btc_balance - $this_btc_on_hold),$bid,$ask,$market_price,$this_user_id,$orig_order);
 			if ($error) {
 				db_commit();
@@ -624,35 +576,22 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price < $bid) {
-						$hidden_executions[] = $comp_order;
+					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price < $bid)
 						continue;
-					}
 					
 					if (!empty($comp_order['real_market_price']) && round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) <= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) > $price && !$market_price) {
 						$hidden_executions[] = $comp_order;
 						continue;
 					}
 					
-					if (!empty($comp_order['order_type']) && $comp_order['order_type'] == $CFG->order_type_bid) {
-						if ($comp_order['is_market'] == 'Y')
-							$hidden_executions[] = $comp_order;
-						
-						continue;
-					}
-					
 					if (!($amount > 0) || !(($this_fiat_balance - $this_fiat_on_hold) > 0)) {
 						$triggered = self::triggerStops($max_price,$min_price,$currency1,1,$bid,$ask,$currency_max,$currency_min);
-						$triggered_rows = self::getMarketOrders();
-						if ($triggered_rows)
-							$hidden_executions = array_merge($triggered_rows,$hidden_executions);
-						
 						break;
 					}
 					elseif ($i == $c && $max_price > 0) {
 						$triggered = self::triggerStops($max_price,$min_price,$currency1,1,$bid,$ask,$currency_max,$currency_min);
 						if ($triggered > 0) {
-							$triggered_rows = self::getCompatible($CFG->order_type_ask,$max_price,$currency1,1,$market_price,$executed_orders,false,false,true);
+							$triggered_rows = self::getCompatible($CFG->order_type_ask,$max_price,$currency1,1,$market_price,$executed_orders);
 							if ($triggered_rows) {
 								foreach ($triggered_rows as $triggered_row) {
 									$compatible->append($triggered_row);
@@ -735,12 +674,8 @@ class Orders {
 						db_update('transactions',$transaction_id,array('conversion'=>'Y','convert_amount'=>($comp_order['fiat_price'] * $trans_amount),'convert_rate_given'=>$comp_order['conversion_factor'],'convert_system_rate'=>$comp_order['orig_conversion_factor'],'convert_from_currency'=>$currency_info['id'],'convert_to_currency'=>$comp_order['currency_id']));
 					
 					if (round($comp_order_outstanding,8,PHP_ROUND_HALF_UP) > 0) {
-						if (!$comp_funds_finished) {
+						if (!$comp_funds_finished)
 							db_update('orders',$comp_order['id'],array('btc_price'=>$comp_order['orig_btc_price'],'btc'=>$comp_order_outstanding,'fiat'=>($comp_order['orig_btc_price'] * $comp_order_outstanding)));
-							
-							if ($comp_order['is_market'] == 'Y')
-								$hidden_executions[] = $comp_order;
-						}
 						else
 							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
 					}
@@ -813,35 +748,22 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price > $ask) {
-						$hidden_executions[] = $comp_order;
+					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price > $ask)
 						continue;
-					}
-										
+					
 					if (!empty($comp_order['real_market_price']) && round($comp_order['real_market_price'],2,PHP_ROUND_HALF_UP) >= $price && round($comp_order['fiat_price'],2,PHP_ROUND_HALF_UP) < $price && !$market_price) {
 						$hidden_executions[] = $comp_order;
 						continue;
 					}
 					
-					if (!empty($comp_order['order_type']) && $comp_order['order_type'] == $CFG->order_type_ask) {
-						if ($comp_order['is_market'] == 'Y')
-							$hidden_executions[] = $comp_order;
-							
-						continue;
-					}
-					
 					if (!($amount > 0) || !(($this_btc_balance - $this_btc_on_hold) > 0)) {
 						$triggered = self::triggerStops($max_price,$min_price,$currency1,false,$bid,$ask,$currency_max,$currency_min);
-						$triggered_rows = self::getMarketOrders();
-						if ($triggered_rows)
-							$hidden_executions = array_merge($triggered_rows,$hidden_executions);
-						
 						break;
 					}
 					elseif ($i == $c && $min_price > 0) {
 						$triggered = self::triggerStops($max_price,$min_price,$currency1,false,$bid,$ask,$currency_max,$currency_min);
 						if ($triggered > 0) {
-							$triggered_rows = self::getCompatible($CFG->order_type_bid,$min_price,$currency1,1,$market_price,$executed_orders,false,false,true);
+							$triggered_rows = self::getCompatible($CFG->order_type_bid,$min_price,$currency1,1,$market_price,$executed_orders);
 							if ($triggered_rows) {
 								foreach ($triggered_rows as $triggered_row) {
 									$compatible->append($triggered_row);
@@ -925,12 +847,8 @@ class Orders {
 						db_update('transactions',$transaction_id,array('conversion'=>'Y','convert_amount'=>($comp_order['orig_btc_price'] * $trans_amount),'convert_rate_given'=>$comp_order['conversion_factor'],'convert_system_rate'=>$comp_order['orig_conversion_factor'],'convert_from_currency'=>$comp_order['currency_id'],'convert_to_currency'=>$currency_info['id']));
 						
 					if (round($comp_order_outstanding,8,PHP_ROUND_HALF_UP) > 0) {
-						if (!$comp_funds_finished) {
+						if (!$comp_funds_finished)
 							db_update('orders',$comp_order['id'],array('btc_price'=>$comp_order['orig_btc_price'],'btc'=>$comp_order_outstanding,'fiat'=>($comp_order['orig_btc_price'] * $comp_order_outstanding)));
-							
-							if ($comp_order['is_market'] == 'Y')
-								$hidden_executions[] = $comp_order;
-						}
 						else
 							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
 					}
@@ -990,19 +908,12 @@ class Orders {
 			db_insert('history',array('date'=>date('Y-m-d H:i:s'),'ip'=>(!empty($CFG->client_ip) ? $CFG->client_ip : ''),'history_action'=>$CFG->history_sell_id,'site_user'=>$this_user_id,'order_id'=>$order_log_id));
 		}
 		
-		db_commit();
-		
-		if ($max_price > 0 && $currency1 == 'usd')
-			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$max_price));
-		if ($min_price > 0 && $currency1 == 'usd')
-			db_update('currencies',$CFG->btc_currency_id,array('usd_bid'=>$min_price));
-		
-		if ($hidden_executions && !$external_transaction) {
+		if ($hidden_executions && !$external_transaction && $amount > 0 && !$this_funds_finished) {
 			foreach ($hidden_executions as $comp_order) {
-				if ($triggered_rows && $triggered_rows['id'] == $comp_order['id'] && $comp_order['is_market'] != 'Y')
+				if ($triggered_rows && $triggered_rows['id'] == $comp_order['id'])
 					continue; 
 				
-				$return = self::executeOrder(($comp_order['order_type'] == $CFG->order_type_bid),$comp_order['orig_btc_price'],$comp_order['btc_outstanding'],strtolower($comp_order['currency_abbr']),false,($comp_order['is_market'] == 'Y'),$comp_order['id'],$comp_order['site_user'],true,$comp_order['stop_price'],true,true);
+				$return = self::executeOrder((!$buy),$comp_order['orig_btc_price'],$comp_order['btc_outstanding'],strtolower($comp_order['currency_abbr']),false,false,$comp_order['id'],$comp_order['site_user'],1,$comp_order['stop_price'],1,1);
 				if (!empty($return['order_info']['comp_orig_prices'][($edit_id ? $edit_id : $insert_id)])) {
 					$executed_prices[] = $return['order_info']['comp_orig_prices'][($edit_id ? $edit_id : $insert_id)];
 					++$transactions;
@@ -1017,6 +928,14 @@ class Orders {
 					$amount = $reevaluated_order['btc'];
 			}
 		}
+
+		if (!$external_transaction)
+			db_commit();
+		
+		if ($max_price > 0 && $currency1 == 'usd')
+			db_update('currencies',$CFG->btc_currency_id,array('usd_ask'=>$max_price));
+		if ($min_price > 0 && $currency1 == 'usd')
+			db_update('currencies',$CFG->btc_currency_id,array('usd_bid'=>$min_price));
 		
 		$order_info = false;
 		if ($verbose) {
