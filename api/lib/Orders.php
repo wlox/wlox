@@ -84,8 +84,7 @@ class Orders {
 			$sql .= " ORDER BY $order_by $order_desc ";
 		if (!$count && $dont_paginate && ($public_api_open_orders || $public_api_order_book))
 			$sql .= " ORDER BY price $order_desc ";
-		trigger_error($sql);
-		trigger_error(substr($sql,500,2000));
+
 		$result = db_query_array($sql);
 		if (!$count)
 			return $result;
