@@ -14,8 +14,8 @@ class Transactions {
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$order_arr = array('date'=>'transactions.date','btc'=>'transactions.btc','btcprice'=>'usd_price','fiat'=>'usd_amount','fee'=>'usd_fee');
-		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.date';
+		$order_arr = array('date'=>'transactions.id','btc'=>'transactions.btc','btcprice'=>'usd_price','fiat'=>'usd_amount','fee'=>'usd_fee');
+		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.id';
 		$order_desc = ($order_desc) ? 'ASC' : 'DESC';
 		$user = ($user) ? User::$info['id'] : false;
 		$usd_info = $CFG->currencies['USD'];
@@ -65,8 +65,8 @@ class Transactions {
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
 		if (!$count && $dont_paginate)
-			$sql .= " ORDER BY transactions.date DESC, transactions.id DESC ";
-		
+			$sql .= " ORDER BY transactions.id DESC ";
+
 		$result = db_query_array($sql);
 		if (!$count)
 			return $result;

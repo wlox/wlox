@@ -21,7 +21,7 @@ class History {
 		WHERE history.site_user = ".User::$info['id']." ";
 		
 		if ($per_page > 0 && !$count && !$dont_paginate)
-			$sql .= " ORDER BY history.date DESC LIMIT $r1,$per_page ";
+			$sql .= " ORDER BY history.id DESC LIMIT $r1,$per_page ";
 
 		$result = db_query_array($sql);
 		if (!$count)

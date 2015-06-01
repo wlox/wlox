@@ -49,7 +49,7 @@ class Requests{
 			$sql .= " AND requests.id = $id ";
 		
 		if ($per_page > 0 && !$count)
-			$sql .= " ORDER BY requests.date DESC LIMIT $r1,$per_page ";
+			$sql .= " ORDER BY requests.id DESC LIMIT $r1,$per_page ";
 
 		$result = db_query_array($sql);
 		if (!$count)
