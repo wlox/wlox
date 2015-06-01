@@ -36,8 +36,7 @@ $sell_limit = 1;
 
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 API::add('User','getAvailable');
-API::add('Orders','getCurrentBid',array($currency1));
-API::add('Orders','getCurrentAsk',array($currency1));
+API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array($currency_info['id']));
@@ -58,8 +57,8 @@ $query = API::send();
 
 $user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
-$current_bid = $query['Orders']['getCurrentBid']['results'][0];
-$current_ask =  $query['Orders']['getCurrentAsk']['results'][0];
+$current_bid = $query['Orders']['getBidAsk']['results'][0]['bid'];
+$current_ask =  $query['Orders']['getBidAsk']['results'][0]['ask'];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $self_orders = (!empty($query['Orders']['checkOutbidSelf']) && (!empty($_REQUEST['buy_limit']) || !empty($_REQUEST['sell_limit']))) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;

@@ -6,13 +6,12 @@ include '../lib/common.php';
 
 $currency1 = (!empty($CFG->currencies[strtoupper($_REQUEST['currency'])])) ? $_REQUEST['currency'] : 'usd';
 
-API::add('Orders','getCurrentBid',array($currency1));
-API::add('Orders','getCurrentAsk',array($currency1));
+API::add('Orders','getBidAsk',array($currency1));
 API::add('User','getAvailable');
 $query = API::send();
 
-$current_bid = $query['Orders']['getCurrentBid']['results'][0];
-$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
+$current_bid = $query['Orders']['getBidAsk']['results'][0]['bid'];
+$current_ask = $query['Orders']['getBidAsk']['results'][0]['ask'];
 $user_available = $query['User']['getAvailable']['results'][0];
 
 $return['currency_info'] = $CFG->currencies[strtoupper($currency1)];

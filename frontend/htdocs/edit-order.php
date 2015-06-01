@@ -44,14 +44,13 @@ elseif (!empty($_REQUEST['sell']) && empty($_REQUEST['sell_market_price'])) {
 		API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
 }
 
-API::add('Orders','getCurrentBid',array($currency1));
-API::add('Orders','getCurrentAsk',array($currency1));
+API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 $query = API::send();
 
-$current_bid = $query['Orders']['getCurrentBid']['results'][0];
-$current_ask = $query['Orders']['getCurrentAsk']['results'][0];
+$current_bid = $query['Orders']['getBidAsk']['results'][0]['bid'];
+$current_ask = $query['Orders']['getBidAsk']['results'][0]['ask'];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $self_orders = (!empty($query['Orders']['checkOutbidSelf']['results'][0])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
