@@ -28,18 +28,11 @@ $CFG->email_2fa_verified = false;
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) : false;
 
-// memcached check
-$memcached = (class_exists('Memcached'));
-if ($memcached) {
-	$m = new Memcached();
-	$m->addServer('localhost', 11211);
-}
-
 // authenticate session
 if ($session_id1) {
 	$cached = false;
 	$nonce_invalid = false;
-	if ($memcached) {
+	if ($CFG->memcached) {
 		$cached = $m->get($session_id1);
 		if ($cached && ($nonce1 >= ($cached['nonce'] + 5) || $nonce1 <= ($cached['nonce'] - 5))) {
 			$nonce_invalid = true;
@@ -82,7 +75,7 @@ if ($session_id1) {
 if ($api_key1 && $api_signature1) {
 	$cached = false;
 	$nonce_invalid = false;
-	if ($memcached) {
+	if ($CFG->memcached) {
 		$cached = $m->get($api_key1);
 		if ($cached && floatval(substr(strval($nonce1),0,10)) <= (floatval(substr(strval($cached['nonce']),0,10)) - 5)) {
 			$nonce_invalid = true;
@@ -114,7 +107,7 @@ if ($api_key1 && $api_signature1) {
 			User::setInfo($result[0]);
 			
 			if (!empty($_REQUEST['api_update_nonce'])) {
-				if ($memcached) {
+				if ($CFG->memcached) {
 					$result[0]['nonce'] = $nonce1;
 					$m->set($api_key1,$result[0],900);
 				}
@@ -220,7 +213,7 @@ if (is_array($commands)) {
 }
 
 if ($update_nonce) {
-	if ($memcached) {
+	if ($CFG->memcached) {
 		$result[0]['nonce'] = $nonce1 + 1;
 		$return['nonce_updated'] = $m->set($session_id1,$result[0],900);
 	}
