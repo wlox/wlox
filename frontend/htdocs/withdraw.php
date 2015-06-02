@@ -74,7 +74,6 @@ $total = $query['Requests']['get']['results'][0];
 $requests = $query['Requests']['get']['results'][1];
 $status = $query['Status']['get']['results'][0];
 
-API::add('Transactions','pagination',array('withdraw.php',$page1,$total,15,5,false));
 API::add('User','getAvailable');
 if ($bank_account) {
 	if (is_numeric($bank_account['currency'])) {
@@ -97,7 +96,7 @@ else {
 	$bank_instructions = $query['Content']['getRecord']['results'][0];
 }
 $user_available = $query['User']['getAvailable']['results'][0];
-$pagination = $query['Transactions']['pagination']['results'][0];
+$pagination = Content::pagination('withdraw.php',$page1,$total,15,5,false);
 
 if ($CFG->withdrawals_status == 'suspended')
 	Errors::add(Lang::string('withdrawal-suspended'));

@@ -16,11 +16,10 @@ $query = API::send();
 $total = $query['History']['get']['results'][0];
 
 API::add('History','get',array(false,$page1,30));
-API::add('Transactions','pagination',array('history.php',$page1,$total,30,5,false));
 $query = API::send();
 
 $history = $query['History']['get']['results'][0];
-$pagination = $query['Transactions']['pagination']['results'][0];
+$pagination = Content::pagination('history.php',$page1,$total,30,5,false);
 
 $page_title = Lang::string('history');
 

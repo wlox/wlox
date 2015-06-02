@@ -22,12 +22,11 @@ $query = API::send();
 $total = $query['Transactions']['get']['results'][0];
 
 API::add('Transactions','get',array(false,$page1,30,$currency1,1,$start_date1,$type1,$order_by1,$order_desc1));
-API::add('Transactions','pagination',array('transactions.php',$page1,$total,30,5,false));
 API::add('Transactions','getTypes');
 $query = API::send();
 
 $transactions = $query['Transactions']['get']['results'][0];
-$pagination = $query['Transactions']['pagination']['results'][0];
+$pagination = Content::pagination('transactions.php',$page1,$total,30,5,false);
 $transaction_types = $query['Transactions']['getTypes']['results'][0];
 
 $currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : array();
