@@ -1,7 +1,7 @@
 <?php
 class Currencies {
 	public static function get() {
-		$sql = "SELECT * FROM currencies WHERE is_active = 'Y' ORDER BY currency ASC";
+		$sql = "SELECT * FROM currencies WHERE is_active = 'Y'";
 		$result = db_query_array($sql);
 		
 		if ($result) {
@@ -10,6 +10,7 @@ class Currencies {
 				$currencies[$row['id']] = $row;
 			}
 		}
+		ksort($currencies);
 		return $currencies;
 	}
 	
