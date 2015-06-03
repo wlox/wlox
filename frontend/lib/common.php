@@ -18,7 +18,6 @@ if (!empty($hostname) && !stristr($hostname,'localhost')) {
 	if ($c > 2) {
 		if ((strlen($hostname_parts[($c - 1)]) == 2 && strlen($hostname_parts[($c - 2)]) == 3) || (strlen($hostname_parts[($c - 1)]) == 2 && strlen($hostname_parts[($c - 2)]) == 2)) {
 			if ($c > 3) {
-				print_ar($hostname_parts);
 				$hostname_parts = array_slice($hostname_parts,($c - 3));
 				$hostname = implode('.',$hostname_parts);
 			}
