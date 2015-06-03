@@ -7,8 +7,8 @@ class User {
 		if (!empty($info['id'])) {
 			$balances = self::getBalances($info['id']);
 			if ($balances) {
-				foreach ($balances as $row) {
-					User::$info[strtolower($row['currency_abbr'])] = $row['balance'];
+				foreach ($balances as $abbr => $row) {
+					User::$info[$abbr] = $row;
 				}
 			}
 		}
@@ -33,6 +33,15 @@ class User {
 		if (!($user_id > 0))
 			return false;
 		
+		/*
+		if ($CFG->memcached && !$currencies) {
+			$cached = $CFG->m->get('balances_'.$user_id);
+			if ($cached) {
+				return $cached;
+			}
+		}
+		*/
+		
 		$sql = 'SELECT site_users_balances.*, currencies.currency AS currency_abbr FROM site_users_balances LEFT JOIN currencies ON (site_users_balances.currency = currencies.id) WHERE site_users_balances.site_user = '.$user_id.' ';
 		if (!is_array($currencies) && $currencies > 0)
 			$sql .= ' AND site_users_balances.currency = '.$currencies;
@@ -50,15 +59,17 @@ class User {
 		if (!$result)
 			return false;
 		
-		if (!empty($currencies)) {
-			$sorted = array();
-			foreach ($result as $row) {
-				$sorted[strtolower($row['currency_abbr'])] = $row['balance'];
-			}
-			return $sorted;
+		$sorted = array();
+		foreach ($result as $row) {
+			$sorted[strtolower($row['currency_abbr'])] = $row['balance'];
 		}
-		else
-			return $result;
+		
+		/*
+		if ($CFG->memcached && !$currencies)
+			$CFG->m->set('balances_'.$user_id,$sorted,0);
+		*/
+		
+		return $sorted;
 	}
 	
 	public static function updateBalances($user_id,$currencies_balances) {
@@ -66,6 +77,11 @@ class User {
 		
 		if (!($user_id > 0) || empty($currencies_balances) || !is_array($currencies_balances))
 			return false;
+		
+		/*
+		if ($CFG->memcached)
+			$CFG->m->delete('balances_'.$user_id);
+		*/
 		
 		$currencies_str = '(CASE currency ';
 		$currency_ids = array();
@@ -79,7 +95,7 @@ class User {
 		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
 		$result = db_query($sql);
 		
-		if ($result && $result < count($currencies_balances)) {
+		if (!$result || $result < count($currencies_balances)) {
 			$sql = 'SELECT currency FROM site_users_balances WHERE site_user = '.$user_id;
 			$result = db_query_array($sql);
 			$existing = array();
@@ -181,7 +197,7 @@ class User {
 		}
 		
 		if (User::$info['default_currency'] > 0) {
-			$currency = DB::getRecord('currencies',User::$info['default_currency'],0,1);
+			$currency = $CFG->currencies[User::$info['default_currency']];
 			$return['default_currency_abbr'] = $currency['currency'];
 		}
 		
@@ -207,6 +223,16 @@ class User {
 		$user_fee = (is_array($user_fee)) ? $user_fee : FeeSchedule::getUserFees($user_id);
 		$lock = ($for_update) ? 'LOCK IN SHARE MODE' : '';
 		$on_hold = array();
+		
+		/*
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('on_hold_'.$user_id);
+			if ($cached) {
+				self::$on_hold = $cached;
+				return $cached;
+			}
+		}
+		*/
 	
 		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_id." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
 		$result = db_query_array($sql);
@@ -252,6 +278,12 @@ class User {
 				}
 			}
 		}
+		
+		/*
+		if ($CFG->memcached)
+			$CFG->m->set('on_hold_'.$user_id,$on_hold,0);
+		*/
+		
 		self::$on_hold = $on_hold;
 		return $on_hold;
 	}
@@ -383,6 +415,7 @@ class User {
 		if (!$CFG->session_active || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
 			return false;
 		
+		self::deleteCache();
 		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
@@ -394,6 +427,7 @@ class User {
 		if (!$CFG->session_active || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars || User::$info['no_logins'] != 'Y')
 			return false;
 		
+		self::deleteCache();
 		$pass = Encryption::hash($pass);
 		return db_update('site_users',User::$info['id'],array('pass'=>$pass));
 	}
@@ -424,6 +458,8 @@ class User {
 		$id = self::userExists($email);
 		if (!($id > 0))
 			return false;
+		
+		self::deleteCache();
 		
 		$user = DB::getRecord('site_users',$id,0,1);
 		//$new_id = self::getNewId();
@@ -527,6 +563,8 @@ class User {
 		if (!$CFG->session_active || User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y')
 			return false;
 		
+		self::deleteCache();
+		
 		return db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'authy_requested'=>'Y','verified_authy'=>'N','authy_id'=>$authy_id,'using_sms'=>$using_sms,'google_2fa_code'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
 	}
 	
@@ -542,6 +580,8 @@ class User {
 		$key = Google2FA::generate_secret_key();
 		if (!$key)
 			return false;
+		
+		self::deleteCache();
 		
 		$result = db_update('site_users',User::$info['id'],array('tel'=>$cell,'country_code'=>$country_code,'google_2fa_code'=>$key,'verified_google'=>'N','using_sms'=>'N','authy_id'=>'','confirm_withdrawal_2fa_btc'=>'Y','confirm_withdrawal_2fa_bank'=>'Y'));
 		if ($result)
@@ -563,6 +603,8 @@ class User {
 		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified) || User::$info['verified_google'] == 'Y')
 			return false;
 	
+		self::deleteCache();
+		
 		return db_update('site_users',User::$info['id'],array('verified_authy'=>'Y'));
 	}
 	
@@ -572,6 +614,8 @@ class User {
 		if (!($CFG->session_active && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
 			return false;
 			
+		self::deleteCache();
+		
 		return db_update('site_users',User::$info['id'],array('verified_google'=>'Y'));
 	}
 	
@@ -581,6 +625,8 @@ class User {
 		if (!($CFG->session_active && $CFG->token_verified))
 			return false;
 
+		self::deleteCache();
+		
 		return db_update('site_users',User::$info['id'],array('google_2fa_code'=>'','verified_google'=>'N','using_sms'=>'N','authy_id'=>'','verified_authy'=>'N'));
 	}
 	
@@ -604,6 +650,8 @@ class User {
 
 		if (($update['pass'] && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
 			return false;
+		
+		self::deleteCache();
 		
 		if ($CFG->session_id) {
 		    $sql = "DELETE FROM sessions WHERE user_id = ".User::$info['id']." AND session_id != {$CFG->session_id}";
@@ -632,6 +680,8 @@ class User {
 		$notify_withdraw_bank2 = ($notify_withdraw_bank1) ? 'Y' : 'N';
 		$notify_login2 = ($notify_login1) ? 'Y' : 'N';
 			
+		self::deleteCache();
+		
 		return db_update('site_users',User::$info['id'],array('confirm_withdrawal_2fa_btc'=>$confirm_withdrawal_2fa_btc2,'confirm_withdrawal_email_btc'=>$confirm_withdrawal_email_btc2,'confirm_withdrawal_2fa_bank'=>$confirm_withdrawal_2fa_bank2,'confirm_withdrawal_email_bank'=>$confirm_withdrawal_email_bank2,'notify_deposit_btc'=>$notify_deposit_btc2,'notify_deposit_bank'=>$notify_deposit_bank2,'notify_withdraw_btc'=>$notify_withdraw_btc2,'notify_withdraw_bank'=>$notify_withdraw_bank2,'notify_login'=>$notify_login2));
 	}
 	
@@ -653,8 +703,10 @@ class User {
 		else
 			$found = true;
 
-		if (!$found)
+		if (!$found) {
+			self::deleteCache();
 			return db_update('site_users',User::$info['id'],array('deactivated'=>'Y'));
+		}
 	}
 	
 	public static function reactivateAccount() {
@@ -672,6 +724,7 @@ class User {
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
+		self::deleteCache();
 		return db_update('site_users',User::$info['id'],array('locked'=>'Y'));
 	}
 	
@@ -681,6 +734,7 @@ class User {
 		if (!(($CFG->session_locked || $CFG->session_active) && ($CFG->token_verified || $CFG->email_2fa_verified)))
 			return false;
 	
+		self::deleteCache();
 		return db_update('site_users',User::$info['id'],array('locked'=>'N'));
 	}
 	
@@ -752,6 +806,7 @@ class User {
 			return false;
 		
 		$lang = preg_replace("/[^a-z]/", "",$lang);
+		self::deleteCache();
 		return db_update('site_users',User::$info['id'],array('last_lang'=>$lang));
 	}
 	
@@ -769,6 +824,13 @@ class User {
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
+	}
+	
+	public static function deleteCache() {
+		global $CFG;
+		
+		if ($CFG->memcached && $CFG->session_id)
+			$CFG->delete_cache = $CFG->m->delete('session_'.$CFG->session_id);
 	}
 }
 

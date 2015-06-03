@@ -10,9 +10,10 @@ db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
 
 // memcached check
 $CFG->memcached = (class_exists('Memcached'));
+$CFG->m = false;
 if ($CFG->memcached) {
-	$m = new Memcached();
-	$m->addServer('localhost', 11211);
+	$CFG->m = new Memcached();
+	$CFG->m->addServer('localhost', 11211);
 }
 
 /* Load settings and timezone */

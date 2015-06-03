@@ -1,6 +1,15 @@
 <?php
 class Currencies {
 	public static function get() {
+		global $CFG;
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('currencies');
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$sql = "SELECT * FROM currencies WHERE is_active = 'Y' ORDER BY currency ASC";
 		$result = db_query_array($sql);
 		
@@ -9,6 +18,9 @@ class Currencies {
 				$currencies[$row['currency']] = $row;
 				$currencies[$row['id']] = $row;
 			}
+			
+			if ($CFG->memcached)
+				$CFG->m->set('currencies',$currencies,60);
 		}
 		return $currencies;
 	}

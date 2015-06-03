@@ -28,7 +28,7 @@ class Status{
 		$sql = 'UPDATE status_escrows SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND status_id = 1';
 		$result = db_query($sql);
 		
-		if ($result && $result < count($escrows)) {
+		if (!$result || $result < count($escrows)) {
 			$sql = 'SELECT currency FROM status_escrows WHERE status_id = 1';
 			$result = db_query_array($sql);
 			$existing = array();
@@ -48,5 +48,23 @@ class Status{
 			}
 		}
 		return $result;
+	}
+	
+	public static function sumFields($fields) {
+		global $CFG;
+	
+		if (!is_array($fields) || empty($fields))
+			return false;
+	
+		$set = array();
+		foreach ($fields as $field => $sum_amount) {
+			if (!is_numeric($sum_amount))
+				continue;
+	
+			$set[] = $field.' = '.$field.' + ('.$sum_amount.')';
+		}
+	
+		$sql = 'UPDATE status SET '.implode(',',$set).' WHERE id = 1';
+		return db_query($sql);
 	}
 }
