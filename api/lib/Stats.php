@@ -32,13 +32,13 @@ class Stats {
 		$usd_info = $CFG->currencies['USD'];
 		$currency_id = ($currency_id > 0) ? preg_replace("/[^0-9]/", "",$currency_id) : $usd_info['id'];
 		$currency_abbr = preg_replace("/[^a-zA-Z]/", "",$currency_abbr);
-		
+
 		if ($currency_abbr) {
-			$c_info = DB::getRecord('currencies',false,$currency_abbr,0,'currency');
+			$c_info = $CFG->currencies[strtoupper($currency_abbr)];
 			$currency_id = $c_info['id'];
 		}
 		elseif ($currency_id > 0) {
-			$c_info = DB::getRecord('currencies',$currency_id,0,1);
+			$c_info = $CFG->currencies[$currency_id];
 		}
 		
 		$conversion = ($usd_info['id'] == $currency_id) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$c_info['usd_ask'].', '.$c_info['usd_ask'].' / currencies.usd_ask))';

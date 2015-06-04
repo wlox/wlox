@@ -9,10 +9,9 @@ class Currencies {
 				return $cached;
 			}
 		}
-		
-		$sql = "SELECT * FROM currencies WHERE is_active = 'Y' ORDER BY currency ASC";
+
+		$sql = "SELECT * FROM currencies WHERE is_active = 'Y'";
 		$result = db_query_array($sql);
-		
 		if ($result) {
 			foreach ($result as $row) {
 				$currencies[$row['currency']] = $row;
@@ -22,6 +21,7 @@ class Currencies {
 			if ($CFG->memcached)
 				$CFG->m->set('currencies',$currencies,60);
 		}
+		ksort($currencies);
 		return $currencies;
 	}
 	

@@ -54,7 +54,6 @@ if ($session_id1) {
 			$update_nonce = $_POST['update_nonce'];
 			
 			if (User::$info['locked'] == 'Y' || User::$info['deactivated'] == 'Y') {
-				$return['error'] = 'account-locked-or-deactivated';
 				$CFG->session_locked = true;
 			}
 			else {
