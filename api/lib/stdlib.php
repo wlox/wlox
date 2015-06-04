@@ -43,8 +43,7 @@ if (!function_exists('mb_strlen')) {
 			return false;
 
 		return preg_match_all("/.{1}/us",$utf8string,$dummy);
+
 	}
 }
-
-
 ?>
