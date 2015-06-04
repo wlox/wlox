@@ -451,7 +451,6 @@ class Orders {
 		if (!$CFG->session_active)
 			return false;
 		
-		$status = Status::get();
 		if ($CFG->trading_status == 'suspended') {
 			db_commit();
 			return array('error'=>array('message'=>Lang::string('buy-trading-disabled'),'code'=>'TRADING_SUSPENDED'));

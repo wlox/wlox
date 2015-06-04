@@ -30,9 +30,22 @@ $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) 
 
 // authenticate session
 if ($session_id1) {
-	$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+	$cached = false;
+	$nonce_invalid = false;
+	if ($CFG->memcached) {
+		$cached = $CFG->m->get('session_'.$session_id1);
+		if ($cached && ($nonce1 >= ($cached['nonce'] + 5) || $nonce1 <= ($cached['nonce'] - 5))) {
+			$nonce_invalid = true;
+		}
+	}
+	
+	if ($cached)
+		$result = array($cached);
+	else
+		$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+	
 	$return['session'] = $session_id1;
-	if ($result && ($nonce1 >= ($result[0]['nonce'] + 5) || $nonce1 <= ($result[0]['nonce'] - 5))) {
+	if ($nonce_invalid) {
 		$return['error'] = 'invalid-nonce';
 	}
 	elseif (!empty($result)) {
@@ -59,8 +72,21 @@ if ($session_id1) {
 
 // verify api key
 if ($api_key1 && $api_signature1) {
-	$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'"');
-	if ($result && floatval(substr(strval($nonce1),0,10)) <= (floatval(substr(strval($result[0]['nonce']),0,10)) - 5)) {
+	$cached = false;
+	$nonce_invalid = false;
+	if ($CFG->memcached) {
+		$cached = $CFG->m->get('api_'.$api_key1);
+		if ($cached && floatval(substr(strval($nonce1),0,10)) <= (floatval(substr(strval($cached['nonce']),0,10)) - 5)) {
+			$nonce_invalid = true;
+		}
+	}
+	
+	if ($cached)
+		$result = array($cached);
+	else
+		$result = db_query_array('SELECT api_keys.id AS key_id, api_keys.nonce AS nonce, api_keys.key AS api_key, api_keys.secret AS secret, api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw, site_users.* FROM api_keys LEFT JOIN site_users ON (api_keys.site_user = site_users.id) WHERE api_keys.key = "'.$api_key1.'"');
+	
+	if ($nonce_invalid) {
 		$return['error'] = 'AUTH_INVALID_NONCE';
 	}
 	elseif ($result && !($result[0]['id'] > 0)) {
@@ -78,9 +104,15 @@ if ($api_key1 && $api_signature1) {
 		if ($api_signature1 == $hash) {
 			User::setInfo($result[0]);
 			
-			if (!empty($_REQUEST['api_update_nonce']))
-				db_update('api_keys',$result[0]['key_id'],array('nonce'=>$nonce1));
-				
+			if (!empty($_REQUEST['api_update_nonce'])) {
+				if ($CFG->memcached) {
+					$result[0]['nonce'] = $nonce1;
+					$CFG->m->set('api_'.$api_key1,$result[0],300);
+				}
+				else
+					db_update('api_keys',$result[0]['key_id'],array('nonce'=>$nonce1));	
+			}
+			
 			if (empty($CFG->language))
 				$CFG->language = $result[0]['last_lang'];
 				
@@ -145,7 +177,7 @@ $CFG->lang_table_key = $CFG->language;
 if ($CFG->language == 'en')
 	$CFG->lang_table_key = 'eng';
 elseif ($CFG->language == 'es')
-$CFG->lang_table_key = 'esp';
+	$CFG->lang_table_key = 'esp';
 
 if (is_array($commands)) {
 	foreach ($commands as $classname => $methods_arr) {
@@ -178,9 +210,14 @@ if (is_array($commands)) {
 	}
 }
 
-if ($update_nonce)
-	$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
-
+if ($update_nonce) {
+	if ($CFG->memcached && empty($CFG->delete_cache)) {
+		$result[0]['nonce'] = $nonce1 + 1;
+		$return['nonce_updated'] = $CFG->m->set('session_'.$session_id1,$result[0],300);
+	}
+	else
+		$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
+}
 
 if (is_array($return))
 	echo json_encode($return);

@@ -2,6 +2,14 @@
 class Lang {
 	public static function getTable() {
 		global $CFG;
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('lang');
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$sql = "SELECT * FROM lang";
 		$result = db_query_array($sql);
 		
@@ -13,6 +21,9 @@ class Lang {
 				$lang_table[$key]['ru'] = str_replace('[exchange_name]',$CFG->exchange_name,$row['ru']);
 				$lang_table[$key]['zh'] = str_replace('[exchange_name]',$CFG->exchange_name,$row['zh']);
 			}
+			
+			if ($CFG->memcached)
+				$CFG->m->set('lang',$lang_table,300);
 		}
 		return $lang_table;
 	}
@@ -28,11 +39,22 @@ class Lang {
 			$lang = 'eng';
 		else if ($lang == 'es')
 			$lang = 'esp';
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('lang_'.$key.'_'.$lang);
+			if ($cached) {
+				return $cached;
+			}
+		}
 			
 		$sql = 'SELECT '.$lang.' AS line FROM lang WHERE `key` = "'.$key.'" LIMIT 0,1';
 		$result = db_query_array($sql);
-		if ($result)
+		if ($result) {
+			if ($CFG->memcached)
+				$CFG->m->set('lang_'.$key.'_'.$lang,$result[0]['line'],300);
+			
 			return $result[0]['line'];
+		}
 		else
 			return false;
 	}
