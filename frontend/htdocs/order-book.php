@@ -4,20 +4,16 @@ include '../lib/common.php';
 
 $page_title = Lang::string('order-book');
 
-if (empty($_REQUEST) && empty($_SESSION['currency']) && !empty(User::$info['default_currency_abbr']))
+if (empty($_REQUEST['currency']) && empty($_SESSION['currency']) && !empty(User::$info['default_currency_abbr']))
 	$_SESSION['currency'] = User::$info['default_currency_abbr'];
-elseif (empty($_REQUEST) && empty($_SESSION['currency']) && empty(User::$info['default_currency_abbr']))
+elseif (empty($_REQUEST['currency']) && empty($_SESSION['currency']) && empty(User::$info['default_currency_abbr']))
 	$_SESSION['currency'] = 'usd';
 elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
-
-if (empty($_SESSION['currency']) || empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
-	$_SESSION['currency'] = 'usd';
 	
 $currency1 = strtolower($_SESSION['currency']);
 $currency_symbol = strtoupper($currency1);
 $currency_info = $CFG->currencies[$currency_symbol];
-
 
 API::add('Orders','get',array(false,false,false,$currency1,false,false,1,false,false,1));
 API::add('Orders','get',array(false,false,false,$currency1,false,false,false,false,1,1));

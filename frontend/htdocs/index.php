@@ -1,19 +1,18 @@
 <?php
 include '../lib/common.php';
 
-if (empty($_REQUEST) && empty($_SESSION['currency']) && !empty(User::$info['default_currency_abbr']))
+if (empty($_REQUEST['currency']) && empty($_SESSION['currency']) && !empty(User::$info['default_currency_abbr']))
 	$_SESSION['currency'] = User::$info['default_currency_abbr'];
-elseif (empty($_REQUEST) && empty($_SESSION['currency']) && empty(User::$info['default_currency_abbr']))
+elseif (empty($_REQUEST['currency']) && empty($_SESSION['currency']) && empty(User::$info['default_currency_abbr']))
 	$_SESSION['currency'] = 'usd';
 elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
 
-if (empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
-	$_SESSION['currency'] = 'usd';
-
 $page_title = Lang::string('home-title');
 $currency1 = strtolower($_SESSION['currency']);
 $currency_symbol = strtoupper($currency1);
+	
+$currency_info = $CFG->currencies[strtoupper($currency1)];
 
 if (!User::isLoggedIn()) {
 	API::add('Content','getRecord',array('home'));
@@ -23,7 +22,11 @@ if (!User::isLoggedIn()) {
 	API::add('Content','getRecord',array('home-feature4'));
 }
 
-API::add('Currencies','getRecord',array($currency1));
+API::add('Stats','getCurrent',array($currency_info['id']));
+API::add('Transactions','get',array(false,false,5,$currency1));
+API::add('Orders','get',array(false,false,5,$currency1,false,false,1));
+API::add('Orders','get',array(false,false,5,$currency1,false,false,false,false,1));
+API::add('News','get',array(false,false,3));
 $query = API::send();
 
 if (!User::isLoggedIn()) {
@@ -33,15 +36,6 @@ if (!User::isLoggedIn()) {
 	$feature3 = $query['Content']['getRecord']['results'][3];
 	$feature4 = $query['Content']['getRecord']['results'][4];
 }
-	
-$currency_info = $query['Currencies']['getRecord']['results'][0];
-
-API::add('Stats','getCurrent',array($currency_info['id']));
-API::add('Transactions','get',array(false,false,5,$currency1));
-API::add('Orders','get',array(false,false,5,$currency1,false,false,1));
-API::add('Orders','get',array(false,false,5,$currency1,false,false,false,false,1));
-API::add('News','get',array(false,false,3));
-$query = API::send();
 
 $stats = $query['Stats']['getCurrent']['results'][0];
 $transactions = $query['Transactions']['get']['results'][0];
