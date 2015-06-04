@@ -63,7 +63,7 @@ class Transactions {
 			$sql .= " AND transactions.currency = {$currency_info['id']} ";
 
 		if ($per_page > 0 && !$count && !$dont_paginate)
-			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
+			$sql .= " ORDER BY $order_by $order_desc, transactions.id $order_desc LIMIT $r1,$per_page ";
 		if (!$count && $dont_paginate)
 			$sql .= " ORDER BY transactions.id DESC ";
 

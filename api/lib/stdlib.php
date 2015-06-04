@@ -37,17 +37,13 @@ function print_ar($arr, $html_entities = false, $no_interpolation = false, $in_r
 	}
 }
 
-if (!function_exists('hex2bin')) {
-	function hex2bin( $str ) {
-		$sbin = "";
-		$len = strlen( $str );
-		for ( $i = 0; $i < $len; $i += 2 ) {
-			$sbin .= pack( "H*", substr( $str, $i, 2 ) );
-		}
+if (!function_exists('mb_strlen')) {
+	function mb_strlen($utf8string=false) {
+		if (empty($utf8string))
+			return false;
 
-		return $sbin;
+		return preg_match_all("/.{1}/us",$utf8string,$dummy);
+
 	}
 }
-
-
 ?>

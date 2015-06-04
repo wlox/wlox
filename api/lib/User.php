@@ -79,7 +79,7 @@ class User {
 		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
 		$result = db_query($sql);
 		
-		if ($result && $result < count($currencies_balances)) {
+		if (!$result || $result < count($currencies_balances)) {
 			$sql = 'SELECT currency FROM site_users_balances WHERE site_user = '.$user_id;
 			$result = db_query_array($sql);
 			$existing = array();
@@ -141,6 +141,7 @@ class User {
 		}
 		
 		$return_values = array(
+		'user',
 		'first_name',
 		'last_name',
 		'fee_schedule',
@@ -461,9 +462,9 @@ class User {
 			$result = db_query_array($sql);
 			
 			$pass1 = self::randomPassword(12);
-			$info['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
-			$info['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
-			$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
+			//$info['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
+			//$info['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
+			//$info['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 			$info['user'] = $new_id;
 			$info['pass'] = Encryption::hash($pass1);
 			$info['date'] = date('Y-m-d H:i:s');
@@ -594,15 +595,16 @@ class User {
 			return false;
 
 		$update['pass'] = (!empty($info['pass'])) ? preg_replace($CFG->pass_regex, "",$info['pass']) : false;
-		$update['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
-		$update['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
-		$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
+		//$update['first_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['first_name']);
+		//$update['last_name'] = preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$info['last_name']);
+		//$update['country'] = preg_replace("/[^0-9]/", "",$info['country']);
 		$update['email'] = preg_replace("/[^0-9a-zA-Z@\.\!#\$%\&\*+_\~\?\-]/", "",$info['email']);
+		$update['default_currency'] = preg_replace("/[^0-9]/", "",$info['default_currency']);
 		
 		if (!$update['pass'])
 			unset($update['pass']);
 
-		if (($update['pass'] && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) || !$update['first_name'] || !$update['last_name'] || !$update['email'])
+		if (($update['pass'] && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) /*|| !$update['first_name'] || !$update['last_name'] */|| !$update['email'])
 			return false;
 		
 		if ($CFG->session_id) {
@@ -666,7 +668,7 @@ class User {
 		return db_update('site_users',User::$info['id'],array('deactivated'=>'N'));
 	}
 	
-	function lockAccount() {
+	public static function lockAccount() {
 		global $CFG;
 	
 		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)))
