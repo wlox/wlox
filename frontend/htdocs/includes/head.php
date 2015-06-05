@@ -30,15 +30,12 @@
 	<![endif]-->
     
     <!-- ######### CSS STYLES ######### -->
-	
-    <link rel="stylesheet" href="css/reset.css" type="text/css" />
-	<link rel="stylesheet" href="css/style.css?v=24032015" type="text/css" />
+	<link rel="stylesheet" href="css/style.css?v=20150605" type="text/css" />
     
     <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
     
     <!-- responsive devices styles -->
-
-	<link rel="stylesheet" media="screen" href="css/responsive-leyouts.css?v=20141230" type="text/css" />
+	<link rel="stylesheet" media="screen" href="css/responsive-leyouts.css?v=20150605" type="text/css" />
     
 <!-- just remove the below comments witch color skin you want to use -->
     <!--<link rel="stylesheet" href="css/colors/lightblue.css" />-->
@@ -51,32 +48,6 @@
     <!--<link rel="stylesheet" href="css/colors/pink.css" />-->
     <!--<link rel="stylesheet" href="css/colors/brown.css" />-->
     
-<!-- just remove the below comments witch bg patterns you want to use --> 
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-default.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-one.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-two.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-three.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-four.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-five.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-six.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-seven.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-eight.css" />-->
-    <!--<link rel="stylesheet" href="css/bg-patterns/pattern-nine.css" />-->
-
-    
-    <!-- sticky menu -->
-    <link rel="stylesheet" href="js/sticky-menu/core.css">
-    
-
-    <? if ($CFG->self == 'index.php' && !User::isLoggedIn()) { ?>
-    <!-- REVOLUTION SLIDER -->
-    <link rel="stylesheet" type="text/css" href="js/revolutionslider/css/fullwidth.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="js/revolutionslider/rs-plugin/css/settings.css" media="screen" />
-    
-    <!-- jquery jcarousel -->
-    <link rel="stylesheet" type="text/css" href="js/jcarousel/skin.css" />
-    <link rel="stylesheet" type="text/css" href="js/jcarousel/skin2.css" />
-	<? } ?>
     
     <? if ($CFG->self == 'security.php') { ?>
     <!-- authy -->
@@ -139,7 +110,9 @@
                 <li>|</li>
                 <li><a href="<?= Lang::url('contact.php') ?>"><?= Lang::string('contact') ?></a></li>
                 <li>|</li>
-                <li><a href="https://github.com/wlox/wlox/"><i class="fa fa-github"></i> GitHub</a></li>
+                <li><a target="_blank" href="https://github.com/wlox/wlox/"><i class="fa fa-github"></i> GitHub</a></li>
+                <li>|</li>
+                <li><a target="_blank" href="https://cryptocapital.co"><img src="images/crypto_logo.png" /></a></li>
             </ul>
         
             <ul class="tci_list">

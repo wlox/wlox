@@ -1,5 +1,11 @@
 /* Responsive CSS Styles Table of Contents */
 
+@media only screen and (min-width: 1169px){
+	.mobilebanner { height: 380px;padding: 100px 0 0 50px;}
+	.mobilebanner h1 { font-size:58px;margin-bottom: 20px;}
+	.mobilebanner .text { font-size: 16px;line-height: 26px;}
+}
+
 @media only screen and (min-width: 1000px) and (max-width: 1169px){
 
 .container {
@@ -461,8 +467,11 @@ a.show_hide{
 .mobilebanner{
 	display:block;
 }
+.mobilebanner .text{
+	margin:15px 10px 5px;	
+}
 a.button_slider {
-	margin: 0 0 15px 10px;
+	margin: 15px 0 15px 10px;
 }
 
 .container {
@@ -537,6 +546,15 @@ a.button_slider {
 	margin-top: 9px;
 	margin-bottom: 22px;
 	background:url(../images/logo.png) no-repeat center top;
+}
+
+ul.tci_list {
+	float:left;
+	clear: left;
+	padding-left:10px;
+}
+ul.tci_list_left{
+	padding:14px 0 0 10px;
 }
 
 .tci_list_left li {
@@ -1093,6 +1111,34 @@ a.show_hide{
 	float: left;
 }
 
+#header.sticky {height:160px !important;}
+#header:not(.sticky) {height:249px !important;}
+.sticky #trueHeader #logo{
+	display:none;
+}
+.sticky #access .menu select{
+	margin: -35px 25px 10px 0px !important;
+}
+.sticky #access .menu .stickylogo {
+	display:inline-block;
+	float: left;
+    margin: -30px 6px 0 0;
+}
+.sticky .last {
+	margin-bottom:0 !important;
+	height:0;
+}
+.fullwidthbanner-container, .punch_text{
+	display:none;
+}
+.mobilebanner{
+	display:block;
+}
+.mobilebanner .text{
+	margin:15px 10px 5px;	
+}
+.balances{margin-left:0;}
+.starting_in.rank {line-height: 36px;}
 .container {
 	width: 300px;
 	margin: auto auto auto auto;
@@ -1167,6 +1213,15 @@ a.show_hide{
 	background:url(../images/logo.png) no-repeat center top;
 }
 
+ul.tci_list {
+	float:left;
+	clear: left;
+	padding-left:10px;
+}
+ul.tci_list_left{
+	padding:14px 0 0 10px;
+}
+
 .tci_list_left li {
 	margin: 7px 0px 0px 0px;
 	font-size: 12px;
@@ -1191,9 +1246,7 @@ a.show_hide{
 }
 
 a.button_slider {
-	padding: 3px 2px;
-	font-size: 7px;
-	border-radius: 2px;
+	margin:15px 0 15px 10px;
 }
 
 .slider_sec_box{
@@ -1349,7 +1402,9 @@ a.button_slider {
 	width: 100%;
 	margin-right: 0%;
 }
-
+.footer .container {
+	margin-left: 15px;
+}
 .copyright_info .one_half{
 	width: 100%;
 	margin-right: 0%;

@@ -54,50 +54,23 @@ if (!User::isLoggedIn()) {
 ======================================= -->  
 
 <div class="container_full">
-    
-    <div class="fullwidthbanner-container">
-    
-		<div class="fullwidthbanner">
-        
-						<ul>    
-                            <!-- SLIDE 1 -->
-							<li data-transition="fade" data-slotamount="9" data-thumb="images/slider-bg1.jpg">
-								
-                                <img src="images/slider-bg1.jpg" alt="" />
-                                
-                                <div class="caption sfb" data-x="658" data-y="0" data-speed="900" data-start="900" data-easing="easeOutSine"><img src="images/slide1.png" alt="" /></div>
-
-                                <!--  div class="caption lft big_white"  data-x="10" data-y="90" data-speed="900" data-start="700" data-easing="easeOutExpo">Business, Corporate, Creative &amp; Onepage Websites</div -->
-                                
-								<h1 class="caption lft large_text_two <?= ($CFG->language == 'ru') ? 'caption_ru' : false ?>"  data-x="10" data-y="149" data-speed="900" data-start="1300" data-easing="easeOutExpo"><?= $content['title'] ?></h1>
-                                
-                                <div class="caption lfb h_line"  data-x="10" data-y="214" data-speed="900" data-start="2000" data-easing="easeOutExpo"></div>
-
-                                <?php 
-                                if ($CFG->language == 'en' || $CFG->language == 'es' || empty($CFG->language))
-                                	$wordwrap = 80;
-                                elseif ($CFG->language == 'ru')
-                                	$wordwrap = 150;
-                                elseif ($CFG->language == 'zh')
-                                	$wordwrap = 150;
-                                ?>
-                                <p class="caption lfb small_text"  data-x="10" data-y="238" data-speed="900" data-start="2700" data-easing="easeOutExpo"><?= wordwrap(strip_tags($content['content']),$wordwrap,'<br/>') ?> <a class="morestuff" href="<?= Lang::url('about.php') ?>">>></a></p>
-                                
-                                <div class="caption lfb h_line"  data-x="10" data-y="344" data-speed="900" data-start="3400" data-easing="easeOutExpo"></div>
-                                
-                                <div class="caption lfb"  data-x="10" data-y="378" data-speed="900" data-start="4000" data-easing="easeOutExpo"><a href="login.php" class="button_slider"><i class="fa fa-key"></i>&nbsp;&nbsp;<?= Lang::string('home-login') ?></a></div>
-                                
-                                <div class="caption lfb"  data-x="180" data-y="378" data-speed="900" data-start="4500" data-easing="easeOutExpo"><a href="register.php" class="button_slider"><i class="fa fa-user"></i>&nbsp;&nbsp;<?= Lang::string('home-register') ?></a></div>
-                               
-							</li>
-						</ul>
-                        
-					</div>
-                    
-				</div>
-
-
-</div><!-- end slider -->
+	<?php 
+	if ($CFG->language == 'en' || $CFG->language == 'es' || empty($CFG->language))
+		$wordwrap = 80;
+	elseif ($CFG->language == 'ru')
+		$wordwrap = 150;
+	elseif ($CFG->language == 'zh')
+		$wordwrap = 150;
+	?>
+	<div class="mobilebanner">
+		<h1 <?= ($CFG->language == 'ru') ? 'class="caption_ru"' : false ?>><?= $content['title'] ?></h1>
+		<p class="text"><?= wordwrap(strip_tags($content['content']),$wordwrap,'<br/>') ?> <a class="morestuff" href="<?= Lang::url('about.php') ?>">>></a></p>   
+		<div class="crypto_logo"><a target="_blank" href="https://cryptocapital.co">Integrated With <img src="images/crypto_logo.png" /></a></div>
+		<a href="login.php" class="button_slider"><i class="fa fa-key"></i>&nbsp;&nbsp;<?= Lang::string('home-login') ?></a>       
+		<a href="<?= Lang::url('register.php') ?>" class="button_slider"><i class="fa fa-user"></i>&nbsp;&nbsp;<?= Lang::string('home-register') ?></a>
+		<div class="clear"></div>
+	</div>
+</div>
 
 <div class="clearfix"></div>
 
