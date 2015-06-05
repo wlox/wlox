@@ -28,6 +28,18 @@ if ($delete_id1 > 0 && $_SESSION["openorders_uniq"] == $_REQUEST['uniq']) {
 	}
 }
 
+$delete_all = (!empty($_REQUEST['delete_all']));
+if ($delete_all && $_SESSION["openorders_uniq"] == $_REQUEST['uniq']) {
+	API::add('Orders','deleteAll');
+	$query = API::send();
+	$del_order = $query['Orders']['deleteAll']['results'][0];
+
+	if (!$del_order)
+		Link::redirect('open-orders.php?message=deleteall-error');
+	else
+		Link::redirect('open-orders.php?message=deleteall-success');
+}
+
 $currency1 = (!empty($_REQUEST['currency']) && array_key_exists(strtoupper($_REQUEST['currency']),$CFG->currencies)) ? $_REQUEST['currency'] : false;
 $order_by1 = (!empty($_REQUEST['order_by'])) ? preg_replace("/[^a-z]/", "",$_REQUEST['order_by']) : false;
 $trans_realized1 = (!empty($_REQUEST['transactions'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['transactions']) : false;
@@ -56,6 +68,10 @@ elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'not-your-order'
 	Errors::add(Lang::string('orders-not-yours'));
 elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'order-cancelled')
 	Messages::add(Lang::string('orders-order-cancelled'));
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'deleteall-error')
+	Errors::add(Lang::string('orders-order-cancelled-error'));
+elseif (!empty($_REQUEST['message']) && $_REQUEST['message'] == 'deleteall-success')
+	Messages::add(Lang::string('orders-order-cancelled-all'));
 
 $page_title = Lang::string('open-orders');
 $_SESSION["openorders_uniq"] = md5(uniqid(mt_rand(),true));
@@ -104,6 +120,11 @@ if (!$bypass) {
 							<option value="fiat"><?= Lang::string('orders-order-by-fiat') ?></option>
 						</select>
 					</li>
+					<? if ($asks || $bids) { ?>
+					<li>
+						<a class="download" href="#" onclick="confirmDeleteAll('<?= $_SESSION["openorders_uniq"] ?>',event);"><i class="fa fa-times"></i> <?= Lang::string('order-cancel-all') ?></a>
+					</li>
+					<? } ?>
 				</ul>
 			</form>
 		</div>
