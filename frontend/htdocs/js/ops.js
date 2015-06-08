@@ -45,8 +45,8 @@ function graphPriceHistory(timeframe,currency) {
 	     	});
 			
 			var date_options = { year: "numeric", month: "short",day: "numeric" };
-			axes = plot.getAxes();
-			dataset = plot.getData();
+			var axes = plot.getAxes();
+			var dataset = plot.getData();
 			var left_offset = 30;
 			var bottom_offset = 50;
 			var flip;
@@ -55,44 +55,41 @@ function graphPriceHistory(timeframe,currency) {
 			
 			$("#graph_price_history").bind("plothover", function (event, pos, item) {
 				plot.unhighlight();
-				latestPosition = pos;
 				
 				if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
 					$('#tooltip').css('display','none');
 					return false;
 				}
 				
-				if (!updateLegendTimeout) {
-					updateLegendTimeout = setTimeout(updateLegend, 50);
-				}
-				
-				if (graph_point == undefined)
-					return false;
-				
-				date = new Date(parseInt(graph_point[0]));
-				$('#tooltip').css('display','block');
-				$('#tooltip .date').html($('#javascript_mon_'+date.getMonth()).val()+' '+date.getDate()+', '+date.getFullYear());
-				$('#tooltip .price').html(currency1+' '+graph_point[1]);
-				
-				var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
-				var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
-				max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
-	
-				if ((max_x - x_pix) < $('#tooltip').width())
-					flip = true;
-				else
-					flip = false;
-				
-				if (!flip) {
-					$('#tooltip').css('left',(x_pix+left_offset)+'px');
-					$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-				}
-				else {
-					$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
-					$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-				}
-				
-				plot.highlight(graph_i,graph_j);
+				updateLegend(pos,axes,dataset,true,function(graph_point,graph_i,graph_j) {
+					if (graph_point == undefined)
+						return false;
+					
+					date = new Date(parseInt(graph_point[0]));
+					$('#tooltip').css('display','block');
+					$('#tooltip .date').html($('#javascript_mon_'+date.getMonth()).val()+' '+date.getDate()+', '+date.getFullYear());
+					$('#tooltip .price').html(currency1+' '+graph_point[1]);
+					
+					var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
+					var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
+					max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
+		
+					if ((max_x - x_pix) < $('#tooltip').width())
+						flip = true;
+					else
+						flip = false;
+					
+					if (!flip) {
+						$('#tooltip').css('left',(x_pix+left_offset)+'px');
+						$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+					}
+					else {
+						$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
+						$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+					}
+					
+					plot.highlight(graph_i,graph_j);
+				});
 			}); 
 			
 			$("#graph_price_history").remove('.tp-loader');
@@ -192,67 +189,74 @@ function graphOrders(json_data) {
  	});
 	
 	var date_options = { year: "numeric", month: "short",day: "numeric" };
-	axes = plot.getAxes();
-	dataset = plot.getData();
+	var axes = plot.getAxes();
+	var dataset = plot.getData();
 	var left_offset = 30;
 	var bottom_offset = 50;
 	var flip;
 	var max_x;
 	var currency1 = currency.toUpperCase();
+	var last_type = false;
 	$("#graph_orders").bind("plothover", function (event, pos, item) {
 		plot.unhighlight();
-		latestPosition = pos;
 		
 		if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
 			$('#tooltip').css('display','none');
 			return false;
 		}
 		
-		if (!updateLegendTimeout) {
-			updateLegendTimeout = setTimeout(updateLegend, 50);
-		}
+		updateLegend(pos,axes,dataset,false,function(graph_point,graph_i,graph_j) {
+			var ask = (graph_i == 1);
+			
+			if (!graph_point || graph_point == 0)
+				return false;
+			
+			$('#tooltip').css('display','block');
+			$('#tooltip .price').html(currency1+' '+formatCurrency(graph_point[0]));
 
-		var ask = false;
-		if (pos.x >= dataset[graph_i1].data[0][0]) {
-			graph_point = graph_point1;
-			graph_i = graph_i1;
-			graph_j = graph_j1;
-			ask = true;
-		}
-		
-		$('#tooltip').css('display','block');
-		$('#tooltip .price').html(currency1+' '+formatCurrency(graph_point[0]));
-
-		if (!ask) {
-			$('#tooltip .bid span').html(graph_point[1]);
-			$('#tooltip .bid').css('display','block');
-			$('#tooltip .ask').css('display','none');
-		}
-		else {
-			$('#tooltip .ask span').html(graph_point[1]);
-			$('#tooltip .ask').css('display','block');
-			$('#tooltip .bid').css('display','none');
-		}
-		
-		var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
-		var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
-		max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
-
-		if ((max_x - x_pix) < $('#tooltip').width())
-			flip = true;
-		else
-			flip = false;
-		
-		if (!flip) {
-			$('#tooltip').css('left',(x_pix+left_offset)+'px');
-			$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-		}
-		else {
-			$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
-			$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
-		}
-		
-		plot.highlight(graph_i,graph_j);
+			if (last_type != graph_i) {
+				if (graph_i > 0)
+					$('#tooltip .price').addClass('alt');
+				else
+					$('#tooltip .price').removeClass('alt');
+			}
+	
+			if (!ask) {
+				$('#tooltip .bid span').html(formatCurrency(graph_point[1]));
+				if (last_type != graph_i) {
+					$('#tooltip .bid').css('display','block');
+					$('#tooltip .ask').css('display','none');
+				}
+			}
+			else {
+				$('#tooltip .ask span').html(formatCurrency(graph_point[1]));
+				if (last_type != graph_i) {
+					$('#tooltip .ask').css('display','block');
+					$('#tooltip .bid').css('display','none');
+				}
+			}
+			
+			var x_pix = dataset[graph_i].xaxis.p2c(graph_point[0]);
+			var y_pix = dataset[graph_i].yaxis.p2c(graph_point[1]);
+			max_x = dataset[graph_i].xaxis.p2c(axes.xaxis.max);
+			last_type = graph_i;
+	
+			if ((max_x - x_pix) < $('#tooltip').width())
+				flip = true;
+			else
+				flip = false;
+			
+			if (!flip) {
+				$('#tooltip').css('left',(x_pix+left_offset)+'px');
+				$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+			}
+			else {
+				$('#tooltip').css('left',(x_pix-$('#tooltip').width())+'px');
+				$('#tooltip').css('top',(y_pix-bottom_offset)+'px');
+			}
+			
+			plot.highlight(graph_i,graph_j);
+		});
 	}); 
 	
 	$("#graph_price_history").remove('.tp-loader');
@@ -269,46 +273,50 @@ function graphControls() {
 	});
 }
 
-var updateLegendTimeout = null;
-var latestPosition = null;
-var graph_point;
-var graph_point1;
-var axes;
-var dataset;
-var graph_i;
-var graph_j;
-var graph_i1;
-var graph_j1;
-function updateLegend() {
-	updateLegendTimeout = null;
-	var pos = latestPosition;
+function updateLegend(pos,axes,dataset,single_dataset,callback) {
 	if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max || pos.y < axes.yaxis.min || pos.y > axes.yaxis.max) {
-		return;
+		return false;
 	}
-	var i, j;
-	var already = false;
-	for (i = 0; i < dataset.length; ++i) {
-		var series = dataset[i];
-		// Find the nearest points, x-wise
-		for (j = 0; j < series.data.length; ++j) {
-			if (series.data[j][0] >= pos.x) {
-				if (!already) {
-					graph_point = series.data[j];
-					graph_i = i;
-					graph_j = j;
-					already = true;
-					break;
-				}
-				else {
-					graph_point1 = series.data[j];
-					graph_i1 = i;
-					graph_j1 = j;
-					break;
-				}
-			}
+	
+	if (single_dataset) {
+		if (!dataset || !dataset[0].data || dataset[0].data.length == 0)
+			return false;
+		
+		var series = dataset[0].data;
+		var graph_i = 0;
+	}
+	else {
+		if (dataset[0] && dataset[0].data && pos.x <= dataset[0].data[0][0]) {
+			var series = dataset[0].data;
+			var graph_i = 0;
 		}
-		already = true;
+		else if (dataset[1] && dataset[1].data && pos.x >= dataset[1].data[0][0]) {
+			var series = dataset[1].data;
+			var graph_i = 1;
+		}
+		else
+			return false;
 	}
+	
+	var diff = null;
+	var last_diff = null;
+	var graph_j = null;
+	var graph_point = null;
+
+	for (i in series) {
+		if (!pos.x || !series[i][0])
+			continue;
+		
+		diff = pos.x - parseFloat(series[i][0]);
+		if (last_diff && Math.abs(diff) > Math.abs(last_diff))
+			break;
+		
+		graph_j = i;
+		graph_point = series[i];
+		last_diff = diff;
+	}
+	
+	callback(graph_point,graph_i,graph_j);
 }
 
 function updateTransactions() {

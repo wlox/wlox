@@ -1099,6 +1099,7 @@ a.button_slider:hover {
 #tooltip{padding: 5px 8px;position:absolute;float:left;background-color:#FFF;border:1px solid #cccccc; display:none;-moz-box-shadow: 0px 0px 4px #cccccc;-webkit-box-shadow: 0px 0px 8px #cccccc;box-shadow: 0px 0px 4px #cccccc;-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";-moz-opacity: 0.8;-khtml-opacity: 0.8;opacity: 0.8;}
 #tooltip .date{font-size:12px;}
 #tooltip .price{color: #00BDBD;font-size: 20px;font-weight: bold;}
+#tooltip .price.alt{color:#53DB80;}
 .fresh_projects {
 	float: left;
 	width: 100%;
