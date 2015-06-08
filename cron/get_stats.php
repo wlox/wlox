@@ -37,24 +37,36 @@ if ($CFG->currencies) {
 	$data = json_decode(file_get_contents('http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.xchange%20where%20pair%3D%22'.$currency_string.'%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys'),TRUE);
 	
 	if ($data['query']['results']['rate']) {
+		$bid_str = '(CASE currency ';
+		$ask_str = '(CASE currency ';
+		$currency_ids = array();
+		$last = false;
+		
 		foreach ($data['query']['results']['rate'] as $row) {
 			$key = str_replace('USD','',$row['id']);
+			if ($key == $last)
+				continue;
+			
 			$ask = $row['Ask'];
 			$bid = $row['Bid'];
 			
 			if (strlen($key) < 3 || strstr($key,'='))
 				continue;
 			
-			$sql = "SELECT id FROM currencies WHERE currency = '$key'";
-			$result = db_query_array($sql);
+			if ($bid == $CFG->currencies[$key]['usd_bid'] || $ask == $CFG->currencies[$key]['usd_ask'])
+				continue;
 			
-			if ($result) {
-				db_update('currencies',$result[0]['id'],array('usd_bid'=>$bid,'usd_ask'=>$ask));
-			}
-			else {
-				db_insert('currencies',array('usd_bid'=>$bid,'usd_ask'=>$ask,'currency'=>$key));
-			}
+			$bid_str .= ' WHEN "'.$key.'" THEN '.$bid.' ';
+			$ask_str .= ' WHEN "'.$key.'" THEN '.$ask.' ';
+			$currency_ids[] = $CFG->currencies[$key]['id'];
+			$last = $key;
 		}
+		
+		$bid_str .= ' END)';
+		$ask_str .= ' END)';
+		
+		$sql = 'UPDATE currencies SET usd_bid = '.$bid_str.', usd_ask = '.$ask_str.' WHERE id IN ('.implode(',',$currency_ids).')';
+		$result = db_query($sql);
 	}
 }
 
