@@ -59,7 +59,7 @@ class Orders {
 		if ($user > 0)
 			$sql .= " AND orders.site_user = $user ";
 		else
-			$sql .= ' AND orders.btc_price > 0 ';
+			$sql .= ' AND orders.btc_price > 0 AND orders.market_price != "Y" ';
 		
 		if ($start_date > 0)
 			$sql .= " AND orders.date >= '$start_date' ";
