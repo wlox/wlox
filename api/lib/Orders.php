@@ -59,7 +59,7 @@ class Orders {
 		if ($user > 0)
 			$sql .= " AND orders.site_user = $user ";
 		else
-			$sql .= ' AND orders.btc_price > 0 ';
+			$sql .= ' AND orders.btc_price > 0 AND orders.market_price != "Y" ';
 		
 		if ($start_date > 0)
 			$sql .= " AND orders.date >= '$start_date' ";
@@ -285,18 +285,15 @@ class Orders {
 			$price_str1 = "IF($currency_max_str > ROUND(IF(orders.currency = {$currency_info['id']},$max_price, $max_price * $conversion),2), $currency_max_str, ROUND(IF(orders.currency = {$currency_info['id']},$max_price, $max_price * $conversion),2))";
 		else
 			$price_str1 = "ROUND(IF(orders.currency = {$currency_info['id']},$max_price, $max_price * $conversion),2)";
-
 		
 		$sql = "UPDATE orders 
 				LEFT JOIN currencies ON (orders.currency = currencies.id) 
 				LEFT JOIN order_log ON (orders.log_id = order_log.id)
-				LEFT JOIN (SELECT btc_price, order_type, currency FROM orders WHERE order_type = {$CFG->order_type_bid} ORDER BY btc_price DESC LIMIT 0,1) AS max_bid ON (orders.currency = max_bid.currency)
-				LEFT JOIN (SELECT btc_price, order_type, currency FROM orders WHERE order_type = {$CFG->order_type_ask} ORDER BY btc_price DESC LIMIT 0,1) AS max_ask ON (orders.currency = max_ask.currency)
 				SET orders.market_price = 'Y', orders.btc_price = IF(orders.btc_price > 0,orders.btc_price,orders.stop_price), orders.stop_price = '', order_log.market_price = 'Y', order_log.stop_price = ''
-				WHERE ((orders.stop_price >= IF($price_str < max_bid.btc_price,max_bid.btc_price,$price_str) AND orders.order_type = {$CFG->order_type_ask}) OR (orders.stop_price <= IF($price_str1 > max_ask.btc_price,max_ask.btc_price,$price_str1) AND orders.order_type = {$CFG->order_type_bid}))
+				WHERE ((orders.stop_price >= $price_str AND orders.order_type = {$CFG->order_type_ask}) OR (orders.stop_price <= $price_str1 AND orders.order_type = {$CFG->order_type_bid}))
 				AND orders.stop_price > 0
 				".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false);
-
+		
 		return db_query($sql);
 	}
 	

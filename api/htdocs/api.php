@@ -15,6 +15,7 @@ $api_key1 = (!empty($_POST['api_key'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POS
 $api_signature1 = (!empty($_POST['api_signature'])) ? preg_replace("/[^0-9a-zA-Z]/","",$_POST['api_signature']) : false;
 $raw_params_json = (!empty($_POST['raw_params_json'])) ? $_POST['raw_params_json'] : false;
 $update_nonce = false;
+$awaiting_token = false;
 
 $CFG->language = (!empty($_POST['lang']) && in_array(strtolower($_POST['lang']),array('en','es','ru','zh'))) ? strtolower($_POST['lang']) : false;
 $CFG->client_ip = (!empty($_POST['ip'])) ? preg_replace("/[^0-9\.]/","",$_POST['ip']) : false;
@@ -49,6 +50,7 @@ if ($session_id1) {
 		$return['error'] = 'invalid-nonce';
 	}
 	elseif (!empty($result)) {
+		$awaiting_token = ($result[0]['awaiting'] == 'Y');
 		if (!empty($_POST['commands']) && openssl_verify($_POST['commands'],$signature1,$result[0]['session_key'])) {
 			User::setInfo($result[0]);
 			$update_nonce = $_POST['update_nonce'];
@@ -211,7 +213,7 @@ if (is_array($commands)) {
 }
 
 if ($update_nonce) {
-	if ($CFG->memcached && empty($CFG->delete_cache)) {
+	if ($CFG->memcached && empty($CFG->delete_cache) && !$awaiting_token) {
 		$result[0]['nonce'] = $nonce1 + 1;
 		$return['nonce_updated'] = $CFG->m->set('session_'.$session_id1,$result[0],300);
 	}
