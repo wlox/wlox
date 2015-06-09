@@ -16,14 +16,24 @@ class Stats {
 		elseif ($timeframe == '1year')
 			$start = date('Y-m-d',strtotime('-1 year'));
 		
-		$sql = "SELECT usd_ask FROM currencies WHERE currency = '$currency'";
-		$result = db_query_array($sql);
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('historical_'.$currency.'_'.$timeframe.(($public_api) ? '_api' : ''));
+			if ($cached) {
+				return $cached;
+			}
+		}
 		
-		if (!$result)
+		$currency_info = $CFG->currencies[strtoupper($currency)];
+		$usd_ask = $currency_info['usd_ask'];
+		if (!$usd_ask)
 			return false;
 		
-		$sql = "SELECT ".((!$public_api) ? "(UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS" : '')." `date`,ROUND((usd/{$result[0]['usd_ask']}),2) AS price FROM historical_data WHERE `date` >= '$start' GROUP BY `date` ORDER BY `date` ASC";
-		return db_query_array($sql);
+		$sql = "SELECT ".((!$public_api) ? "(UNIX_TIMESTAMP(DATE(`date`)) * 1000) AS" : '')." `date`,ROUND((usd/$usd_ask),2) AS price FROM historical_data WHERE `date` >= '$start' GROUP BY `date` ORDER BY `date` ASC";
+		$result = db_query_array($sql);
+		if ($CFG->memcached)
+			$CFG->m->set('historical_'.$currency.'_'.$timeframe.(($public_api) ? '_api' : ''),$result,3600);
+		
+		return $result;
 	}
 	
 	public static function getCurrent($currency_id,$currency_abbr=false) {
@@ -41,14 +51,19 @@ class Stats {
 			$c_info = $CFG->currencies[$currency_id];
 		}
 		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('stats_'.$c_info['currency']);
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$conversion = ($usd_info['id'] == $currency_id) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$c_info['usd_ask'].', '.$c_info['usd_ask'].' / currencies.usd_ask))';
 		$conversion1 = ($usd_info['id'] == $currency_id) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$c_info['usd_ask'].', '.$c_info['usd_ask'].' / currencies1.usd_ask))';
 		
-		if (!empty($CFG->session_api)) {
-			$bid_ask = Orders::getBidAsk(false,$currency_id);
-			$bid = $bid_ask['bid'];
-			$ask = $bid_ask['ask'];
-		}
+		$bid_ask = Orders::getBidAsk(false,$currency_id);
+		$bid = $bid_ask['bid'];
+		$ask = $bid_ask['ask'];
 
 		$sql = "SELECT * FROM current_stats WHERE id = 1";
 		$result1 = db_query_array($sql);
@@ -65,11 +80,9 @@ class Stats {
 		$sql = "SELECT MAX(".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price').") AS max, MIN(".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = $currency_id THEN transactions.btc_price WHEN transactions.currency1 = $currency_id THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price').") AS min FROM transactions LEFT JOIN currencies ON (transactions.currency = currencies.id) LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1) WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." LIMIT 0,1";
 		$result5 = db_query_array($sql);
 
-		if (!empty($CFG->session_api)) {
-			$stats['bid'] = $bid;
-			$stats['ask'] = $ask;
-		}
-		
+
+		$stats['bid'] = $bid;
+		$stats['ask'] = $ask;
 		$stats['last_price'] = ($result2[0]['btc_price']) ? $result2[0]['btc_price'] : $ask;
 		$stats['last_transaction_type'] = $result2[0]['last_transaction_type'];
 		$stats['last_transaction_currency'] = $result2[0]['last_transaction_currency'];
@@ -82,13 +95,29 @@ class Stats {
 		$stats['total_btc'] = $result1[0]['total_btc'];
 		$stats['market_cap'] = $result1[0]['market_cap'];
 		$stats['trade_volume'] = $result1[0]['trade_volume'];
+		
+		if ($CFG->memcached)
+			$CFG->m->set('stats_'.$c_info['currency'],$stats,120);
+		
 		return $stats;
 	}
 	
 	public static function getBTCTraded() {
 		global $CFG;
+
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('btc_traded');
+			if ($cached) {
+				return $cached;
+			}
+		}
 		
 		$sql = "SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) LIMIT 0,1";
-		return db_query_array($sql);
+		$result = db_query_array($sql);
+		
+		if ($CFG->memcached)
+			$CFG->m->set('btc_traded',$result,120);
+		
+		return $result;
 	}
 }

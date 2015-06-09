@@ -996,7 +996,33 @@ class Orders {
 
 			$order_info = array('id'=>$order_log_id,'side'=>($buy ? 'buy' : 'sell'),'type'=>(($market_price) ? 'market' : (($stop_price > 0) ? 'stop' : 'limit')),'amount'=>$orig_amount,'amount_remaining'=>$amount,'price'=>round($price,8,PHP_ROUND_HALF_UP),'avg_price_executed'=>((count($executed_prices) > 0) ? round(array_sum($avg_exec),2,PHP_ROUND_HALF_UP) : 0),'stop_price'=>$stop_price,'currency'=>strtoupper($currency1),'status'=>$order_status,'replaced'=>($edit_id ? $orig_order['log_id'] : 0),'comp_orig_prices'=>$executed_orig_prices);
 		}
+		
+		if ($CFG->memcached)
+			self::unsetCache();
+		
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
+	}
+	
+	public static function unsetCache() {
+		global $CFG;
+		
+		$trans_cache = $CFG->m->get('trans_cache');
+		if ($CFG->currencies) {
+			foreach ($CFG->currencies as $key => $currency) {
+				if (is_numeric($key) || $currency['currency'] == 'BTC')
+					continue;
+				
+				$CFG->m->delete('stats_'.$key);
+				$CFG->m->delete('trans_l5_'.$key);
+				$CFG->m->delete('trans_l1_'.$key);
+			}
+		}
+		
+		if ($trans_cache) {
+			foreach ($trans_cache as $key => $n) {
+				$CFG->m->delete('trans_api'.$key);
+			}
+		}
 	}
 	
 	private static function cancelOrder($order_id=false,$outstanding_btc=false,$site_user=false) {

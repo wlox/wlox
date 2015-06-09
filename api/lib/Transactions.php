@@ -30,7 +30,18 @@ class Transactions {
 		else
 			$type = preg_replace("/[^0-9]/", "",$type);
 		
-		//$currency = (!$currency) ? 'usd' : $currency;
+		if ($CFG->memcached) {
+			$cached = null;
+			if ($per_page == 5 && !$count && !$public_api_all)
+				$cached = $CFG->m->get('trans_l5_'.$currency_info['currency']);
+			elseif ($per_page == 1 && !$count && !$public_api_all)
+				$cached = $CFG->m->get('trans_l1_'.$currency_info['currency']);
+			elseif ($public_api_all)
+				$cached = $CFG->m->get('trans_api'.(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : ''));
+			
+			if ($cached)
+				return $cached;
+		}
 		
 		if (!$count && !$public_api_all)
 			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS btc_price, currencies.currency AS currency, currencies1.currency AS currency1, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp ";
@@ -67,7 +78,27 @@ class Transactions {
 		if (!$count && $dont_paginate)
 			$sql .= " ORDER BY transactions.id DESC ";
 
+		
 		$result = db_query_array($sql);
+		if ($CFG->memcached) {
+			if ($per_page == 5 && !$count && !$public_api_all)
+				$CFG->m->set('trans_l5_'.$currency_info['currency'],$result,300);
+			elseif ($per_page == 1 && !$count && !$public_api_all)
+				$CFG->m->set('trans_l1_'.$currency_info['currency'],$result,300);
+			elseif ($public_api_all)
+				$CFG->m->set('trans_api'.(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : ''),$result,300);
+			
+			if ($public_api_all) {
+				$cached = $CFG->m->get('trans_cache');
+				if (!$cached)
+					$cached = array();
+				
+				$key = (($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
+				$cached[$key] = true;
+				$CFG->m->set('trans_cache',$cached,300);
+			}
+		}
+		
 		if (!$count)
 			return $result;
 		else
