@@ -16,7 +16,7 @@ if (!$notrades) {
 	API::add('Stats','getBTCTraded');
 }
 elseif (empty($_REQUEST['get10'])) {
-	$limit = 30;
+	$limit = (!$user) ? 30 : false;
 }
 
 if (!empty($_REQUEST['last_price'])) {
