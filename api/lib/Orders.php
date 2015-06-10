@@ -29,7 +29,12 @@ class Orders {
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
 		$btc_price = ($currency && !$user && $CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))),2) AS btc_price, " : false;
 		$btc_price1 = ($currency && !$user && $CFG->cross_currency_trades) ? str_replace('AS btc_price,','',$btc_price) : false;
-		//$btc_price = ($currency && !$user && $CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))),2) AS btc_price, " : false;
+		
+		if ($CFG->memcached && !$order_by1) {
+			$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''));
+			if ($cached)
+				return $cached;
+		}
 		
 		if (!$count && !$public_api_open_orders && !$public_api_order_book)
 			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." $btc_price order_types.name_{$CFG->language} AS type, currencies.currency AS currency, (currencies.$usd_field * orders.fiat) AS usd_amount, (currencies.$usd_field * orders.btc_price) AS usd_price, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol, ".(!$user ? 'SUM(' : '')."IF(".$user_id." = orders.site_user ".(($currency && $CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : '').",1,0)".(!$user ? ')' : '')." AS mine, currencies.currency AS currency_abbr ";
@@ -86,6 +91,18 @@ class Orders {
 			$sql .= " ORDER BY price $order_desc ";
 
 		$result = db_query_array($sql);
+		
+		if ($CFG->memcached && !$order_by1) {
+			$CFG->m->set('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''),$result,300);
+			$cached = $CFG->m->get('orders_cache');
+			if (!$cached)
+				$cached = array();
+			
+			$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : '');
+			$cached[$key] = true;
+			$CFG->m->set('orders_cache',$cached,300);
+		}
+		
 		if (!$count)
 			return $result;
 		else
@@ -1003,23 +1020,33 @@ class Orders {
 	public static function unsetCache() {
 		global $CFG;
 		
-		$trans_cache = $CFG->m->get('trans_cache');
+		$cached = $CFG->m->getMulti(array('trans_cache','orders_cache'));
+		$delete_keys = array();
+		
 		if ($CFG->currencies) {
 			foreach ($CFG->currencies as $key => $currency) {
 				if (is_numeric($key) || $currency['currency'] == 'BTC')
 					continue;
 				
-				$CFG->m->delete('stats_'.$key);
-				$CFG->m->delete('trans_l5_'.$key);
-				$CFG->m->delete('trans_l1_'.$key);
+				$delete_keys[] = 'stats_'.$key;
+				$delete_keys[] = 'trans_l5_'.$key;
+				$delete_keys[] = 'trans_l1_'.$key;
 			}
 		}
 		
-		if ($trans_cache) {
-			foreach ($trans_cache as $key => $n) {
-				$CFG->m->delete('trans_api'.$key);
+		if ($cached['trans_cache']) {
+			foreach ($cached['trans_cache'] as $key => $n) {
+				$delete_keys[] = 'trans_api'.$key;
 			}
 		}
+		
+		if ($cached['orders_cache']) {
+			foreach ($cached['orders_cache'] as $key => $n) {
+				$delete_keys[] = 'orders'.$key;
+			}
+		}
+		
+		$CFG->m->deleteMulti($delete_keys);
 	}
 	
 	private static function cancelOrder($order_id=false,$outstanding_btc=false,$site_user=false) {
