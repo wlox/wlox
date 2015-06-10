@@ -74,7 +74,9 @@ class APIKeys {
 		$sql = 'SELECT api_keys.view AS p_view, api_keys.orders AS p_orders, api_keys.withdraw AS p_withdraw FROM api_keys WHERE api_keys.key = "'.$api_key.'"';
 		$result = db_query_array($sql);
 		if ($result) {
-			$CFG->m->set('api_'.$api_key.'_p',$result[0],300);
+			if ($CFG->memcached)
+				$CFG->m->set('api_'.$api_key.'_p',$result[0],300);
+			
 			return $result[0];
 		}
 		else
