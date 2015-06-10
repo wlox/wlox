@@ -158,6 +158,14 @@ class Orders {
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$usd_info = $CFG->currencies['USD'];
 		$currency_info = ($currency_id > 0) ? $CFG->currencies[$currency_id] : $CFG->currencies[strtoupper($currency)];
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('bid_ask_'.$currency_info['currency']);
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
 		$conversion1 = ($usd_info['id'] == $currency_info['id']) ? ' currencies.usd_ask' : ' (1 / IF(transactions.currency = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies.usd_ask))';
 		$conversion2 = ($usd_info['id'] == $currency_info['id']) ? ' currencies1.usd_ask' : ' (1 / IF(transactions.currency1 = '.$usd_info['id'].','.$currency_info['usd_ask'].', '.$currency_info['usd_ask'].' / currencies1.usd_ask))';
@@ -191,6 +199,10 @@ class Orders {
 			if ($result)
 				$res = array('bid'=>$result[0]['fiat_price'],'ask'=>$result[0]['fiat_price']);
 		}
+		
+		if ($CFG->memcached)
+			$CFG->m->set('bid_ask_'.$currency_info['currency'],300);
+		
 		return $res;
 	}
 	
@@ -1143,6 +1155,10 @@ class Orders {
 		
 		self::setStatus(false,'CANCELLED_USER',$del_order['log_id'],$del_order['btc']);
 		db_delete('orders',$del_order['id']);
+		
+		if ($CFG->memcached)
+			self::unsetCache();
+		
 		return self::getStatus($del_order['log_id']);
 	}
 	
@@ -1179,6 +1195,10 @@ class Orders {
 			}
 		}
 		db_commit();
+		
+		if ($CFG->memcached)
+			self::unsetCache();
+		
 		return $orders_info;
 	}
 	
