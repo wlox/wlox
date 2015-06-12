@@ -67,7 +67,7 @@ $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		$buy = ($row['order_type'] == $CFG->order_type_bid);
-		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user']);
+		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user'],true);
 	}
 }
 
