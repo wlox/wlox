@@ -3,14 +3,14 @@ class User {
 	private static $logged_in;
 	public static $awaiting_token, $info, $attempts, $timeout;
 	
-	static function logIn($user,$pass) {
+	static function logIn($user=false,$pass=false,$email_authcode=false,$email_authcode_request=false) {
 		global $CFG;
 		
 		$ip = API::getUserIp();
 		
 		$ch = curl_init($CFG->auth_login_url);
 		curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass,'ip'=>$ip));
+		curl_setopt($ch,CURLOPT_POSTFIELDS,array('user'=>$user,'pass'=>$pass,'ip'=>$ip,'email_authcode'=>$email_authcode,'email_authcode_request'=>$email_authcode_request));
 		curl_setopt($ch,CURLOPT_FRESH_CONNECT,TRUE);
 		
 		$result1 = curl_exec($ch);

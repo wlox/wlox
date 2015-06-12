@@ -5,6 +5,7 @@ include 'stdlib.php';
 include 'session.php';
 include 'autoload.php';
 
+/* HTTP Headers */
 $hostname = (!empty($_SERVER["HTTP_HOST"])) ? $_SERVER["HTTP_HOST"] : $_SERVER["SERVER_NAME"];
 if (!empty($hostname) && !stristr($hostname,'localhost')) {
 	$hostname = str_ireplace('www.','',$hostname);
@@ -39,12 +40,23 @@ ini_set('session.cookie_path','/');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
 
+/* Readonly Sessions */
 if (empty($ajax)) {
 	session_start();
 	session_regenerate();
 }
 else {
 	session_readonly();
+}
+
+/* Current File Name */
+$CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
+
+/* Check for Email Auth */
+if (!empty($_REQUEST['email_auth']) && !empty($_REQUEST['authcode'])) {
+	$email_authcode = urlencode($_REQUEST['authcode']);
+	$email_authcode_request = ($CFG->self == 'withdraw.php');
+	User::logIn(false,false,$email_authcode,$email_authcode_request);
 }
 
 /* Common Info */
@@ -88,7 +100,4 @@ elseif (empty($_SESSION['language'])) {
 
 /* Get Currencies */
 $CFG->currencies = $query['Currencies']['get']['results'][0];
-
-/* Current File Name */
-$CFG->self = basename($_SERVER['SCRIPT_FILENAME']);
 ?>
