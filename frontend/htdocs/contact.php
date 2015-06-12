@@ -8,6 +8,18 @@ $_REQUEST['contact']['email'] = (!empty($_REQUEST['contact']['email'])) ? preg_r
 $_REQUEST['contact']['country'] = (!empty($_REQUEST['contact']['country'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['contact']['country']) : false;
 $_REQUEST['contact']['subject'] = (!empty($_REQUEST['contact']['subject'])) ? preg_replace("/[^\pL a-zA-Z0-9@\s\._-]/u", "",$_REQUEST['contact']['subject']) : false;
 
+if (!empty($_REQUEST['contact']['message'])) {
+	$accepted = array('p','strong','em','u','s','sub','sup','i','b','br');
+	$match = preg_match_all('/<([^<>]+)>/',$_REQUEST['contact']['message'],$matches);
+	if ($matches && $matches[1]) {
+		foreach ($matches[1] as $match1) {
+			if (!in_array(str_replace('/','',$match1),$accepted)) {
+				$_REQUEST['contact']['message'] = str_replace($match1,'',$_REQUEST['contact']['message']);
+			}
+		}
+	}
+}
+
 if (empty($CFG->google_recaptch_api_key) || empty($CFG->google_recaptch_api_secret))
 	$_REQUEST['is_caco'] = (!empty($_REQUEST['form_name']) && empty($_REQUEST['is_caco'])) ? array('contact'=>1) : (!empty($_REQUEST['is_caco']) ? $_REQUEST['is_caco'] : false);
 

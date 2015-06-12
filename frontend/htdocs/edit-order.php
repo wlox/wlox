@@ -19,13 +19,11 @@ $bypass = (!empty($_REQUEST['bypass']));
 API::add('Orders','getRecord',array($order_id1));
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 API::add('User','getAvailable');
-API::add('Status','get');
 $query = API::send();
 
 $order_info = $query['Orders']['getRecord']['results'][0];
 $user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
 $user_available = $query['User']['getAvailable']['results'][0];
-$status = $query['Status']['get']['results'][0];
 
 API::add('Currencies','getRecord',array(false,$order_info['currency']));
 $query = API::send();
@@ -93,7 +91,7 @@ if ($order_info['is_bid']) {
 	$user_fee_bid = ($buy_price1 >= $asks[0]['btc_price'] || $buy_market_price1) ? $user_fee_both['fee'] : $user_fee_both['fee1'];
 	$buy_subtotal1 = $buy_amount1 * (($buy_price1 > 0) ? $buy_price1 : $buy_stop_price1);
 	$buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
-	$buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
+	$buy_total1 = round($buy_subtotal1 + $buy_fee_amount1,2,PHP_ROUND_HALF_UP);
 	$pre_fiat_available = (!empty($user_available[strtoupper($currency1)])) ? $user_available[strtoupper($currency1)] : false;
 	$user_available[strtoupper($currency1)] += ($order_info['btc'] * $order_info['btc_price']) + (($user_fee_bid * 0.01) * ($order_info['btc'] * $order_info['btc_price']));
 	$buy_stop = ($buy_stop_price1 > 0);
@@ -108,7 +106,7 @@ else {
 	$user_fee_ask = (($sell_price1 <= $bids[0]['btc_price']) || $sell_market_price1) ? $user_fee_both['fee'] : $user_fee_both['fee1'];
 	$sell_subtotal1 = $sell_amount1 * (($sell_price1 > 0) ? $sell_price1 : $sell_stop_price1);
 	$sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
-	$sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
+	$sell_total1 = round($sell_subtotal1 - $sell_fee_amount1,2,PHP_ROUND_HALF_UP);
 	$pre_btc_available = $user_available['BTC'];
 	$user_available['BTC'] += $order_info['btc'];
 	$sell_stop = ($sell_stop_price1 > 0);

@@ -40,7 +40,6 @@ API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array($currency_info['id']));
-API::add('Status','get');
 
 if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price']) && !empty($_REQUEST['buy_price'])) {
 	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
@@ -67,8 +66,6 @@ $self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders'
 $self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
 $self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
 $self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
-$status = $query['Status']['get']['results'][0];
-
 $user_fee_bid = (!empty($_REQUEST['buy']) && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || !empty($_REQUEST['buy_market_price']) || empty($_REQUEST['buy_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 $user_fee_ask = (!empty($_REQUEST['sell']) && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 
@@ -76,7 +73,7 @@ $buy_amount1 = (!empty($_REQUEST['buy_amount']) && $_REQUEST['buy_amount'] > 0) 
 $buy_price1 = (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
 $buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
-$buy_total1 = $buy_subtotal1 + $buy_fee_amount1;
+$buy_total1 = round($buy_subtotal1 + $buy_fee_amount1,2,PHP_ROUND_HALF_UP);
 $buy_stop = false;
 $buy_stop_price1 = false;
 
@@ -84,7 +81,7 @@ $sell_amount1 = (!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 
 $sell_price1 = (!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
-$sell_total1 = $sell_subtotal1 - $sell_fee_amount1;
+$sell_total1 = round($sell_subtotal1 - $sell_fee_amount1,2,PHP_ROUND_HALF_UP);
 $sell_stop = false;
 $sell_stop_price1 = false;
 
