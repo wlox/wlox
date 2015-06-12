@@ -211,6 +211,7 @@ class User {
 		
 		$session_id = preg_replace("/[^0-9]/", "",$session_id);
 		
+		self::deleteCache();
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
@@ -753,6 +754,7 @@ class User {
 		if ($request_id > 0) {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['baseurl'] = $CFG->frontend_baseurl;
 		
 			if (!$security_page)
 				$email = SiteEmail::getRecord('settings-auth');
@@ -828,9 +830,10 @@ class User {
 		curl_close($ch);
 	}
 	
-	public static function deleteCache() {
+	public static function deleteCache($session_id=false) {
 		global $CFG;
 		
+		$session_id = (!$session_id) ? $CFG->session_id : $session_id;
 		if ($CFG->memcached && $CFG->session_id)
 			$CFG->delete_cache = $CFG->m->delete('session_'.$CFG->session_id);
 	}
