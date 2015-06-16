@@ -13,7 +13,7 @@ $step2 = false;
 $step3 = false;
 $step4 = false;
 
-$authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
+$authcode1 = (!empty($_REQUEST['authcode'])) ? urldecode($_REQUEST['authcode']) : false;
 if ($authcode1 && empty($_REQUEST['step'])) {
 	API::add('User','getSettingsChangeRequest',array(urlencode($authcode1)));
 	$query = API::send();
@@ -128,7 +128,7 @@ elseif (!empty($_REQUEST['step']) && $_REQUEST['step'] == 2) {
 		Errors::add(Lang::string('security-no-token'));
 	
 	if (!is_array(Errors::$errors)) {
-		API::settingsChangeId(urldecode($authcode1));
+		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','verifiedAuthy');
 		$query = API::send();
@@ -160,7 +160,7 @@ elseif (!empty($_REQUEST['step']) && $_REQUEST['step'] == 3) {
 		Errors::add(Lang::string('security-no-token'));
 
 	if (!is_array(Errors::$errors)) {
-		API::settingsChangeId(urldecode($authcode1));
+		API::settingsChangeId($authcode1);
 		API::token($token1);
 		API::add('User','verifiedGoogle');
 		$query = API::send();
