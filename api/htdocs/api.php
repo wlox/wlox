@@ -43,7 +43,7 @@ if ($session_id1) {
 	if ($cached)
 		$result = array($cached);
 	else
-		$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+		$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.ip AS ip, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
 	
 	$return['session'] = $session_id1;
 	if ($nonce_invalid) {
@@ -135,27 +135,49 @@ if ($api_key1 && $api_signature1) {
 }
 
 // verify token
-if ($token1 > 0 && !empty($result[0]['authy_id']) && $result[0]['authy_id'] > 0) {
-	$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
-	$response1 = (!empty($response)) ? json_decode($response,true) : false;
-
-	if (empty($response) || (empty($response1) || !is_array($response1))) {
-		$return['error'] = 'security-com-error';
+if ($token1 > 0) {
+	$token_cache = array();
+	if ($CFG->memcached) {
+		$token_cache = $CFG->m->get('tokens');
+		if (!$token_cache)
+			$token_cache = array();
 	}
-	elseif (!empty($response1['errors']) || $response1['success'] === false || $response1['success'] === 'false') {
-		$return['error'] = 'authy-errors';
-		$return['authy_errors'] = $response1['errors'];
-	}
-	elseif (!empty($response1['success']) && ($response1['success'] == true || $response1['success'] == 'true')) {
-		$CFG->token_verified = true;
-	}
-}
-elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
-	$result = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
-	if ($result)
-		$CFG->token_verified = true;
-	else
+	
+	if (in_array($token1,$token_cache)) {
 		$return['error'] = 'security-incorrect-token';
+	}
+	else {
+		if ($token1 > 0 && !empty($result[0]['authy_id']) && $result[0]['authy_id'] > 0) {
+			$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.$result[0]['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
+			$response1 = (!empty($response)) ? json_decode($response,true) : false;
+		
+			if (empty($response) || (empty($response1) || !is_array($response1))) {
+				$return['error'] = 'security-com-error';
+			}
+			elseif (!empty($response1['errors']) || $response1['success'] === false || $response1['success'] === 'false') {
+				$return['error'] = 'authy-errors';
+				$return['authy_errors'] = $response1['errors'];
+			}
+			elseif (!empty($response1['success']) && ($response1['success'] == true || $response1['success'] == 'true')) {
+				$CFG->token_verified = true;
+			}
+		}
+		elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
+			$response = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
+			if ($response)
+				$CFG->token_verified = true;
+			else
+				$return['error'] = 'security-incorrect-token';
+		}
+		
+		if ($CFG->memcached && !empty($CFG->token_verified)) {
+			if (count($token_cache) > 1000)
+				array_shift($token_cache);
+			
+			$token_cache[] = $token1;
+			$CFG->m->set('tokens',$token_cache,0);
+		}
+	}
 }
 
 // email 2fa for settings changes

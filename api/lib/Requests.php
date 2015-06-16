@@ -98,6 +98,7 @@ class Requests{
 				Status::sumFields(array('pending_withdrawals'=>$amount));
 				$vars = User::$info;
 				$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+				$vars['baseurl'] = $CFG->frontend_baseurl;
 					
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
@@ -123,6 +124,7 @@ class Requests{
 			if (User::$info['confirm_withdrawal_email_bank'] == 'Y' && !($CFG->token_verified || $CFG->session_api) && $request_id > 0) {
 				$vars = User::$info;
 				$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+				$vars['baseurl'] = $CFG->frontend_baseurl;
 			
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);

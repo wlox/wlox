@@ -151,6 +151,10 @@ class User {
 		if (!User::$info) {
 			return array('error'=>'session-not-found','attempts'=>$login_attempts);
 		}
+
+		if (User::$info['ip'] != $CFG->client_ip) {
+			return array('message'=>'session-not-found','attempts'=>$login_attempts);
+		}
 		
 		if (User::$info['awaiting'] == 'Y') {
 			return array('message'=>'awaiting-token','attempts'=>$login_attempts);
@@ -211,6 +215,7 @@ class User {
 		
 		$session_id = preg_replace("/[^0-9]/", "",$session_id);
 		
+		self::deleteCache();
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
@@ -421,6 +426,18 @@ class User {
 		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
 	
+	public static function changePassword($pass) {
+		global $CFG;
+	
+		$pass = preg_replace($CFG->pass_regex, "",$pass);
+		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)) || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars)
+			return false;
+	
+		self::deleteCache();
+		$pass = Encryption::hash($pass);
+		return db_update('site_users',User::$info['id'],array('pass'=>$pass));
+	}
+	
 	public static function firstLoginPassChange($pass) {
 		global $CFG;
 		
@@ -460,21 +477,20 @@ class User {
 		if (!($id > 0))
 			return false;
 		
-		self::deleteCache();
-		
-		$user = DB::getRecord('site_users',$id,0,1);
-		//$new_id = self::getNewId();
-		//$user['new_user'] = $new_id;
-		$user['new_password'] = self::randomPassword(12);
-		$pass1 = Encryption::hash($user['new_password']);
-
-		db_update('site_users',$id,array(/*'user'=>$user['new_user'],*/'pass'=>$pass1,'no_logins'=>'Y'));
-		
 		$sql = "DELETE FROM sessions WHERE user_id = $id";
 		db_query($sql);
 		
-		$email1 = SiteEmail::getRecord('forgot');
-		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
+		self::deleteCache();
+		
+		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1));
+		if ($request_id > 0) {
+			$vars = User::$info;
+			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['baseurl'] = $CFG->frontend_baseurl;
+		
+			$email1 = SiteEmail::getRecord('forgot');
+			Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$vars);
+		}
 	}
 	
 	public static function registerNew($info) {
@@ -612,7 +628,7 @@ class User {
 	public static function verifiedGoogle() {
 		global $CFG;
 	
-		if (!($CFG->session_active && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
+		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
 			return false;
 			
 		self::deleteCache();
@@ -753,6 +769,7 @@ class User {
 		if ($request_id > 0) {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['baseurl'] = $CFG->frontend_baseurl;
 		
 			if (!$security_page)
 				$email = SiteEmail::getRecord('settings-auth');
@@ -828,9 +845,10 @@ class User {
 		curl_close($ch);
 	}
 	
-	public static function deleteCache() {
+	public static function deleteCache($session_id=false) {
 		global $CFG;
 		
+		$session_id = (!$session_id) ? $CFG->session_id : $session_id;
 		if ($CFG->memcached && $CFG->session_id)
 			$CFG->delete_cache = $CFG->m->delete('session_'.$CFG->session_id);
 	}

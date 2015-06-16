@@ -6,7 +6,8 @@ class SiteEmail{
 		$key = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$key);
 		
 		if (empty($key))
-			return false;		
+			return false;	
+			
 		$sql="SELECT * FROM emails WHERE emails.key='$key' ";	
 		$result = db_query_array($sql);
 		
@@ -16,6 +17,9 @@ class SiteEmail{
 		$result[0]['content'] = $result[0]['content_'.$CFG->language];
 		$result[0]['title'] = str_replace('[exchange_name]',$CFG->exchange_name,$result[0]['title']);
 		$result[0]['content'] = str_replace('[exchange_name]',$CFG->exchange_name,$result[0]['content']);
+		$result[0]['title'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['title']);
+		$result[0]['content'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['content']);
+		
 		return $result[0];
 	}
 	
