@@ -3,17 +3,34 @@ include '../lib/common.php';
 
 $user1 = preg_replace("/[^0-9]/","",$_REQUEST['user']);
 $pass1 = preg_replace($CFG->pass_regex,"",$_REQUEST['pass']);
+$email_authcode = $_REQUEST['email_authcode'];
+$email_authcode_request = !empty($_REQUEST['email_authcode_request']);
 $ip1 = (!empty($_REQUEST['ip'])) ? preg_replace("/[^0-9\.]/","",$_REQUEST['ip']) : false;
 $ip_int = ip2long($ip1);
 $invalid_login = false;
 $awaiting_token = false;
 $attempts = 0;
 $timeout = 0;
+$user_id = 0;
 
-if (!$user1 || !$pass1)
+if ($email_authcode) {
+	$authcode1 = Encryption::decrypt(urldecode($email_authcode));
+	if ($authcode1 > 0) {
+		if (!$email_authcode_request)
+			$sql = 'SELECT site_user FROM change_settings WHERE id = '.$authcode1;
+		else
+			$sql = 'SELECT site_user FROM requests WHERE id = '.$authcode1;
+		
+		$request = db_query_array($sql);
+		if ($request && $request[0]['site_user'])
+			$user_id = $request[0]['site_user'];
+	}
+}
+
+if ((!$user1 || !$pass1) && !$user_id)
 	$invalid_login = 1;
 
-$result = db_query_array("SELECT site_users.*, site_users_access.start AS `start`, site_users_access.last AS `last`, site_users_access.attempts AS attempts FROM site_users LEFT JOIN site_users_access ON (site_users_access.site_user = site_users.id) WHERE site_users.user = '$user1'");
+$result = db_query_array("SELECT site_users.*, site_users_access.start AS `start`, site_users_access.last AS `last`, site_users_access.attempts AS attempts FROM site_users LEFT JOIN site_users_access ON (site_users_access.site_user = site_users.id) WHERE ".(($user_id > 0) ? "site_users.id = $user_id" :  "site_users.user = '$user1'"));
 if (!$result) {
 	if (strlen($user1) == 8) {
 		if ($ip_int) {
@@ -62,7 +79,7 @@ elseif ($result) {
 		
 	}
 	
-	if (!$invalid_login)
+	if (!$invalid_login && !$user_id)
 		$invalid_login = (!Encryption::verify_hash($pass1,$result[0]['pass']));
 }
 
@@ -86,7 +103,7 @@ $public = openssl_pkey_get_details($res);
 $public = $public["key"];
 $nonce = rand(2,99999);
 
-$session_id = db_insert('sessions',array('session_key'=>$public,'user_id'=>$result[0]['id'],'nonce'=>$nonce,'session_time'=>date('Y-m-d H:i:s'),'session_start'=>date('Y-m-d H:i:s'),'awaiting'=>(($awaiting_token) ? 'Y' : 'N')));
+$session_id = db_insert('sessions',array('session_key'=>$public,'user_id'=>$result[0]['id'],'nonce'=>$nonce,'session_time'=>date('Y-m-d H:i:s'),'session_start'=>date('Y-m-d H:i:s'),'awaiting'=>(($awaiting_token) ? 'Y' : 'N'),'ip'=>$ip1));
 $return['session_id'] = $session_id;
 $return['session_key'] = $private;
 $return['nonce'] = $nonce;
