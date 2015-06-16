@@ -103,7 +103,7 @@ $public = openssl_pkey_get_details($res);
 $public = $public["key"];
 $nonce = rand(2,99999);
 
-$session_id = db_insert('sessions',array('session_key'=>$public,'user_id'=>$result[0]['id'],'nonce'=>$nonce,'session_time'=>date('Y-m-d H:i:s'),'session_start'=>date('Y-m-d H:i:s'),'awaiting'=>(($awaiting_token) ? 'Y' : 'N')));
+$session_id = db_insert('sessions',array('session_key'=>$public,'user_id'=>$result[0]['id'],'nonce'=>$nonce,'session_time'=>date('Y-m-d H:i:s'),'session_start'=>date('Y-m-d H:i:s'),'awaiting'=>(($awaiting_token) ? 'Y' : 'N'),'ip'=>$ip1));
 $return['session_id'] = $session_id;
 $return['session_key'] = $private;
 $return['nonce'] = $nonce;
