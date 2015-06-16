@@ -151,8 +151,8 @@ if ($token1 > 0 && !empty($result[0]['authy_id']) && $result[0]['authy_id'] > 0)
 	}
 }
 elseif ($token1 > 0 && $result[0]['google_2fa_code']) {
-	$result = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
-	if ($result)
+	$response = Google2FA::verify_key($result[0]['google_2fa_code'],$token1);
+	if ($response)
 		$CFG->token_verified = true;
 	else
 		$return['error'] = 'security-incorrect-token';

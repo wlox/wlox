@@ -422,6 +422,18 @@ class User {
 		return db_update('site_users',User::$info['id'],array('no_logins'=>'N','pass'=>$pass));
 	}
 	
+	public static function changePassword($pass) {
+		global $CFG;
+	
+		$pass = preg_replace($CFG->pass_regex, "",$pass);
+		if (!($CFG->session_active && ($CFG->token_verified || $CFG->email_2fa_verified)) || mb_strlen($pass,'utf-8') < $CFG->pass_min_chars)
+			return false;
+	
+		self::deleteCache();
+		$pass = Encryption::hash($pass);
+		return db_update('site_users',User::$info['id'],array('pass'=>$pass));
+	}
+	
 	public static function firstLoginPassChange($pass) {
 		global $CFG;
 		
@@ -461,21 +473,20 @@ class User {
 		if (!($id > 0))
 			return false;
 		
-		self::deleteCache();
-		
-		$user = DB::getRecord('site_users',$id,0,1);
-		//$new_id = self::getNewId();
-		//$user['new_user'] = $new_id;
-		$user['new_password'] = self::randomPassword(12);
-		$pass1 = Encryption::hash($user['new_password']);
-
-		db_update('site_users',$id,array(/*'user'=>$user['new_user'],*/'pass'=>$pass1,'no_logins'=>'Y'));
-		
 		$sql = "DELETE FROM sessions WHERE user_id = $id";
 		db_query($sql);
 		
-		$email1 = SiteEmail::getRecord('forgot');
-		Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$user);
+		self::deleteCache();
+		
+		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1));
+		if ($request_id > 0) {
+			$vars = User::$info;
+			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['baseurl'] = $CFG->frontend_baseurl;
+		
+			$email1 = SiteEmail::getRecord('forgot');
+			Email::send($CFG->form_email,$email,$email1['title'],$CFG->form_email_from,false,$email1['content'],$vars);
+		}
 	}
 	
 	public static function registerNew($info) {
