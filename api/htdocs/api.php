@@ -43,7 +43,7 @@ if ($session_id1) {
 	if ($cached)
 		$result = array($cached);
 	else
-		$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
+		$result = db_query_array('SELECT sessions.nonce AS nonce ,sessions.session_key AS session_key, sessions.ip AS ip, sessions.awaiting AS awaiting, site_users.* FROM sessions LEFT JOIN site_users ON (sessions.user_id = site_users.id) WHERE sessions.session_id = '.$session_id1);
 	
 	$return['session'] = $session_id1;
 	if ($nonce_invalid) {
@@ -171,7 +171,7 @@ if ($token1 > 0) {
 		}
 		
 		if ($CFG->memcached && !empty($CFG->token_verified)) {
-			if (count($token_cache) > 300)
+			if (count($token_cache) > 1000)
 				array_shift($token_cache);
 			
 			$token_cache[] = $token1;

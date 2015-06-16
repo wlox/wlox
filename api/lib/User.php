@@ -151,6 +151,10 @@ class User {
 		if (!User::$info) {
 			return array('error'=>'session-not-found','attempts'=>$login_attempts);
 		}
+
+		if (User::$info['ip'] != $CFG->client_ip) {
+			return array('message'=>'session-not-found','attempts'=>$login_attempts);
+		}
 		
 		if (User::$info['awaiting'] == 'Y') {
 			return array('message'=>'awaiting-token','attempts'=>$login_attempts);
