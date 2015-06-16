@@ -8,6 +8,7 @@ elseif (!User::$awaiting_token)
 
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
 $dont_ask1 = !empty($_REQUEST['dont_ask']);
+$authcode1 = (!empty($_REQUEST['authcode'])) ? urldecode($_REQUEST['authcode']) : false;
 
 if (!empty($_REQUEST['step']) && $_REQUEST['step'] == 1) {
 	if (!($token1 > 0))
@@ -16,7 +17,10 @@ if (!empty($_REQUEST['step']) && $_REQUEST['step'] == 1) {
 	if (!is_array(Errors::$errors)) {
 		$verify = User::verifyToken($token1,$dont_ask1);
 		if ($verify) {
-			Link::redirect('account.php');
+			if (!empty($_REQUEST['email_auth']))
+				Link::redirect('change-password.php?authcode='.urlencode($_REQUEST['authcode']));
+			else
+				Link::redirect('account.php');
 			exit;
 		}
 	}
@@ -46,6 +50,8 @@ include 'includes/head.php';
 			<? Errors::display(); ?>
 			<form id="enable_tfa" action="verify-token.php" method="POST">
 				<input type="hidden" name="step" value="1" />
+				<input type="hidden" name="email_auth" value="<?= !empty($_REQUEST['email_auth']) ?>" />
+				<input type="hidden" name="authcode" value="<?= urlencode($authcode1) ?>" />
 				<div class="buyform">
 					<div class="content">
 		            	<h3 class="section_label">

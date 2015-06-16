@@ -36,8 +36,12 @@ if ($referer == 'login.php' || $referer == 'verify-token.php' || $referer == 'fi
 	$query = API::send();
 }
 
-$page_title = Lang::string('account');
+if (!empty($_REQUEST['message'])) {
+	if ($_REQUEST['message'] == 'settings-personal-message')
+		Messages::add(Lang::string('settings-personal-message'));
+}
 
+$page_title = Lang::string('account');
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -50,6 +54,7 @@ include 'includes/head.php';
 	<? include 'includes/sidebar_account.php'; ?>
 	<div class="content_right">
 		<div class="testimonials-4">
+			<? Messages::display(); ?>
             <h2><?= Lang::string('account-welcome') ?>, <strong><?= (empty(User::$info['first_name'])) ? User::$info['user'] : User::$info['first_name'].' '.User::$info['last_name'] ?></strong></h2>
 			<? 
 			if (User::$info['verified_authy'] != 'Y' && User::$info['verified_google'] != 'Y') {
