@@ -12,6 +12,10 @@ class Lang {
 				$lang_table[$key]['en'] = str_replace('[exchange_name]',$CFG->exchange_name,$row['eng']);
 				$lang_table[$key]['ru'] = str_replace('[exchange_name]',$CFG->exchange_name,$row['ru']);
 				$lang_table[$key]['zh'] = str_replace('[exchange_name]',$CFG->exchange_name,$row['zh']);
+				$lang_table[$key]['es'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$row['esp']);
+				$lang_table[$key]['en'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$row['eng']);
+				$lang_table[$key]['ru'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$row['ru']);
+				$lang_table[$key]['zh'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$row['zh']);
 			}
 		}
 		return $lang_table;
