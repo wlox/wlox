@@ -14,6 +14,8 @@ class Email {
 		
 		$html_version = str_ireplace('[variables]',$var_string,$html_version);
 		$text_version = str_ireplace('[variables]',$var_string,$text_version);
+		$html_version = str_ireplace('&amp;','&',$html_version);
+		$text_version = str_ireplace('&amp;','&',$text_version);
 		
 		if (is_array($variables)) {
 			foreach ($variables as $key => $val) {

@@ -67,17 +67,17 @@ $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		$buy = ($row['order_type'] == $CFG->order_type_bid);
-		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user']);
+		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user'],true);
 	}
 }
 
 // notify pending withdrawals
 if ($CFG->email_notify_fiat_withdrawals == 'Y') {
-	$sql = 'SELECT 1 FROM requests WHERE notified = 0 AND request_type = '.$CFG->request_widthdrawal_id.' AND currency != '.$CFG->btc_currency_id.' AND request_status = '.$CFG->request_pending_id.' AND done != \'Y\' LIMIT 0,1';
+	$sql = 'SELECT 1 FROM requests WHERE notified = 0 AND request_type = '.$CFG->request_widthdrawal_id.' AND request_status = '.$CFG->request_pending_id.' AND `date` < DATE_SUB(DATE_ADD(NOW(), INTERVAL '.((($CFG->timezone_offset)/60)/60).' HOUR), INTERVAL 5 MINUTE) AND done != \'Y\' LIMIT 0,1';
 	$result = db_query_array($sql);
 	
 	if ($result) {
-		$sql = 'SELECT ROUND(SUM(requests.amount),2) AS amount, LOWER(currencies.currency) AS currency FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.currency != '.$CFG->btc_currency_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done != \'Y\' GROUP BY requests.currency';
+		$sql = 'SELECT ROUND(SUM(requests.amount),2) AS amount, LOWER(currencies.currency) AS currency FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done != \'Y\' GROUP BY requests.currency';
 		$result = db_query_array($sql);
 		
 		if ($result) {
