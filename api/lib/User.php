@@ -624,7 +624,7 @@ class User {
 	public static function verifiedGoogle() {
 		global $CFG;
 	
-		if (!($CFG->session_active && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
+		if (!($CFG->session_active && $CFG->token_verified && $CFG->email_2fa_verified) || User::$info['verified_authy'] == 'Y')
 			return false;
 			
 		self::deleteCache();
