@@ -1,4 +1,4 @@
-ALTER TABLE `sessions` ADD `ip` VARCHAR( 255 ) NOT NULL 
+ALTER TABLE `sessions` ADD `ip` VARCHAR( 255 ) NOT NULL;
 
 INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`, `zh`, `ru`) VALUES
 (448, 'orders-order-cancelled-all', 'Se han cancelado todas sus órdenes.', 'You have cancelled all your orders.', '', 9, '您已取消所有订单。', 'Вы отменили все ваши заявки.'),
