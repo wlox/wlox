@@ -755,7 +755,7 @@ class Orders {
 			if (round($amount,8,PHP_ROUND_HALF_UP) > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						if (!$no_compatible) {
+						if (!($no_compatible && $external_transaction)) {
 							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>$amount*$price,'currency'=>$currency_info['id'],'btc_price'=>(($price != $stop_price) ? $price : 0),'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id,'stop_price'=>$stop_price));
 							$edit_order = 1;
 						}
@@ -944,7 +944,7 @@ class Orders {
 			if (round($amount,8,PHP_ROUND_HALF_UP) > 0) {
 				if ($edit_id > 0) {
 					if (!$this_funds_finished) {
-						if (!$no_compatible) {
+						if (!($no_compatible && $external_transaction)) {
 							db_update('orders',$edit_id,array('btc'=>$amount,'fiat'=>($amount*$price),'btc_price'=>(($price != $stop_price) ? $price : 0),'market_price'=>(($market_price) ? 'Y' : 'N'),'log_id'=>$order_log_id,'stop_price'=>$stop_price));
 							$edit_order = 1;
 						}
