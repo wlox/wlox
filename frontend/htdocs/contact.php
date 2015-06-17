@@ -87,8 +87,8 @@ include 'includes/head.php';
 			    <?
 			    Messages::display();
 			    Errors::display();
-			    $contact->textInput('first_name',Lang::string('settings-first-name'),1,User::$info['first_name']);
-			    $contact->textInput('last_name',Lang::string('settings-last-name'),1,User::$info['last_name']);
+			    $contact->textInput('first_name',Lang::string('settings-first-name'),0,User::$info['first_name']);
+			    $contact->textInput('last_name',Lang::string('settings-last-name'),0,User::$info['last_name']);
 			    $contact->textInput('company',Lang::string('settings-company'));
 			    $contact->textInput('email',Lang::string('settings-email'),'email',User::$info['email']);
 			    $contact->selectInput('country',Lang::string('settings-country'),0,User::$info['country'],$countries,false,array('name'));
