@@ -49,10 +49,6 @@ include 'includes/head.php';
 if (!User::isLoggedIn()) {
 ?>
 
-
-<!-- Slider
-======================================= -->  
-
 <div class="container_full">
 	<?php 
 	if ($CFG->language == 'en' || $CFG->language == 'es' || empty($CFG->language))
@@ -63,22 +59,22 @@ if (!User::isLoggedIn()) {
 		$wordwrap = 150;
 	?>
 	<div class="mobilebanner">
-		<h1 <?= ($CFG->language == 'ru') ? 'class="caption_ru"' : false ?>><?= $content['title'] ?></h1>
-		<p class="text"><?= wordwrap(strip_tags($content['content']),$wordwrap,'<br/>') ?> <a class="morestuff" href="<?= Lang::url('about.php') ?>">>></a></p>   
-		<div class="crypto_logo"><a target="_blank" href="https://cryptocapital.co">Integrated With <img src="images/crypto_logo.png" /></a></div>
-		<a href="login.php" class="button_slider"><i class="fa fa-key"></i>&nbsp;&nbsp;<?= Lang::string('home-login') ?></a>       
-		<a href="<?= Lang::url('register.php') ?>" class="button_slider"><i class="fa fa-user"></i>&nbsp;&nbsp;<?= Lang::string('home-register') ?></a>
-		<div class="clear"></div>
+		<div class="container">
+			<h1 <?= ($CFG->language == 'ru') ? 'class="caption_ru"' : false ?>><?= $content['title'] ?></h1>
+			<p class="text"><?= wordwrap(strip_tags($content['content']),$wordwrap,'<br/>') ?> <a class="morestuff" href="<?= Lang::url('about.php') ?>">>></a></p>   
+			<div class="crypto_logo"><a target="_blank" href="https://cryptocapital.co">Integrated With <img src="images/crypto_logo.png" /></a></div>
+			<a href="login.php" class="button_slider"><i class="fa fa-key"></i>&nbsp;&nbsp;<?= Lang::string('home-login') ?></a>       
+			<a href="<?= Lang::url('register.php') ?>" class="button_slider"><i class="fa fa-user"></i>&nbsp;&nbsp;<?= Lang::string('home-register') ?></a>
+			<div class="clear"></div>
+		</div>
 	</div>
 </div>
 
 <div class="clearfix"></div>
 
 <div class="punch_text">
-
-	<div class="container"><b><?= Lang::string('home-trading') ?></b> <a href="how-to-register.php"><?= Lang::string('home-more') ?></a></div>
-
-</div><!-- end punch text -->
+	<div class="container"><b><?= Lang::string('home-trading') ?></b> <a href="<?= Lang::url('our-security.php') ?>"><?= Lang::string('home-more') ?></a></div>
+</div>
 
 <div class="waves_01"></div>
 

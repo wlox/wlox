@@ -459,11 +459,11 @@ height: 0;
 .price-green{color:#0DD84D !important;}
 .price-red{color:#FF5151 !important;}
 .mobilebanner{background:url(../images/slider-bg1.jpg) no-repeat left top / cover;padding: 20px 0px;}
-.mobilebanner h1{color: #fff;font-family: "Open Sans",sans;font-size:45px;font-weight: bold;letter-spacing: 0;margin: 0 10px 0px 10px;padding: 0;text-shadow: none;text-transform: uppercase;}
+.mobilebanner h1{color: #fff;font-family: "Open Sans",sans;font-size:45px;font-weight: bold;letter-spacing: 0;margin: 0 10px 0px 0;padding: 0;text-shadow: none;text-transform: uppercase;}
 .mobilebanner h1.caption_ru {font-size: 48px;}
 .mobilebanner .line{background: url("../../../../images/opacity-line.png") repeat-x scroll left top rgba(0, 0, 0, 0);height: 1px;}
-.mobilebanner .text{color: #fff;font-size: 15px;margin:35px 10px 5px;}
-.mobilebanner .crypto_logo {padding: 10px 0;margin-left: 12px;color:#FFF; font-weight: 600;font-size: 15px;text-shadow: 0 0 2px rgba(150, 150, 150, 1);text-transform: uppercase;}
+.mobilebanner .text{color: #fff;font-size: 15px;margin:35px 10px 5px 0;}
+.mobilebanner .crypto_logo {padding: 10px 0;margin-left: 0;color:#FFF; font-weight: 600;font-size: 15px;text-shadow: 0 0 2px rgba(150, 150, 150, 1);text-transform: uppercase;}
 .mobilebanner .crypto_logo img {display: inline-block;margin-bottom: -12px;margin-left: 6px;}
 .mobilebanner .crypto_logo a {color:#FFF;-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";-moz-opacity: 0.8;-khtml-opacity: 0.8;opacity: 0.8;}
 .mobilebanner .crypto_logo a:hover {-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";-moz-opacity: 1;-khtml-opacity: 1;opacity:1;}
@@ -747,7 +747,7 @@ a.button_slider {
 	background-color: #444444;
 	float: left;
 	padding: 13px 30px;
-	margin:30px 10px 0;
+	margin:30px 20px 0 0;
 	font-weight: normal;
 	font-size: 18px;
 	text-transform: uppercase;
