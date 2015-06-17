@@ -13,9 +13,11 @@ $uniq1 = (!empty($_REQUEST['settings'])) ? $_REQUEST['settings']['uniq'] : $_REQ
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
 $request_2fa = false;
 
+/*
 if (!empty($_REQUEST['ex_request'])) {
 	$_REQUEST = unserialize(urldecode($_REQUEST['ex_request']));
 }
+*/
 
 // check for authcode or redirect if invalid
 if ($authcode1) {
@@ -53,6 +55,7 @@ if (!empty($too_few_chars))
 	$personal->errors[] = Lang::string('login-password-error');
 
 // check if we should request 2fa
+/*
 if (!empty($_REQUEST['settings']) && !$token1 && !is_array($personal->errors) && !is_array(Errors::$errors)) {
 	if (!empty($_REQUEST['request_2fa'])) {
 		if (!($token1 > 0)) {
@@ -72,6 +75,7 @@ if (!empty($_REQUEST['settings']) && !$token1 && !is_array($personal->errors) &&
 		$request_2fa = true;
 	}
 }
+*/
 
 // display errors or send pass change request
 if (!empty($_REQUEST['settings']) && !empty($personal->errors)) {
@@ -91,10 +95,10 @@ if (!empty($_REQUEST['settings']) && !empty($personal->errors)) {
 }
 elseif (!empty($_REQUEST['settings']) && empty($personal->errors)) {
 	if (empty($no_token) && !$request_2fa) {
-		$authcode2 = (User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y') ? false : $authcode1;
-
-		API::settingsChangeId($authcode2);
-		API::token($token1);
+		//$authcode2 = (User::$info['verified_authy'] == 'Y' || User::$info['verified_google'] == 'Y') ? false : $authcode1;
+		//API::settingsChangeId($authcode2);
+		//API::token($token1);
+		API::settingsChangeId($authcode1);
 		API::add('User','changePassword',array($personal->info['pass']));
 		$query = API::send();
 		
