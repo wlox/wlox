@@ -31,6 +31,7 @@ UPDATE `lang` SET `id` = 102,`key` = 'login-password-sent-message',`esp` = 'Se l
 UPDATE `lang` SET `id` = 453,`key` = 'change-password',`esp` = 'Cambiar contraseña',`eng` = 'Change Password',`order` = '',`p_id` = 0,`zh` = '更改密码',`ru` = 'Изменить пароль.' WHERE `lang`.`id` = 453;
 UPDATE `lang` SET `id` = 454,`key` = 'change-password-explain',`esp` = 'Por favor especifique una nueva contraseña para su cuenta.',`eng` = 'Please specify a new password for your account.',`order` = '',`p_id` = 453,`zh` = '请为您的帐户指定一个新密码。',`ru` = 'Пожалуйста, укажите новый пароль для вашей учетной записи.' WHERE `lang`.`id` = 454;
 
-
+INSERT INTO `lang` (`id`, `key`, `esp`, `eng`, `order`, `p_id`, `zh`, `ru`) VALUES
+(455, 'account-welcome-anon', 'Bienvenido a la cuenta', 'Welcome to account', '', 17, '欢迎来到账户', 'Добро пожаловать на счет');
 
 UPDATE`status` SET `db_version` = '1.12' WHERE `status`.`id` =1;
