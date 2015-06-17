@@ -15,7 +15,7 @@ class Currencies {
 		if ($result) {
 			foreach ($result as $row) {
 				$currencies[$row['currency']] = $row;
-				$currencies[$row['id']] = $row;
+				$currencies[(string)$row['id']] = $row;
 			}
 			
 			if ($CFG->memcached)
