@@ -18,10 +18,10 @@ class Currencies {
 				$currencies[(string)$row['id']] = $row;
 			}
 			
+			ksort($currencies);
 			if ($CFG->memcached)
 				$CFG->m->set('currencies',$currencies,60);
 		}
-		ksort($currencies);
 		return $currencies;
 	}
 	
