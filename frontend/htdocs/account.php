@@ -55,7 +55,7 @@ include 'includes/head.php';
 	<div class="content_right">
 		<div class="testimonials-4">
 			<? Messages::display(); ?>
-            <h2><?= Lang::string('account-welcome') ?>, <strong><?= (empty(User::$info['first_name'])) ? User::$info['user'] : User::$info['first_name'].' '.User::$info['last_name'] ?></strong></h2>
+            <h2><?= (empty(User::$info['first_name'])) ? Lang::string('account-welcome-anon').' <strong>'.User::$info['user'] : Lang::string('account-welcome').', <strong>'.User::$info['first_name'].' '.User::$info['last_name'] ?></strong></h2>
 			<? 
 			if (User::$info['verified_authy'] != 'Y' && User::$info['verified_google'] != 'Y') {
 				echo '<div class="notice"><div class="message-box-wrap">'.Lang::string('account-security-notify').'</div></div>';
