@@ -703,7 +703,7 @@ ul.tci_list {
 }
 .tci_list li a {
 	height: 26px;
-	display: block;
+	display: inline;
 	color: #cccccc;
 	text-align: center;
 	line-height: 26px;

@@ -122,7 +122,7 @@
                 <li>|</li>
                 <li><a href="<?= Lang::url('register.php') ?>"><i class="fa fa-user"></i> <?= Lang::string('home-register') ?></a></li>
                 <? } else { ?>
-                <li><a href="logout.php?log_out=1"><i class="fa fa-unlock"></i> <?= Lang::string('log-out') ?></a></li>
+                <li><a href="account.php"><i class="fa fa-user"></i> <?= User::$info['user'] ?></a> | <a href="logout.php?log_out=1"><i class="fa fa-unlock"></i> <?= Lang::string('log-out') ?></a></li>
                 <? } ?>
                 <li class="empty margin-left">
                 	<label for="language_selector"><img src="images/<?= $CFG->language ?>.png" /></label>
