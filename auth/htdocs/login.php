@@ -11,6 +11,7 @@ $invalid_login = false;
 $awaiting_token = false;
 $attempts = 0;
 $timeout = 0;
+$timeout_next = 0;
 $user_id = 0;
 
 if ($email_authcode) {
