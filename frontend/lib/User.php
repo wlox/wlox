@@ -17,11 +17,15 @@ class User {
 		$result = json_decode($result1,true);
 		curl_close($ch);
 		
-		if (!empty($result['attempts']))
+		if (!empty($result['attempts'])) {
 			self::$attempts = $result['attempts'];
+			$_SESSION['attempts'] = $result['attempts'];
+		}
 		
-		if (!empty($result['timeout']))
+		if (!empty($result['timeout'])) {
 			self::$timeout = $result['timeout'];
+			$_SESSION['attempts'] = $result['timeout'];
+		}
 		
 		if (empty($result) || !empty($result['error'])) {
 			return false;
@@ -30,6 +34,8 @@ class User {
 			$_SESSION['session_id'] = $result['session_id'];
 			$_SESSION['session_key'] = $result['session_key'];
 			$_SESSION['nonce'] = $result['nonce'];
+			unset($_SESSION['attempts']);
+			unset($_SESSION['timeout']);
 			return $result;
 		}
 	}
@@ -40,8 +46,10 @@ class User {
 		if (isset($query['User']['verifyLogin']['results'][0]))
 			$result = $query['User']['verifyLogin']['results'][0];
 
-		if (!empty($result['attempts']))
+		if (!empty($result['attempts']) && (empty($_SESSION['attempts']) || $result['attempts'] > $_SESSION['attempts']))
 			self::$attempts = $result['attempts'];
+		else if (!empty($_SESSION['attempts']))
+			self::$attempts = $_SESSION['attempts'];
 		
 		if (empty($_SESSION['session_id']))
 			return false;
