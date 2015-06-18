@@ -45,7 +45,8 @@ if (!$result) {
 		$result = db_query_array("SELECT attempts FROM site_users_catch WHERE site_user = $user1");
 		if ($result) {
 			$attempts = ($result[0]['attempts'] + 1 > $attempts) ? $result[0]['attempts'] + 1 : $attempts;
-			$timeout = pow(3,$attempts);
+			$timeout = pow(2,$attempts);
+			$timeout_next = pow(2,$attempts + 1);
 			db_update('site_users_catch',$user1,array('attempts'=>($result[0]['attempts'] + 1)),'site_user');
 		}
 		else 
@@ -64,7 +65,8 @@ elseif ($result) {
 	}
 	else {
 		$attempts = $result[0]['attempts'] + 1;
-		$timeout = pow(3,$attempts);
+		$timeout = pow(2,$attempts);
+		$timeout_next = pow(2,$attempts + 1);
 		
 		if ($attempts == 3) {
 			$CFG->language = ($result[0]['last_lang']) ? $result[0]['last_lang'] : 'en';
@@ -74,7 +76,7 @@ elseif ($result) {
 		
 		db_update('site_users_access',$result[0]['id'],array('attempts'=>$attempts,'last'=>time()),'site_user');
 		
-		if (time() - $result[0]['last'] <= $timeout)
+		if ((time() - $result[0]['last']) <= $timeout)
 			$invalid_login = 1;
 		
 	}
@@ -86,7 +88,7 @@ elseif ($result) {
 
 if ($invalid_login) {
 	db_insert('ip_access_log',array('ip'=>$ip_int,'timestamp'=>date('Y-m-d H:i:s'),'login'=>'Y'));
-	echo json_encode(array('error'=>'invalid-login','attempts'=>$attempts,'timeout'=>$timeout));
+	echo json_encode(array('error'=>'invalid-login','attempts'=>$attempts,'timeout'=>$timeout_next));
 	exit;
 }
 
