@@ -24,7 +24,7 @@ class User {
 		
 		if (!empty($result['timeout'])) {
 			self::$timeout = $result['timeout'];
-			$_SESSION['attempts'] = $result['timeout'];
+			$_SESSION['timeout'] = $result['timeout'];
 		}
 		
 		if (empty($result) || !empty($result['error'])) {

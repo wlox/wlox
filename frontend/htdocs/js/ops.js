@@ -1103,7 +1103,8 @@ function timeUntil(elem) {
 */
 
 function pageRefresh() {
-	location.reload(); 
+	//location.reload(); 
+	$('.error').remove();
 }
 
 function startFileSortable() {
