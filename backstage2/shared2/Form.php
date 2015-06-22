@@ -2255,6 +2255,7 @@ class Form {
 			$visible = ($this->area_i == 0) ? 'visible' : '';
 			$HTML  = '<tab><div class="tab_area_container '.$visible.'" id="tab_area_'.$CFG->method_id.'">';
 			if ($url) {
+				$tab = $CFG->is_tab;
 				$CFG->inset_id = $this->record_id;
 				$CFG->inset_id_field = $inset_id_field;
 				$CFG->inset_is_tab = $is_tab;
@@ -2266,6 +2267,7 @@ class Form {
 				ob_end_clean();
 				$HTML .= $control_html;
 				$HTML .= '</div>';
+				$CFG->is_tab = $tab;
 			}
 		}
 		$area_i++;

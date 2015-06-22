@@ -21,13 +21,13 @@ if (is_array($CFG->temp_files)) {
 			if ($result || !($data[8] > 0))
 				continue;
 			
-			$sql = 'SELECT bank_accounts.site_user, bank_accounts.currency AS currency_id, currencies.currency AS currency, site_users.'.strtolower($data[6]).' AS cur_balance, site_users.notify_deposit_bank AS notify_deposit_bank, site_users.first_name AS first_name, site_users.last_name AS last_name, site_users.email AS email, site_users.last_lang AS last_lang FROM bank_accounts LEFT JOIN currencies ON (currencies.id = bank_accounts.currency) LEFT JOIN site_users ON (bank_accounts.site_user = site_users.id) WHERE bank_accounts.account_number = '.$data[2].' FOR UPDATE';
+			$sql = 'SELECT site_users_balances.id AS balance_id, bank_accounts.site_user, bank_accounts.currency AS currency_id, currencies.currency AS currency, site_users.'.strtolower($data[6]).' AS cur_balance, site_users.notify_deposit_bank AS notify_deposit_bank, site_users.first_name AS first_name, site_users.last_name AS last_name, site_users.email AS email, site_users.last_lang AS last_lang FROM bank_accounts LEFT JOIN currencies ON (currencies.id = bank_accounts.currency) LEFT JOIN site_users ON (bank_accounts.site_user = site_users.id) LEFT JOIN site_users_balances ON (site_users_balances.site_user = site_users.id AND site_users_balances.currency = bank_accounts.currency) WHERE bank_accounts.account_number = '.$data[2].' FOR UPDATE';
 			$result = db_query_array($sql);
 
-			if ($result[0]['currency'] == $data[6]) {
+			if ($result[0]['currency'] == $data[6] && $result[0]['balance_id'] > 0) {
 				$insert_id = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$result[0]['site_user'],'currency'=>$result[0]['currency_id'],'amount'=>$data[8],'description'=>$CFG->deposit_fiat_desc,'request_type'=>$CFG->request_deposit_id,'request_status'=>$CFG->request_completed_id,'account'=>$data[2],'crypto_id'=>$data[0]));
 				db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>4,'site_user'=>$result[0]['site_user'],'request_id'=>$insert_id,'balance_before'=>$result[0]['cur_balance'],'balance_after'=>($result[0]['cur_balance'] + $data[8])));
-				db_update('site_users',$result[0]['site_user'],array(strtolower($data[6])=>($result[0]['cur_balance'] + $data[8])));
+				db_update('site_users_balances',$result[0]['balance_id'],array(strtolower($data[6])=>($result[0]['cur_balance'] + $data[8])));
 
 				if ($result[0]['notify_deposit_bank'] == 'Y') {
 				    $result[0]['amount'] = number_format($data[8],2);
