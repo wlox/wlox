@@ -26,4 +26,13 @@ class FeeSchedule {
 		
 		return DB::getRecord('fee_schedule',$braket_id,0,1);
 	}
+	
+	public static function getUserFees($user_id=false) {
+		if (!$user_id)
+			return false;
+		
+		$sql = 'SELECT fee_schedule.* FROM fee_schedule LEFT JOIN site_users ON (site_users.fee_schedule = fee_schedule.id) WHERE site_users.id = '.$user_id.' LIMIT 0,1';
+		$result = db_query_array($sql);
+		return ($result) ? $result[0] : false;
+	}
 }

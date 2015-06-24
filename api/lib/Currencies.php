@@ -1,13 +1,26 @@
 <?php
 class Currencies {
 	public static function get() {
-		$sql = "SELECT * FROM currencies WHERE currency != 'BTC' AND is_active = 'Y' ORDER BY currency ASC";
-		$result = db_query_array($sql);
+		global $CFG;
 		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('currencies');
+			if ($cached) {
+				return $cached;
+			}
+		}
+
+		$sql = "SELECT * FROM currencies WHERE is_active = 'Y'";
+		$result = db_query_array($sql);
 		if ($result) {
 			foreach ($result as $row) {
 				$currencies[$row['currency']] = $row;
+				$currencies[(string)$row['id']] = $row;
 			}
+			
+			ksort($currencies);
+			if ($CFG->memcached)
+				$CFG->m->set('currencies',$currencies,60);
 		}
 		return $currencies;
 	}

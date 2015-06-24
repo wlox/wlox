@@ -8,6 +8,14 @@ include '../lib/autoload.php';
 /* Connect to DB */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
 
+// memcached check
+$CFG->memcached = (class_exists('Memcached'));
+$CFG->m = false;
+if ($CFG->memcached) {
+	$CFG->m = new Memcached();
+	$CFG->m->addServer('localhost', 11211);
+}
+
 /* Load settings and timezone */
 Settings::assign();
 date_default_timezone_set($CFG->default_timezone);

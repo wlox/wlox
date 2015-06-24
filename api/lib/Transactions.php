@@ -14,8 +14,8 @@ class Transactions {
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$order_arr = array('date'=>'transactions.date','btc'=>'transactions.btc','btcprice'=>'usd_price','fiat'=>'usd_amount','fee'=>'usd_fee');
-		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.date';
+		$order_arr = array('date'=>'transactions.id','btc'=>'transactions.btc','btcprice'=>'usd_price','fiat'=>'usd_amount','fee'=>'usd_fee');
+		$order_by = ($order_by) ? $order_arr[$order_by] : 'transactions.id';
 		$order_desc = ($order_desc) ? 'ASC' : 'DESC';
 		$user = ($user) ? User::$info['id'] : false;
 		$usd_info = $CFG->currencies['USD'];
@@ -30,7 +30,18 @@ class Transactions {
 		else
 			$type = preg_replace("/[^0-9]/", "",$type);
 		
-		//$currency = (!$currency) ? 'usd' : $currency;
+		if ($CFG->memcached) {
+			$cached = null;
+			if ($per_page == 5 && !$count && !$public_api_all)
+				$cached = $CFG->m->get('trans_l5_'.$currency_info['currency']);
+			elseif ($per_page == 1 && !$count && !$public_api_all)
+				$cached = $CFG->m->get('trans_l1_'.$currency_info['currency']);
+			elseif ($public_api_all)
+				$cached = $CFG->m->get('trans_api'.(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : ''));
+			
+			if ($cached)
+				return $cached;
+		}
 		
 		if (!$count && !$public_api_all)
 			$sql = "SELECT transactions.*, (currencies.usd_ask * transactions.fiat) AS usd_amount, (currencies.usd_ask * transactions.btc_price) AS usd_price, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,currencies.currency,currencies1.currency) AS currency, IF(transactions.site_user = $user,currencies.fa_symbol,currencies1.fa_symbol) AS fa_symbol" : ", ".(($CFG->cross_currency_trades) ? "ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2)" : 'transactions.btc_price')." AS btc_price, currencies.currency AS currency, currencies1.currency AS currency1, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol ").", UNIX_TIMESTAMP(transactions.date) AS datestamp ";
@@ -63,11 +74,31 @@ class Transactions {
 			$sql .= " AND transactions.currency = {$currency_info['id']} ";
 
 		if ($per_page > 0 && !$count && !$dont_paginate)
-			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
+			$sql .= " ORDER BY $order_by $order_desc, transactions.id $order_desc LIMIT $r1,$per_page ";
 		if (!$count && $dont_paginate)
-			$sql .= " ORDER BY transactions.date DESC, transactions.id DESC ";
+			$sql .= " ORDER BY transactions.id DESC ";
+
 		
 		$result = db_query_array($sql);
+		if ($CFG->memcached) {
+			if ($per_page == 5 && !$count && !$public_api_all)
+				$CFG->m->set('trans_l5_'.$currency_info['currency'],$result,300);
+			elseif ($per_page == 1 && !$count && !$public_api_all)
+				$CFG->m->set('trans_l1_'.$currency_info['currency'],$result,300);
+			elseif ($public_api_all)
+				$CFG->m->set('trans_api'.(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : ''),$result,300);
+			
+			if ($public_api_all) {
+				$cached = $CFG->m->get('trans_cache');
+				if (!$cached)
+					$cached = array();
+				
+				$key = (($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
+				$cached[$key] = true;
+				$CFG->m->set('trans_cache',$cached,300);
+			}
+		}
+		
 		if (!$count)
 			return $result;
 		else
@@ -77,68 +108,6 @@ class Transactions {
 	public static function getTypes() {
 		$sql = "SELECT * FROM transaction_types ORDER BY id ASC ";
 		return db_query_array($sql);
-	}
-	
-	public static function pagination($link_url,$page,$total_rows,$rows_per_page=0,$max_pages=0,$pagination_label=false,$target_elem=false) {
-		global $CFG;
-	
-		$link_url = preg_replace("/[^a-zA-Z\.]/", "",$link_url);
-		$page = preg_replace("/[^0-9]/", "",$page);
-		$total_rows = preg_replace("/[^0-9]/", "",$total_rows);
-		$rows_per_page = preg_replace("/[^0-9]/", "",$rows_per_page);
-		$max_pages = preg_replace("/[^0-9]/", "",$max_pages);
-		$pagination_label = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$pagination_label);
-		$target_elem = preg_replace("/[^0-9a-zA-Z!@#$%&*?\.\-_]/", "",$target_elem);
-		$first_page = false;
-		$last_page = false;
-		
-		$page = ($page > 0) ? $page : 1;
-		if (!($rows_per_page > 0))
-			return false;
-	
-		if ($total_rows > $rows_per_page) {
-			$num_pages = ceil($total_rows / $rows_per_page);
-			$page_array = range(1,$num_pages);
-				
-			if ($max_pages > 0) {
-				$p_deviation = ($max_pages - 1) / 2;
-				$alpha = $page - 1;
-				$alpha = ($alpha < $p_deviation) ? $alpha : $p_deviation;
-				$beta = $num_pages - $page;
-				$beta = ($beta < $p_deviation) ? $beta : $p_deviation;
-				if ($alpha < $p_deviation) $beta = $beta + ($p_deviation - $alpha);
-				if ($beta < $p_deviation) $alpha = $alpha + ($p_deviation - $beta);
-			}
-			
-			$first_text = DB::getRecord('lang',0,'first-page',0,'key');
-			$last_text = DB::getRecord('lang',0,'last-page',0,'key');
-			
-			if ($page != 1)
-				$first_page = '<a href="'.$link_url.'?'.(http_build_query(array('page'=>1))).'">'.$first_text[$CFG->lang_table_key].'</a>';
-			if ($page != $num_pages)
-				$last_page = ' &nbsp;<a href="'.$link_url.'?'.(http_build_query(array('page'=>$num_pages))).'">'.$last_text[$CFG->lang_table_key].'</a>';
-	
-			$pagination = '<div class="pagination"><div style="float:left;">'.$first_page;
-			foreach ($page_array as $p) {
-				if (($p >= ($page - $alpha) && $p <= ($page + $beta)) || $max_pages == 0) {
-					if ($p == $page) {
-						$pagination .= ' <span>'.$p.'</span> ';
-					}
-					else {
-						$pagination .= ' <a href="'.$link_url.'?'.(http_build_query(array('page'=>$p))).'">'.$p.'</a> ';
-					}
-				}
-			}
-			$pagination .= '</div>';
-				
-			if ($pagination_label) {
-				$label = str_ireplace('[results]','<b>'.$total_rows.'</b>',$CFG->pagination_label);
-				$label = str_ireplace('[num_pages]','<b>'.$num_pages.'</b>',$label);
-				$pagination .= '<div style="float:right" class="pagination_label">'.$label.'</div>';
-			}
-			$pagination .= $last_page.'<div style="clear:both;height:0;">&nbsp;</div></div>';
-			return $pagination;
-		}
 	}
 	
 	public static function getList($currency=false,$notrades=false,$limit_7=false) {
