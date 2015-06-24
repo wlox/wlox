@@ -161,13 +161,32 @@
             <div id="menu" class="menu">
                 
                 <ul id="tiny">
-                   <li><a href="<?= Lang::url('index.php') ?>" <?= ($CFG->self == 'index.php' || !$CFG->self) ? 'class="active"' : '' ?>><?= Lang::string('home') ?></a></li>
+                    <li><a href="<?= Lang::url('index.php') ?>" <?= ($CFG->self == 'index.php' || !$CFG->self) ? 'class="active"' : '' ?>><?= Lang::string('home') ?></a></li>
                     <li><a href="<?= Lang::url('order-book.php') ?>" <?= ($CFG->self == 'order-book.php') ? 'class="active"' : '' ?>><?= Lang::string('order-book') ?></a></li>
                     <? if (!User::isLoggedIn()) { ?>
+                    <!-- li><a href="what-are-bitcoins.php" <?= ($CFG->self == 'what-are-bitcoins.php' || $CFG->self == 'how-bitcoin-works.php' || $CFG->self == 'trading-bitcoins.php') ? 'class="active"' : '' ?>><?= Lang::string('what-are-bitcoins') ?> <i class="fa fa-angle-down"></i></a>
+                        <ul>
+                        	<li><a href="how-bitcoin-works.php"><?= Lang::string('how-bitcoin-works') ?></a></li>
+                            <li><a href="trading-bitcoins.php"><?= Lang::string('trading-bitcoins') ?></a></li>
+                        </ul>
+                    </li -->
                     <li><a href="<?= Lang::url('our-security.php') ?>" <?= ($CFG->self == 'our-security.php') ? 'class="active"' : '' ?>><?= Lang::string('our-security') ?></a></li>
-                    <li><a href="<?= Lang::url('how-to-register.php') ?>" <?= ($CFG->self == 'how-to-register.php') ? 'class="active"' : '' ?>><?= Lang::string('how-to-register') ?></li>
+                    <li><a href="<?= Lang::url('how-to-register.php') ?>" <?= ($CFG->self == 'how-to-register.php') ? 'class="active"' : '' ?>><?= Lang::string('how-to-register') ?> <!-- i class="fa fa-angle-down"></i --></a>
+                    	<!-- ul>
+                        	<li><a href="securing-account.php"><?= Lang::string('securing-account') ?></a></li>
+                        	<li><a href="reset_2fa.php"><?= Lang::string('reset-2fa') ?></a></li>
+                        	<li><a href="funding-account.php"><?= Lang::string('funding-account') ?></a></li>
+                        	<li><a href="withdrawing-account.php"><?= Lang::string('withdrawing-account') ?></a></li>
+                        </ul -->
+                    </li>
                     <li><a href="<?= Lang::url('fee-schedule.php') ?>" <?= ($CFG->self == 'fee-schedule.php') ? 'class="active"' : '' ?>><?= Lang::string('fee-schedule') ?></a></li>
-                    <li><a href="<?= Lang::url('about.php') ?>" <?= ($CFG->self == 'about.php') ? 'class="active"' : '' ?>><?= Lang::string('about') ?></li>
+                    <li><a href="<?= Lang::url('about.php') ?>" <?= ($CFG->self == 'about.php') ? 'class="active"' : '' ?>><?= Lang::string('about') ?> <!-- i class="fa fa-angle-down"></i --></a>
+                    	<!-- >ul>
+                        	<li><a href="our-security.php"><?= Lang::string('our-security') ?></a></li>
+                        	<li><a href="fee-schedule.php"><?= Lang::string('fee-schedule') ?></a></li->
+                        	<li><a href="news.php"><?= Lang::string('news') ?></a></li>
+                        </ul -->
+                    </li>
                     <li style="display:none;"><a href="login.php"><?= Lang::string('home-login') ?></a></li>
 	                <li style="display:none;"><a href="register.php"><?= Lang::string('home-register') ?></a></li>
                     <? } else { ?>
