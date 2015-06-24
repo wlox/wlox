@@ -6,48 +6,22 @@ include 'common.php';
 
 $CFG->session_active = true;
 $transactions_dir = $CFG->dirroot.'transactions/';
-
-db_start_transaction();
-
 $total_received = 0;
 $bitcoin = new Bitcoin($CFG->bitcoin_username,$CFG->bitcoin_passphrase,$CFG->bitcoin_host,$CFG->bitcoin_port,$CFG->bitcoin_protocol);
 $bitcoin->settxfee($CFG->bitcoin_sending_fee);
 
 $transactions = scandir($transactions_dir);
 if (!$transactions) {
-	db_commit();
+	echo 'done'.PHP_EOL;
 	exit;
 }
 
+$email = SiteEmail::getRecord('new-deposit');
 $sql = "SELECT transaction_id, id FROM requests WHERE request_status != {$CFG->request_completed_id} AND currency = {$CFG->btc_currency_id} AND request_type = {$CFG->request_deposit_id} ";
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		$requests[$row['transaction_id']] = $row['id'];
-	}
-}
-
-$sql = "SELECT address, site_user FROM bitcoin_addresses WHERE system_address != 'Y' ";
-$result = db_query_array($sql);
-if ($result) {
-	foreach ($result as $row) {
-		$addresses[$row['address']] = $row['site_user'];
-	}
-}
-
-$sql = "SELECT id, btc FROM site_users FOR UPDATE";
-$result = db_query_array($sql);
-if ($result) {
-	foreach ($result as $row) {
-		$user_balances[$row['id']] = $row['btc'];
-	}
-}
-
-$sql = "SELECT address, site_user, hot_wallet FROM bitcoin_addresses WHERE system_address = 'Y' ";
-$result = db_query_array($sql);
-if ($result) {
-	foreach ($result as $row) {
-		$system[$row['address']] = ($row['hot_wallet'] == 'Y') ? 'Y' : 'N';
 	}
 }
 
@@ -59,19 +33,11 @@ if ($result) {
 	}
 }
 
-$sql = "SELECT id FROM site_users WHERE trusted = 'Y' ";
-$result = db_query_array($sql);
-$trusted = array();
-if ($result) {
-	foreach ($result as $row) {
-		$trusted[] = $row['id'];
-	}
-}
-
-$status = DB::getRecord('status',1,0,1,false,false,false,1);
+$addresses = array();
+$user_balances = array();
 
 foreach ($transactions as $t_id) {
-	if (!$t_id || $t_id == '.' || $t_id == '..')
+	if (!$t_id || $t_id == '.' || $t_id == '..' || $t_id == '.gitignore')
 		continue;
 	
 	$transaction = $bitcoin->gettransaction($t_id);
@@ -91,21 +57,38 @@ foreach ($transactions as $t_id) {
 	
 	foreach ($transaction['details'] as $detail) {
 		if ($detail['category'] == 'receive') {
-			$user_id = (!empty($addresses[$detail['address']])) ? $addresses[$detail['address']] : false;
+			// identify the user and request id
+			if (empty($addresses[$detail['address']])) {
+				$addr_info = BitcoinAddresses::getAddress($detail['address']);
+				if (!$addr_info)
+					continue;
+				
+				$addresses[$detail['address']] = $addr_info;
+			}
+			
+			$user_id = $addresses[$detail['address']]['site_user'];
 			$request_id = (!empty($requests[$transaction['txid']])) ? $requests[$transaction['txid']] : false;
 			
-			if (!empty($system[$detail['address']]) && $system[$detail['address']] == 'Y') {
+			// check for hot wallet recharge
+			if ($addresses[$detail['address']]['hot_wallet'] == 'Y') {
 				if ($transaction['confirmations'] > 0) {
 					$hot_wallet_in = $detail['amount'];
 				}
 				continue;
 			}
-			elseif (!empty($system[$detail['address']]) && $system[$detail['address']] == 'N') {
+			elseif ($addresses[$detail['address']]['system_address'] == 'Y') {
 				unlink($transactions_dir.$t_id);
 				break;
 			}
 			
-			if ((in_array($user_id,$trusted) && $transaction['confirmations'] < 1) || (!in_array($user_id,$trusted) && $transaction['confirmations'] < 3)) {
+			// get user balance... no need to lock
+			if (empty($user_balances[$user_id])) {
+				$bal_info = User::getBalance($user_id,$CFG->btc_currency_id);
+				$user_balances[$user_id] = $bal_info['balance'];
+			}
+			
+			// if not confirmed enough
+			if (($addresses[$detail['address']]['trusted'] == 'Y' && $transaction['confirmations'] < 1) || ($addresses[$detail['address']]['trusted'] != 'Y' && $transaction['confirmations'] < 3)) {
 				if (!($request_id > 0)) {
 					$rid = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_pending_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
 					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$rid,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
@@ -115,6 +98,7 @@ foreach ($transactions as $t_id) {
 				$pending = true;
 			}
 			else {
+				// if confirmation sufficient
 				if (!($request_id > 0)) {
 					$updated = db_insert('requests',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$user_id,'currency'=>$CFG->btc_currency_id,'amount'=>$detail['amount'],'description'=>$CFG->deposit_bitcoin_desc,'request_status'=>$CFG->request_completed_id,'request_type'=>$CFG->request_deposit_id,'transaction_id'=>$transaction['txid'],'send_address'=>$detail['address']));
 					db_insert('history',array('date'=>date('Y-m-d H:i:s'),'history_action'=>$CFG->history_deposit_id,'site_user'=>$user_id,'request_id'=>$updated,'balance_before'=>$user_balances[$user_id],'balance_after'=>($user_balances[$user_id] + $detail['amount']),'bitcoin_address'=>$detail['address']));
@@ -123,24 +107,23 @@ foreach ($transactions as $t_id) {
 					$updated = db_update('requests',$request_id,array('request_status'=>$CFG->request_completed_id));
 				
 				if ($updated > 0) {
-					$user_balances[$user_id] = $user_balances[$user_id] + $detail['amount'];
-					
-					db_update('site_users',$user_id,array('btc'=>($user_balances[$user_id]),'last_update'=>date('Y-m-d H:i:s')));
+					User::updateBalances($user_id,array('btc'=>($detail['amount'])),true);
 					db_insert('bitcoind_log',array('transaction_id'=>$transaction['txid'],'amount'=>$detail['amount'],'date'=>date('Y-m-d H:i:s')));
+					
 					$unlink = unlink($transactions_dir.$t_id);
 					$total_received += $detail['amount'];
+					$user_balances[$user_id] = $user_balances[$user_id] + $detail['amount'];
 					
 					if (!$unlink && file_exists($unlink)) {
 						$unlink = unlink($transactions_dir.$t_id);
 					}
 					
-					$info = DB::getRecord('site_users',$user_id);
+					$info = $addresses[$detail['address']];
 					if ($info['notify_deposit_btc'] == 'Y') {
 					    $info['amount'] = $detail['amount'];
 					    $info['currency'] = 'BTC';
 					    $info['id'] = (!empty($request_id)) ? $request_id : $updated;
 					    $CFG->language = ($info['last_lang']) ? $info['last_lang'] : 'en';
-					    $email = SiteEmail::getRecord('new-deposit');
 					    Email::send($CFG->form_email,$info['email'],str_replace('[amount]',$detail['amount'],str_replace('[currency]','BTC',$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 					}
 					
@@ -151,8 +134,8 @@ foreach ($transactions as $t_id) {
 				}
 			}
 		}
-		elseif ($detail['category'] == 'send') {	
-			if ($system[$detail['address']]) {
+		elseif ($detail['category'] == 'send') {
+			if ($addresses[$detail['address']]['system_address']) {
 				unlink($transactions_dir.$t_id);
 				break;
 			} 
@@ -165,29 +148,21 @@ foreach ($transactions as $t_id) {
 	if ($send && !$pending && !($hot_wallet_in > 0))
 		unlink($transactions_dir.$t_id);
 	elseif (!$send && ($hot_wallet_in > 0)) {
-		$old_info = $status;
-		$updated = db_update('status',1,array('hot_wallet_btc'=>($status['hot_wallet_btc'] + $hot_wallet_in),'warm_wallet_btc'=>($status['warm_wallet_btc'] - ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>($status['total_btc'] - $CFG->bitcoin_sending_fee)));
+		$updated = Status::sumFields(array('hot_wallet_btc'=>$hot_wallet_in,'warm_wallet_btc'=>(-1 * ($hot_wallet_in + $CFG->bitcoin_sending_fee)),'total_btc'=>(-1 * $CFG->bitcoin_sending_fee)));
 		echo 'Hot wallet received '.$hot_wallet_in.PHP_EOL;
 		if ($updated) {
-			unlink($transactions_dir.$t_id);
+			$unlink = unlink($transactions_dir.$t_id);
 			if (!$unlink && file_exists($unlink)) {
 				$unlink = unlink($transactions_dir.$t_id);
 			}
 			
 			db_insert('bitcoind_log',array('transaction_id'=>$transaction['txid'],'amount'=>$hot_wallet_in,'date'=>date('Y-m-d H:i:s')));
-			$status = DB::getRecord('status',1,0,1,false,false,false,1);
 		}
 	}
 }
 
-$hot_wallet = $status['hot_wallet_btc'] + $total_received;
-$warm_wallet = $status['warm_wallet_btc'];
-$total_btc = $status['total_btc'] + $total_received;
-//$received_pending = $status['received_btc_pending'] + $total_received;
-$pending_withdrawals = $status['pending_withdrawals'];
-$reserve_balance = $total_btc * $CFG->bitcoin_reserve_ratio;
-$reserve_surplus = $hot_wallet - $reserve_balance - $pending_withdrawals - $CFG->bitcoin_sending_fee;
-
+$havelock_warm_wallet = $CFG->bitcoin_warm_wallet_address;
+$reserve_surplus = Status::getReserveSurplus();
 echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
 /*
@@ -202,17 +177,10 @@ if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
 	$havelock_warm_wallet = $result['address'];
 }
 */
-$havelock_warm_wallet = $CFG->bitcoin_warm_wallet_address;
 
 if ($total_received > 0) {
-	if (!$status) {
-		echo 'Error: Could not get status.'.PHP_EOL;
-		db_commit();
-		exit;
-	}
-	
 	echo 'Total received: '.$total_received.PHP_EOL;
-	$updated = db_update('status',1,array('hot_wallet_btc'=>$hot_wallet,'total_btc'=>$total_btc));
+	$update = Status::sumFields(array('hot_wallet_btc'=>$total_received,'total_btc'=>$total_received));
 	
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
 	$warm_wallet_a['address'] = $havelock_warm_wallet;
@@ -237,7 +205,7 @@ if ($total_received > 0) {
 				}
 			}
 			
-			db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees),'last_sweep'=>date('Y-m-d H:i:s')));
+			Status::sumFields(array('hot_wallet_btc'=>(0 - $transferred - $transfer_fees),'warm_wallet_btc'=>$transferred,'total_btc'=>(0 - $transfer_fees)));
 			echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 		}
 	}
@@ -266,13 +234,11 @@ elseif ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
 			}
 		}
 		
-		db_update('status',1,array('hot_wallet_btc'=>($hot_wallet - $transferred - $transfer_fees),'warm_wallet_btc'=>($warm_wallet + $transferred),'total_btc'=>($total_btc - $transfer_fees),'last_sweep'=>date('Y-m-d H:i:s')));
+		Status::sumFields(array('hot_wallet_btc'=>(0 - $transferred - $transfer_fees),'warm_wallet_btc'=>$transferred,'total_btc'=>(0 - $transfer_fees)));
 		echo 'Transferred '.$reserve_surplus.' to warm wallet. TX: '.$response.PHP_EOL;
 	}
 }
 
-db_commit();
-
-db_update('status',1,array('cron_receive_bitcoin'=>date('Y-m-d H:i:s')));
+db_update('status',1,array('cron_receive_bitcoin'=>date('Y-m-d H:i:s'),'last_sweep'=>date('Y-m-d H:i:s')));
 
 echo 'done'.PHP_EOL;

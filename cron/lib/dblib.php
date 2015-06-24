@@ -76,9 +76,14 @@ function db_query($query, $debug = false, $die_on_debug = true, $silent = false,
 		catch (PDOException $e) {
 			if ($dbh->inTransaction()) {
 				for ($i = 1; $i <= $db_retries; $i++) {
+					$dbh->rollBack();
+					if (db_is_syntax_error()) {
+						db_log_error($e,$query);
+						return false;
+					}
+					
 					usleep($db_timeout);
 					trigger_error('Transaction failed. Retrying...',E_USER_WARNING);
-					$dbh->rollBack();
 					$dbh->beginTransaction();
 					
 					try {
@@ -335,8 +340,8 @@ function db_start_transaction() {
 	global $dbh;
 	
 	if (class_exists('PDO')) {
-		//$dbh->query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
-		$dbh->query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
+		$dbh->query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+		//$dbh->query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
 		$dbh->beginTransaction();
 		$db_transaction = array();
 	}
@@ -383,7 +388,7 @@ function db_log_error($e,$query) {
 function db_is_syntax_error() {
 	global $dbh;
 	
-	$errors = array('42S02','42000');
+	$errors = array('42S02','42000','42S22');
 	$e = $dbh->errorCode();
 	if (!$e)
 		return false;

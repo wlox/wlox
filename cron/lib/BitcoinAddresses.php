@@ -5,13 +5,6 @@ class BitcoinAddresses{
 	public static function get($count=false,$page=false,$per_page=false,$user=false,$unassigned=false,$system=false) {
 		global $CFG;
 		
-		if (!$CFG->session_active)
-			return false;
-		
-		$page = preg_replace("/[^0-9]/", "",$page);
-		$per_page = preg_replace("/[^0-9]/", "",$per_page);
-		
-		$page = mysql_real_escape_string($page);
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		$user = User::$info['id'];
@@ -68,12 +61,7 @@ class BitcoinAddresses{
 	public static function getAddress($address) {
 		global $CFG;
 		
-		if (!$CFG->session_active)
-			return false;
-		
-		$address = preg_replace("/[^0-9a-zA-Z]/",'',$address);
-		
-		$sql = "SELECT id, site_user,`date` FROM bitcoin_addresses WHERE address = '$address' ";
+		$sql = "SELECT bitcoin_addresses.id, bitcoin_addresses.site_user,bitcoin_addresses.date,bitcoin_addresses.system_address, bitcoin_addresses.hot_wallet, site_users.trusted, site_users.first_name, site_users.last_name, site_users.notify_deposit_btc FROM bitcoin_addresses LEFT JOIN site_users ON (site_users.id = bitcoin_addresses.site_user) WHERE bitcoin_addresses.address = '$address' LIMIT 0,1";
 		$result = db_query_array($sql);
 		return $result[0];
 	}

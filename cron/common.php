@@ -12,7 +12,8 @@ require_once ("lib/User.php");
 require_once ("lib/Settings.php");
 require_once ("lib/SiteEmail.php");
 require_once ("lib/Email.php");
-//require_once ("lib/CryptoCapital.php");
+require_once ("lib/FeeSchedule.php");
+require_once ("lib/Lang.php");
 
 /* Connect to the database */
 db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
@@ -44,6 +45,7 @@ $last_notify = $start_time;
 
 require_once ("lib/shutdown.php");
 
+<<<<<<< HEAD
 while (file_exists($lock_file)) {
 	sleep(1);
 	if (time() - $last_notify >= 60) {
@@ -60,5 +62,25 @@ $created = file_put_contents($lock_file,$CFG->self.'|'.$start_time);
 if ($created === false) {
 	trigger_error('Cannot access lock file. Check "lock" directory permissions.',E_USER_ERROR);
 	exit;
+=======
+if ($CFG->self != 'get_stats.php') {
+	while (file_exists($lock_file)) {
+		sleep(1);
+		if (time() - $last_notify >= 60) {
+			$lock_file_info = explode('|',file_get_contents($lock_file));
+			$last_notify = time();
+			
+			$content = 'Script '.$CFG->self.' has been waiting for'.(time() - $start_time).'s for '.$lock_file_info[0].' ('.(time() - $lock_file_info[1]).'s) to complete.';
+			//Email::send($CFG->support_email,$CFG->support_email,'Cron Bottleneck @'.$CFG->self,$CFG->exchange_name.' Cron',false,$content);
+			trigger_error($content,E_USER_WARNING);
+		}
+	}
+	
+	$created = file_put_contents($lock_file,$CFG->self.'|'.$start_time);
+	if ($created === false) {
+		trigger_error('Cannot access lock file. Check "lock" directory permissions.',E_USER_ERROR);
+		exit;
+	}
+>>>>>>> edd56105f6b0f4294ca05f89d95ebf836dd45d83
 }
 ?>
