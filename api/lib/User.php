@@ -262,14 +262,14 @@ class User {
 			foreach ($result as $row) {
 				if ($row['type'] == $CFG->order_type_bid) {
 					if (!empty($on_hold[$row['currency']]['order']))
-						$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+						$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
 					else
-						$on_hold[$row['currency']]['order'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+						$on_hold[$row['currency']]['order'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
 					
 					if (!empty($on_hold[$row['currency']]['total']))
-						$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+						$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
 					else
-						$on_hold[$row['currency']]['total'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee'] * 0.01)),2,PHP_ROUND_HALF_UP);
+						$on_hold[$row['currency']]['total'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
 				}
 				else {
 					if (!empty($on_hold['BTC']['order']))

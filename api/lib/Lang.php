@@ -21,7 +21,7 @@ class Lang {
 				$lang_table[$key]['ru'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$row['ru']));
 				$lang_table[$key]['zh'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$row['zh']));
 			}
-			
+
 			if ($CFG->memcached)
 				$CFG->m->set('lang',$lang_table,300);
 		}
