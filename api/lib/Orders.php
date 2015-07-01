@@ -31,13 +31,13 @@ class Orders {
 		$btc_price1 = ($currency && !$user && $CFG->cross_currency_trades) ? str_replace('AS btc_price,','',$btc_price) : false;
 		
 		if ($CFG->memcached && !$order_by1) {
-			$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''));
+			//$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''));
 			if ($cached)
 				return $cached;
 		}
 		
 		if (!$count && !$public_api_open_orders && !$public_api_order_book)
-			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." $btc_price order_types.name_{$CFG->language} AS type, currencies.currency AS currency, (currencies.$usd_field * orders.fiat) AS usd_amount, (currencies.$usd_field * orders.btc_price) AS usd_price, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol, ".((!$user && $user > 0) ? "SUM(IF(".$user_id." = orders.site_user ".(($currency && $CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : '').",1,0))" : '0')." AS mine, currencies.currency AS currency_abbr ";
+			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." $btc_price order_types.name_{$CFG->language} AS type, currencies.currency AS currency, (currencies.$usd_field * orders.fiat) AS usd_amount, (currencies.$usd_field * orders.btc_price) AS usd_price, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, ".(($currency && !$user && $CFG->cross_currency_trades) ? "'".$currency_info['fa_symbol']."'" : 'currencies.fa_symbol')." AS fa_symbol, currencies.currency AS currency_abbr, site_users.user AS user_id";
 		elseif (!$count && $public_api_order_book)
 			$sql = "SELECT $btc_price1 AS price, orders.btc AS order_amount, ROUND((orders.btc * $btc_price1),2) AS order_value, IF(currencies.id != {$currency_info['id']},currencies.currency,'') AS converted_from ";
 		elseif (!$count && $public_api_open_orders)
@@ -56,6 +56,10 @@ class Orders {
 		LEFT JOIN transactions ON (order_log.id = transactions.log_id)
 		LEFT JOIN transactions transactions1 ON (order_log.id = transactions1.log_id1)
 		LEFT JOIN order_log replacing_order ON (order_log.id = replacing_order.p_id)";
+		}
+		else if (!$public_api_order_book) {
+			$sql .='
+		LEFT JOIN site_users ON (orders.site_user = site_users.id)';
 		}
 		
 		$sql .= "
@@ -93,12 +97,12 @@ class Orders {
 		$result = db_query_array($sql);
 		
 		if ($CFG->memcached && !$order_by1) {
-			$CFG->m->set('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''),$result,300);
+			$CFG->m->set('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''),$result,300);
 			$cached = $CFG->m->get('orders_cache');
 			if (!$cached)
 				$cached = array();
 			
-			$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : '');
+			$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : '');
 			$cached[$key] = true;
 			$CFG->m->set('orders_cache',$cached,300);
 		}
