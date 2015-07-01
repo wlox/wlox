@@ -87,6 +87,7 @@
 <input type="hidden" id="is_logged_in" value="<?= User::isLoggedIn() ?>" />
 <input type="hidden" id="cfg_orders_edit" value="<?= Lang::string('orders-edit') ?>" />
 <input type="hidden" id="cfg_orders_delete" value="<?= Lang::string('orders-delete') ?>" />
+<input type="hidden" id="cfg_user_id" value="<?= (User::isLoggedIn()) ? User::$info['user'] : '0' ?>" />
 <input type="hidden" id="buy_errors_no_compatible" value="<?= Lang::string('buy-errors-no-compatible') ?>" />
 <input type="hidden" id="orders_converted_from" value="<?= Lang::string('orders-converted-from') ?>" />
 <input type="hidden" id="your_order" value="<?= Lang::string('home-your-order') ?>" />

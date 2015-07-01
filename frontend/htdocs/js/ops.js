@@ -324,6 +324,7 @@ function updateTransactions() {
 	var get_10 = ($('#user_fee').length > 0);
 	var open_orders_user = $('#open_orders_user').val();
 	var trades_amount = (get_10) ? 10 : 5;
+	var cfg_user_id = $('#cfg_user_id').val();
 	var update = setInterval(function(){
 		while (!ajax_active) {
 			var currency = (notrades) ? (($('#user_fee').length > 0) ? $('#buy_currency').val() : $('#graph_orders_currency').val()) : $('#graph_price_history_currency').val();
@@ -444,7 +445,7 @@ function updateTransactions() {
 						}
 						else {
 							var last_price = 999999999999999999999;
-							var mine = (this.mine > 0 && !open_orders_user) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
+							var mine = (cfg_user_id > 0 && cfg_user_id == this.user_id && !open_orders_user) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
 							var json_elem = this;
 							var skip_next = false;
 							var insert_elem = false;
@@ -589,7 +590,7 @@ function updateTransactions() {
 						}
 						else {
 							var last_price = 0;
-							var mine = (this.mine > 0 && !open_orders_user) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
+							var mine = (cfg_user_id > 0 && cfg_user_id == this.user_id && !open_orders_user) ? '<a class="fa fa-user" href="open-orders.php?id='+this.id+'" title="'+($('#your_order').val())+'"></a>' : '';
 							var json_elem = this;
 							var skip_next = false;
 							var insert_elem = false;
