@@ -92,7 +92,10 @@
 <input type="hidden" id="orders_converted_from" value="<?= Lang::string('orders-converted-from') ?>" />
 <input type="hidden" id="your_order" value="<?= Lang::string('home-your-order') ?>" />
 <input type="hidden" id="order-cancel-all-conf" value="<?= Lang::string('order-cancel-all-conf') ?>" />
+<input type="hidden" id="this_currency_id" value="<?= (!empty($currency_info)) ? $currency_info['id'] : 0 ?>" />
 <?= Lang::url(false,false,1); ?>
+<?= Lang::jsCurrencies(false,false,1); ?>
+
 <div class="site_wrapper">
    
 <!-- HEADER -->

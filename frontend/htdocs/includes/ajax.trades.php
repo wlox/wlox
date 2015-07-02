@@ -26,8 +26,8 @@ if (!empty($_REQUEST['last_price'])) {
 		API::add('User','getAvailable');
 }
 
-API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,1));
-API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,false,false,1));
+API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,1,false,false,$user));
+API::add('Orders','get',array(false,false,$limit,$currency1,$user,false,false,false,1,$user));
 $query = API::send();
 
 $return['asks'][] = $query['Orders']['get']['results'][1];

@@ -160,9 +160,9 @@ if (!$bypass) {
 								
 								echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr '.$blink.'">
-							<input type="hidden" class="usd_price" value="'.number_format($bid['usd_price'],2).'" />
+							<input type="hidden" class="usd_price" value="'.number_format(((empty($bid['usd_price'])) ? $bid['usd_price'] : $bid['btc_price']),2).'" />
 							<td>'.$type.'</td>
-							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
+							<td>'.$CFG->currencies[$bid['currency']]['fa_symbol'].'<span class="order_price">'.number_format(($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['btc'] * (($bid['fiat_price'] > 0) ? $bid['fiat_price'] : $bid['stop_price']),2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$bid['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$bid['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
@@ -171,7 +171,7 @@ if (!$bypass) {
 									echo '
 						<tr id="bid_'.$bid['id'].'" class="bid_tr double">
 							<td><div class="identify stop_order">S</div></td>
-							<td>'.$bid['fa_symbol'].'<span class="order_price">'.number_format($bid['stop_price'],2).'</span></td>
+							<td>'.$CFG->currencies[$bid['currency']]['fa_symbol'].'<span class="order_price">'.number_format($bid['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($bid['btc'],8).'</span></td>
 							<td>'.$bid['fa_symbol'].'<span class="order_value">'.number_format($bid['btc']*$bid['stop_price'],2).'</span></td>
 							<td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td>
@@ -213,11 +213,11 @@ if (!$bypass) {
 								
 								echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr '.$blink.'">
-							<input type="hidden" class="usd_price" value="'.number_format($ask['usd_price'],2).'" />
+							<input type="hidden" class="usd_price" value="'.number_format(((empty($ask['usd_price'])) ? $ask['usd_price'] : $ask['btc_price']),2).'" />
 							<td>'.$type.'</td>
-							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
+							<td>'.$CFG->currencies[$ask['currency']]['fa_symbol'].'<span class="order_price">'.number_format(($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
-							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['btc'] * (($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price']),2).'</span></td>
+							<td>'.$CFG->currencies[$ask['currency']]['fa_symbol'].'<span class="order_value">'.number_format($ask['btc'] * (($ask['fiat_price'] > 0) ? $ask['fiat_price'] : $ask['stop_price']),2).'</span></td>
 							<td><a href="edit-order.php?order_id='.$ask['id'].'" title="'.Lang::string('orders-edit').'"><i class="fa fa-pencil"></i></a> <a href="open-orders.php?delete_id='.$ask['id'].'&uniq='.$_SESSION["openorders_uniq"].'" title="'.Lang::string('orders-delete').'"><i class="fa fa-times"></i></a></td>
 						</tr>';
 								
@@ -225,9 +225,9 @@ if (!$bypass) {
 									echo '
 						<tr id="ask_'.$ask['id'].'" class="ask_tr double">
 							<td><div class="identify stop_order">S</div></td>
-							<td>'.$ask['fa_symbol'].'<span class="order_price">'.number_format($ask['stop_price'],2).'</span></td>
+							<td>'.$CFG->currencies[$ask['currency']]['fa_symbol'].'<span class="order_price">'.number_format($ask['stop_price'],2).'</span></td>
 							<td><span class="order_amount">'.number_format($ask['btc'],8).'</span></td>
-							<td>'.$ask['fa_symbol'].'<span class="order_value">'.number_format($ask['stop_price']*$ask['btc'],2).'</span></td>
+							<td>'.$CFG->currencies[$ask['currency']]['fa_symbol'].'<span class="order_value">'.number_format($ask['stop_price']*$ask['btc'],2).'</span></td>
 							<td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td>
 						</tr>';
 								}
