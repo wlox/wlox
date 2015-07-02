@@ -60,7 +60,7 @@ class Orders {
 			$price_str = 'orders.btc_price';
 		
 		if (!$count && !$public_api_open_orders && !$public_api_order_book)
-			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." ".((!$currency && $user) ? 'ROUND('.$price_str_usd.',2) AS usd_price,' : 'ROUND('.$price_str.',2) AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id ".($order_by == 'usd_amount' ? ', (orders.btc * '.$price_str_usd.') AS usd_amount' : '') ;
+			$sql = "SELECT orders.id, orders.currency, orders.market_price, orders.stop_price, orders.log_id, orders.fiat, ".(!$user ? 'SUM(orders.btc) AS btc,' : 'orders.btc,')." ".((!$currency && $user) ? 'ROUND('.$price_str_usd.',2) AS usd_price,' : 'ROUND('.$price_str.',2) AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id ".($order_by == 'usd_amount' ? ', (orders.btc * '.$price_str_usd.') AS usd_amount' : '') ;
 		elseif (!$count && $public_api_order_book)
 			$sql = "SELECT ROUND($price_str,2) AS price, orders.btc AS order_amount, ROUND((orders.btc * $price_str),2) AS order_value, $currency_abbr AS converted_from ";
 		elseif (!$count && $public_api_open_orders)
