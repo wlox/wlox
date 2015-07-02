@@ -655,9 +655,9 @@ class Orders {
 		$new_order = 0;
 		$edit_order = 0;
 		$comp_btc_balance = array();
-		$comp_btc_on_hold = false;
+		$comp_btc_on_hold = array();
 		$comp_fiat_balance = array();
-		$comp_fiat_on_hold = false;
+		$comp_fiat_on_hold = array();
 		$currency_max = false;
 		$currency_max_str = false;
 		$currency_min = false;
@@ -777,6 +777,9 @@ class Orders {
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
 					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
+						if ($comp_funds_finished)
+							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
+						
 						$i++;
 						continue;
 					}
@@ -966,6 +969,9 @@ class Orders {
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
 					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
+						if ($comp_funds_finished)
+							self::cancelOrder($comp_order['id'],$comp_order_outstanding,$comp_order['site_user']);
+						
 						$i++;
 						continue;
 					}
