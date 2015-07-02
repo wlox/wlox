@@ -325,10 +325,23 @@ function updateTransactions() {
 	var open_orders_user = $('#open_orders_user').val();
 	var trades_amount = (get_10) ? 10 : 5;
 	var cfg_user_id = $('#cfg_user_id').val();
+	var sort_column = false;
+	
 	var update = setInterval(function(){
 		while (!ajax_active) {
 			var currency = (notrades) ? (($('#user_fee').length > 0) ? $('#buy_currency').val() : $('#graph_orders_currency').val()) : $('#graph_price_history_currency').val();
-			$.getJSON("includes/ajax.trades.php?currency="+currency+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '&last_price=1')+((get_10) ? '&get10=1' : ''),function(json_data) {
+			var order_by = $('#order_by').val();
+			
+			if ($('#order_by').length > 0) {
+				if ($('#order_by').val() == 'btcprice')
+					sort_column = '.usd_price';
+				else if ($('#order_by').val() == 'date')
+					sort_column = '.order_date';
+				else if ($('#order_by').val() == 'btc')
+					sort_column = '.order_amount';
+			}
+			
+			$.getJSON("includes/ajax.trades.php?currency="+currency+((order_by) ? '&order_by='+order_by : '')+((notrades) ? '&notrades=1' : '')+((open_orders_user) ? '&user=1' : '&last_price=1')+((get_10) ? '&get10=1' : ''),function(json_data) {
 				var depth_chart_data = {bids:[],asks: []}; 
 				if (!notrades && json_data.transactions[0] != null) {
 					var i = 0;
@@ -508,7 +521,7 @@ function updateTransactions() {
 										double = 1;
 									}
 									
-									usd_price = '<input type="hidden" class="usd_price" value="'+json_elem.usd_price+'" />';
+									usd_price = '<input type="hidden" class="usd_price" value="'+(json_elem.usd_price ? json_elem.usd_price : json_elem.btc_price)+'" /><input type="hidden" class="order_date" value="'+json_elem.date+'" />';
 								}
 								
 								var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'&uniq='+$('#uniq').val()+'"><i class="fa fa-times"></i></a></td>' : false;
@@ -529,7 +542,7 @@ function updateTransactions() {
 						}
 					});
 					
-					sortTable('#bids_list',((notrades) ? 0 : 1),1);
+					sortTable('#bids_list',((notrades) ? 0 : 1),1,sort_column);
 				}
 				else {
 					$('#no_bids').css('display','');
@@ -657,7 +670,7 @@ function updateTransactions() {
 										double = 1;
 									}
 									
-									usd_price = '<input type="hidden" class="usd_price" value="'+json_elem.usd_price+'" />';
+									usd_price = '<input type="hidden" class="usd_price" value="'+(json_elem.usd_price ? json_elem.usd_price : json_elem.btc_price)+'" /><input type="hidden" class="order_date" value="'+json_elem.date+'" />';
 								}
 								
 								var edit_str = (open_orders_user) ? '<td><a title="'+$('#cfg_orders_edit').val()+'" href="edit-order.php?order_id='+json_elem.id+'"><i class="fa fa-pencil"></i></a> <a title="'+$('#cfg_orders_delete').val()+'" href="open-orders.php?delete_id='+json_elem.id+'&uniq='+$('#uniq').val()+'"><i class="fa fa-times"></i></a></td>' : false;
@@ -678,7 +691,7 @@ function updateTransactions() {
 						}
 					});
 					
-					sortTable('#asks_list',((notrades) ? 0 : 1),0);
+					sortTable('#asks_list',((notrades) ? 0 : 1),0,sort_column);
 				}
 				else {
 					$('#no_asks').css('display','');
@@ -1169,14 +1182,23 @@ function expireSession() {
 	}
 }
 
-function sortTable(elem_selector,col_num,desc){
+function sortTable(elem_selector,col_num,desc,col_name){
 	var rows = $(elem_selector+' tr:not(:first,.double)').get();
+	desc = (col_name == '.order_date' || col_name == '.order_amount') ? true : desc;
+	
+	if (!col_name) {
+		if ($('.usd_price').length > 0)
+			col_name = '.usd_price';
+		else
+			col_name = '.order_price';
+	}
+	
 	rows.sort(function(a, b) {
 		if ($(a).children('th').length > 0)
 			return -1;
 
-		var A = ($(a).find('.usd_price').length > 0) ? parseFloat($(a).find('.usd_price').val()) : parseFloat($(a).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
-		var B = ($(b).find('.usd_price').length > 0) ? parseFloat($(b).find('.usd_price').val()) : parseFloat($(b).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
+		var A = (col_name != '.order_price') ? parseFloat($(a).find(col_name).val()) : parseFloat($(a).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
+		var B = (col_name != '.order_price') ? parseFloat($(b).find(col_name).val()) : parseFloat($(b).find('.order_price').eq(col_num).text().replace('$','').replace(',','').replace('BTC',''));
 		A = (isNaN(A)) ? 0 : A;
 		B = (isNaN(B)) ? 0 : B;
 		
