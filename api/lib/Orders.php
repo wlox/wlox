@@ -1,6 +1,6 @@
 <?php
 class Orders {
-	public static function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$dont_paginate=false,$public_api_open_orders=false,$public_api_order_book=false) {
+	public static function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$open_orders=false,$public_api_open_orders=false,$public_api_order_book=false) {
 		global $CFG;
 		
 		if ($user && !(User::$info['id'] > 0))
@@ -14,7 +14,7 @@ class Orders {
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$order_arr = array('date'=>'orders.id','btc'=>'orders.btc','btcprice'=>'btc_price','fiat'=>'usd_amount');
+		$order_arr = array('date'=>'orders.id','btc'=>'orders.btc','btcprice'=>'usd_price','fiat'=>'orders.btc');
 		$order_by = ($order_by1) ? $order_arr[$order_by1] : ((!$currency && $user) ? 'usd_price' : 'btc_price');
 		$order_desc = ($order_desc && ($order_by1 != 'date' && $order_by1 != 'fiat')) ? 'ASC' : 'DESC';
 		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
@@ -22,16 +22,21 @@ class Orders {
 		$user = ($user) ? User::$info['id'] : false;
 		$type = ($show_bids) ? $CFG->order_type_bid : $CFG->order_type_ask;
 		$user_id = (User::$info['id'] > 0) ? User::$info['id'] : '0';
-		
-		//$usd_field = ($show_bids) ? 'usd_bid' : 'usd_ask';
 		$usd_field = 'usd_ask';
 		$conv_comp = ($show_bids) ? '-' : '+';
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
-		$btc_price = ($currency && !$user && $CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion $conv_comp ($conversion * {$CFG->currency_conversion_fee}))),2) AS btc_price, " : false;
-		$btc_price1 = ($currency && !$user && $CFG->cross_currency_trades) ? str_replace('AS btc_price,','',$btc_price) : false;
+		$cached = false;
 		
 		if ($CFG->memcached && !$order_by1) {
-			$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''));
+			if (!$public_api_open_orders && !$public_api_order_book) {
+				if (!$open_orders)
+					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($type) ? '_t'.$type : ''));
+				else
+					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : ''));
+			}
+			else {
+				$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : ''));
+			}
 			if ($cached)
 				return $cached;
 		}
@@ -60,11 +65,11 @@ class Orders {
 			$price_str = 'orders.btc_price';
 		
 		if (!$count && !$public_api_open_orders && !$public_api_order_book)
-			$sql = "SELECT orders.id, orders.currency, orders.market_price, orders.stop_price, orders.log_id, orders.fiat, ".(!$user ? 'SUM(orders.btc) AS btc,' : 'orders.btc,')." ".((!$currency && $user) ? 'ROUND('.$price_str_usd.',2) AS usd_price,' : 'ROUND('.$price_str.',2) AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id ".($order_by == 'usd_amount' ? ', (orders.btc * '.$price_str_usd.') AS usd_amount' : '') ;
+			$sql = "SELECT orders.id, orders.currency, orders.market_price, orders.stop_price, orders.log_id, orders.fiat, UNIX_TIMESTAMP(orders.date) AS `date`, ".(!$open_orders ? 'SUM(orders.btc) AS btc,' : 'orders.btc,')." ".((!$currency && $open_orders) ? 'ROUND('.$price_str_usd.',2) AS usd_price, orders.btc_price, ' : 'ROUND('.$price_str.',2) AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id ".($order_by == 'usd_amount' ? ', (orders.btc * '.$price_str_usd.') AS usd_amount' : '') ;
 		elseif (!$count && $public_api_order_book)
-			$sql = "SELECT ROUND($price_str,2) AS price, orders.btc AS order_amount, ROUND((orders.btc * $price_str),2) AS order_value, $currency_abbr AS converted_from ";
+			$sql = "SELECT ROUND($price_str,2) AS price, orders.btc AS order_amount, ROUND((orders.btc * $price_str),2) AS order_value, $currency_abbr AS converted_from, UNIX_TIMESTAMP(orders.date) AS `timestamp` ";
 		elseif (!$count && $public_api_open_orders)
-			$sql = "SELECT order_log.id AS id, IF(order_log.order_type = {$CFG->order_type_bid},'buy','sell') AS side, (IF(order_log.market_price = 'Y','market',IF(order_log.stop_price > 0,'stop','limit'))) AS `type`, order_log.btc AS amount, IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining) AS amount_remaining, order_log.btc_price AS price, ROUND(SUM(IF(transactions.id IS NOT NULL OR transactions1.id IS NOT NULL,(transactions.btc  / (order_log.btc - IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining))) * IF(transactions.id IS NOT NULL,transactions.btc_price,transactions1.orig_btc_price),0)),2) AS avg_price_executed, order_log.stop_price AS stop_price, $currency_abbr AS currency, order_log.status AS status, order_log.p_id AS replaced, IF(order_log.status = 'REPLACED',replacing_order.id,0) AS replaced_by";
+			$sql = "SELECT order_log.id AS id, IF(order_log.order_type = {$CFG->order_type_bid},'buy','sell') AS side, (IF(order_log.market_price = 'Y','market',IF(order_log.stop_price > 0,'stop','limit'))) AS `type`, order_log.btc AS amount, IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining) AS amount_remaining, order_log.btc_price AS price, ROUND(SUM(IF(transactions.id IS NOT NULL OR transactions1.id IS NOT NULL,(transactions.btc  / (order_log.btc - IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining))) * IF(transactions.id IS NOT NULL,transactions.btc_price,transactions1.orig_btc_price),0)),2) AS avg_price_executed, order_log.stop_price AS stop_price, $currency_abbr AS currency, order_log.status AS status, order_log.p_id AS replaced, IF(order_log.status = 'REPLACED',replacing_order.id,0) AS replaced_by, UNIX_TIMESTAMP(orders.date) AS `timestamp`";
 		else
 			$sql = "SELECT COUNT(orders.id) AS total ";
 			
@@ -109,23 +114,63 @@ class Orders {
 		if ($public_api_order_book)
 			$sql .= ' GROUP BY orders.btc_price,orders.currency ';
 			
-		if ($per_page > 0 && !$count && !$dont_paginate)
-			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
-		if (!$count && $dont_paginate && !$public_api_open_orders && !$public_api_order_book)
+		if ($per_page > 0 && !$count && !$open_orders)
+			$sql .= " ORDER BY $order_by $order_desc ".(!$CFG->memcached ? "LIMIT $r1,$per_page" : '');
+		if (!$count && $open_orders && !$public_api_open_orders && !$public_api_order_book)
 			$sql .= " ORDER BY $order_by $order_desc ";
-		if (!$count && $dont_paginate && ($public_api_open_orders || $public_api_order_book))
-			$sql .= " ORDER BY price $order_desc ";
+		if ($public_api_open_orders)
+			$sql .= " ORDER BY price $order_desc LIMIT $r1,$per_page";
+		if ($public_api_order_book)
+			$sql .= " ORDER BY price $order_desc";
 		
 		$result = db_query_array($sql);
 		
-		if ($CFG->memcached && !$order_by1) {
-			$CFG->m->set('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : ''),$result,300);
+		if ($CFG->memcached && !$count) {
 			$cached = $CFG->m->get('orders_cache');
 			if (!$cached)
 				$cached = array();
 			
-			$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '').($public_api_open_orders ? 'oo' : '');
-			$cached[$key] = true;
+			if (!$public_api_open_orders && !$public_api_order_book) {
+				if (!$open_orders) {
+					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
+					$CFG->m->set('orders'.$key,$result,300);
+					
+					$result_sub[30] = array_slice($result,0,30);
+					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
+					$CFG->m->set('orders'.$key,$result_sub[30],300);
+					
+					$result_sub[10] = array_slice($result,0,10);
+					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
+					$CFG->m->set('orders'.$key,$result_sub[10],300);
+					
+					$result_sub[5] = array_slice($result,0,5);
+					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
+					$CFG->m->set('orders'.$key,$result_sub[5],300);
+					
+					if ($per_page > 0)
+						$result = $result_sub[$per_page];
+				}
+				else {
+					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
+					$cached[$key] = true;
+					$CFG->m->set('orders'.$key,$result,300);
+				}
+			}
+			else if ($public_api_open_orders) {
+				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : '');
+				$cached[$key] = true;
+				$CFG->m->set('orders'.$key,$result,300);
+			}
+			else if ($public_api_order_book) {
+				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '');
+				$cached[$key] = true;
+				$CFG->m->set('orders'.$key,$result,300);
+			}
+			
 			$CFG->m->set('orders_cache',$cached,300);
 		}
 		
