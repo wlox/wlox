@@ -14,8 +14,8 @@ class Orders {
 		
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
-		$order_arr = array('date'=>'orders.date','btc'=>'orders.btc','btcprice'=>'btc_price','fiat'=>'usd_amount');
-		$order_by = ($order_by1) ? $order_arr[$order_by1] : ((!$currency && $dont_paginate) ? 'usd_price' : 'btc_price');
+		$order_arr = array('date'=>'orders.id','btc'=>'orders.btc','btcprice'=>'btc_price','fiat'=>'usd_amount');
+		$order_by = ($order_by1) ? $order_arr[$order_by1] : ((!$currency && $user) ? 'usd_price' : 'btc_price');
 		$order_desc = ($order_desc && ($order_by1 != 'date' && $order_by1 != 'fiat')) ? 'ASC' : 'DESC';
 		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$usd_info = $CFG->currencies['USD'];
@@ -38,13 +38,16 @@ class Orders {
 		
 		if ($CFG->cross_currency_trades) {
 			$price_str = '(CASE orders.currency WHEN '.$currency_info['id'].' THEN orders.btc_price';
-			$price_str_usd = '(CASE orders.currency WHEN '.$currency_info['id'].' THEN orders.btc_price';
+			$price_str_usd = '(CASE orders.currency';
 			$currency_abbr = '(CASE orders.currency';
 			foreach ($CFG->currencies as $curr_id => $currency1) {
-				if (is_numeric($curr_id) || $currency1['currency'] == 'BTC' || $currency1['id'] == $currency_info['id'])
+				if (is_numeric($curr_id) || $currency1['currency'] == 'BTC')
+					continue;
+				
+				if (!empty($currency_info) && $currency1['id'] == $currency_info['id'])
 					continue;
 		
-				$conversion = ($currency_info['currency'] == 'USD') ? $currency1[$usd_field] : $currency1[$usd_field] / $currency_info[$usd_field];
+				$conversion = (empty($currency_info) || $currency_info['currency'] == 'USD') ? $currency1[$usd_field] : $currency1[$usd_field] / $currency_info[$usd_field];
 				$price_str .= ' WHEN '.$currency1['id'].' THEN orders.btc_price * ('.$conversion.' '.$conv_comp.' ('.$conversion.' * '.$CFG->currency_conversion_fee.'))';
 				$price_str_usd .= ' WHEN '.$currency1['id'].' THEN orders.btc_price * ('.$conversion.')';
 				$currency_abbr .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
@@ -57,9 +60,9 @@ class Orders {
 			$price_str = 'orders.btc_price';
 		
 		if (!$count && !$public_api_open_orders && !$public_api_order_book)
-			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." ".((!$currency && $dont_paginate) ? $price_str_usd.' AS usd_price,' : $price_str.' AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id";
+			$sql = "SELECT orders.*, ".(!$user ? 'SUM(orders.btc) AS btc,' : '')." ".((!$currency && $user) ? 'ROUND('.$price_str_usd.',2) AS usd_price,' : 'ROUND('.$price_str.',2) AS btc_price,')." order_types.name_{$CFG->language} AS type, orders.btc_price AS fiat_price, (UNIX_TIMESTAMP(orders.date) * 1000) AS time_since, site_users.user AS user_id ".($order_by == 'usd_amount' ? ', (orders.btc * '.$price_str_usd.') AS usd_amount' : '') ;
 		elseif (!$count && $public_api_order_book)
-			$sql = "SELECT $price_str AS price, orders.btc AS order_amount, ROUND((orders.btc * $price_str),2) AS order_value, $currency_abbr AS converted_from ";
+			$sql = "SELECT ROUND($price_str,2) AS price, orders.btc AS order_amount, ROUND((orders.btc * $price_str),2) AS order_value, $currency_abbr AS converted_from ";
 		elseif (!$count && $public_api_open_orders)
 			$sql = "SELECT order_log.id AS id, IF(order_log.order_type = {$CFG->order_type_bid},'buy','sell') AS side, (IF(order_log.market_price = 'Y','market',IF(order_log.stop_price > 0,'stop','limit'))) AS `type`, order_log.btc AS amount, IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining) AS amount_remaining, order_log.btc_price AS price, ROUND(SUM(IF(transactions.id IS NOT NULL OR transactions1.id IS NOT NULL,(transactions.btc  / (order_log.btc - IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining))) * IF(transactions.id IS NOT NULL,transactions.btc_price,transactions1.orig_btc_price),0)),2) AS avg_price_executed, order_log.stop_price AS stop_price, $currency_abbr AS currency, order_log.status AS status, order_log.p_id AS replaced, IF(order_log.status = 'REPLACED',replacing_order.id,0) AS replaced_by";
 		else
@@ -98,13 +101,13 @@ class Orders {
 			$sql .= " AND orders.currency = {$currency_info['id']} ";
 		
 		if (!$user && !$public_api_order_book)
-			$sql .= ' GROUP BY CONCAT( orders.btc_price, "-", orders.currency) ';
+			$sql .= ' GROUP BY orders.btc_price,orders.currency ';
 		
 		if ($public_api_open_orders)
 			$sql .= ' GROUP BY order_log.id ';
 		
 		if ($public_api_order_book)
-			$sql .= ' GROUP BY CONCAT( orders.btc_price, "-", orders.currency ) ';
+			$sql .= ' GROUP BY orders.btc_price,orders.currency ';
 			
 		if ($per_page > 0 && !$count && !$dont_paginate)
 			$sql .= " ORDER BY $order_by $order_desc LIMIT $r1,$per_page ";
