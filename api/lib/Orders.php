@@ -501,9 +501,26 @@ class Orders {
 		$type = (!$buy) ? $CFG->order_type_bid : $CFG->order_type_ask;
 		$usd_field = 'usd_ask';
 		$comparison = ($buy) ? '<=' : '>=';
-		$conv_comp = (!$buy) ? '-' : '+';
-		$usd_info = $CFG->currencies['USD'];
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
+		
+		if ($CFG->cross_currency_trades) {
+			$price_str = '(CASE orders.currency WHEN '.$currency_info['id'].' THEN '.$price;
+			$stops_str = '(CASE orders.currency WHEN '.$currency_info['id'].' THEN '.$stop_price;
+			foreach ($CFG->currencies as $curr_id => $currency1) {
+				if (is_numeric($curr_id) || $currency1['currency'] == 'BTC' || $currency1['id'] == $currency_info['id'])
+					continue;
+		
+				$conversion1 = ($currency_info['currency'] == 'USD') ? 1 / $currency1[$usd_field] : $currency_info[$usd_field] / $currency1[$usd_field];
+				$price_str .= ' WHEN '.$currency1['id'].' THEN '.round($price * $conversion1,2,PHP_ROUND_HALF_UP);
+				$stops_str .= ' WHEN '.$currency1['id'].' THEN '.round($stop_price * $conversion1,2,PHP_ROUND_HALF_UP);
+			}
+			$price_str .= ' END)';
+			$stops_str .= ' END)';
+		}
+		else {
+			$price_str = $price;
+			$stops_str = $stop_price;
+		}
 		
 		$sql = 'SELECT orders.currency,';
 		$sql .= (($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * $conversion),2)" : 'orders.btc_price')." AS price, ";
@@ -511,16 +528,16 @@ class Orders {
 		if ($buy && $price > 0)
 			$sql .= (($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.stop_price,orders.stop_price * $conversion),2)" : 'orders.stop_price')." AS stop_price, ";
 		
-		$sql .= " 1 FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id)
+		$sql .= " 1 FROM orders
 				WHERE orders.order_type = $type AND (";
 		
 		$conditions = array();
 		if ($price > 0)
-			$conditions[] = " (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion)),2)" : 'orders.btc_price')." $comparison $price AND orders.btc_price > 0) ";
+			$conditions[] = " orders.btc_price $comparison $price_str AND orders.btc_price > 0) ";
 		if ($buy && $price > 0)
-			$conditions[] =	" (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.stop_price,orders.stop_price * $conversion),2)" : 'orders.stop_price')." >= $price AND orders.stop_price > 0) ";
+			$conditions[] =	" orders.stop_price >= $price_str AND orders.stop_price > 0) ";
 		elseif ($stop_price > 0)
-			$conditions[] = " (".(($CFG->cross_currency_trades) ? "ROUND(IF(orders.currency = {$currency_info['id']},orders.btc_price,orders.btc_price * ($conversion)),2)" : 'orders.btc_price')." <= $stop_price AND orders.btc_price > 0) ";
+			$conditions[] = " orders.btc_price <= $stops_str AND orders.btc_price > 0) ";
 		
 		$sql .= implode(' OR ',$conditions).") ".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false)." AND orders.site_user = $user_id";
 		
