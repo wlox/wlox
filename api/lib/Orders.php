@@ -387,7 +387,7 @@ class Orders {
 	public static function getMarketOrders() {
 		global $CFG;
 		
-		$sql = 'SELECT orders.order_type, orders.btc_price AS orig_btc_price, orders.btc AS btc_outstanding, currencies.currency AS currency_abbr, orders.market_price AS is_market, orders.id, orders.site_user, orders.stop_price FROM orders LEFT JOIN currencies ON (orders.currency = currencies.id) WHERE orders.market_price = "Y"';
+		$sql = 'SELECT orders.order_type, orders.btc_price AS orig_btc_price, orders.btc AS btc_outstanding, orders.currency, orders.market_price AS is_market, orders.id, orders.site_user, orders.stop_price FROM orders WHERE orders.market_price = "Y"';
 		return db_query_array($sql);
 	}
 
