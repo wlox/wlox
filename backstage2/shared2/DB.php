@@ -36,7 +36,7 @@ class DB {
 						'subtable_fields'=>$_REQUEST['subtables'][$f_result]['subtable_fieldls'],
 						'f_id_field'=>$_REQUEST['subtables'][$f_result]['f_id_field'],
 						'filter_result'=>1,
-						'f_value'=>$f_value
+						'f_value'=>$f_value['results']
 					);
 					unset($filter_results[$f_result]);
 				}
@@ -94,11 +94,18 @@ class DB {
 									$foreign_order_table = false;
 									$otparts = false;
 								}
+								$i1 = 1;
+								$c1 = count($join_path);
 								foreach ($join_path as $join_field) {
 									$join_field_parts = explode('.',$join_field);
 									$join_table = $join_field_parts[0];
 									$j_field = $join_field_parts[1];
 									$remote_tables[$remote_i][$join_table][] = $j_field;
+									
+									if ($i1 == $c1)
+										$remote_tables[$remote_i][$join_table]['join_condition'] = $field['join_condition'];
+									
+									$i1++;
 								}
 								if ($field['filter_result']) {
 									$join_table1 = $join_table.$remote_i.'.'.$j_field;
@@ -452,11 +459,11 @@ class DB {
 							$o_field = $foreign_order[$r_table]['order_by'];
 							$j_field = ($prev_field == 'id') ? $r_field[0] : 'id';
 							$j_field = ($r_table == $prev_table) ? $prev_field : $r_field[0];
-							
 							$remote_i1 = ($i > 0) ? $remote_i : '';
+							$join_condition = (!empty($r_field['join_condition'])) ? 'AND '.str_replace($r_table,$r_table.$remote_i,$r_field['join_condition']) : '';
 							
 							if (empty($o_field)) {
-								$sql .= " LEFT JOIN {$r_table} {$r_table}{$remote_i} ON ({$prev_table}{$remote_i1}.{$prev_field} = {$r_table}{$remote_i}.{$j_field}) ";
+								$sql .= " LEFT JOIN {$r_table} {$r_table}{$remote_i} ON ({$prev_table}{$remote_i1}.{$prev_field} = {$r_table}{$remote_i}.{$j_field} $join_condition) ";
 							}
 							else {
 								$o_asc = (!empty($foreign_order[$j_table]['order_asc'])) ? '>' : '<';
@@ -492,16 +499,18 @@ class DB {
 		}
 		
 		if (is_array($filter_results)) {
-			if (!empty($filter_results['first_letter'])) {
+			if (!empty($filter_results['first_letter']['results'])) {
 				$r_subtable = (!empty($filter_results['first_letter_subtable'])) ? $filter_results['first_letter_subtable'] : $table;
 				$sql .= " AND {$r_subtable}.{$filter_results['first_letter_field']} LIKE '{$filter_results['first_letter']}%' ";
 			}
 
-			foreach ($filter_results as $r_name => $r_value) {
+			foreach ($filter_results as $r_name => $r_properties) {
+				$r_value = $r_properties['results'];
 				if (!is_array($r_value) && strlen($r_value) == 0)
 					continue;
 
 				$w_table = (@array_key_exists($r_name,$f_where)) ? $f_where[$r_name] : $table;
+				$r_name_orig = $r_name;
 				$r_name = self::replaceTables($r_name,$joined_tables);
 
 				if ($r_name == 'cat_selects') {
@@ -579,14 +588,21 @@ class DB {
 				}
 				else {
 					$r_name_parts = explode(',',$r_name);
+					$r_name_orig_parts = explode(',',$r_name_orig);
 					$r_name_sql = false;
-					
+					$equals = ($r_properties['not_equals']) ? '!=' : '=';
+
 					$sql .= ' AND (';
-					foreach ($r_name_parts as $r_name_part) {
-						if (strstr($r_name_part,'.'))
-							$r_name_sql[] = " {$r_name_part} = '$r_value' ";
+					foreach ($r_name_parts as $k1 => $r_name_part) {
+						if (strstr($r_name_part,'.')) {
+							$r_orig_name = explode('.',$r_name_orig_parts[$k1]);
+							if (!empty($join_tables[$r_orig_name[0]]))
+								$r_name_sql[] = " {$r_name_orig_parts[$k1]} $equals '$r_value' ";
+							
+							$r_name_sql[] = " {$r_name_part} $equals '$r_value' ";
+						}
 						else
-							$r_name_sql[] = " {$table}.{$r_name_part} = '$r_value' ";
+							$r_name_sql[] = " {$table}.{$r_name_part} $equals '$r_value' ";
 					}
 					$sql .= implode('OR',$r_name_sql);
 					$sql .= ' ) ';

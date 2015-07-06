@@ -162,7 +162,7 @@ class Grid {
 	
 	// you can do operations with field names, ex: (name1 - name2) / name3
 	// you can also use any math function such as min,max,etc...
-	function aggregate($name,$formula,$header_caption=false,$cumulative_function=false,$run_in_sql=false,$filter=false,$join_path=false) {
+	function aggregate($name,$formula,$header_caption=false,$cumulative_function=false,$run_in_sql=false,$filter=false,$join_path=false,$join_condition=false) {
 		global $CFG;
 
 		$this->fields[$name] = array(
@@ -174,6 +174,7 @@ class Grid {
 			'run_in_sql'=>$run_in_sql,
 			'filter' => $filter,
 			'join_path' => $join_path,
+			'join_condition'=>$join_condition,
 			'is_op'=>1);
 	}
 	
@@ -257,7 +258,7 @@ class Grid {
 			'method_id'=>$CFG->method_id);
 	}
 	
-	function filterSelect($field_name,$caption=false,$options_array=false,$subtable=false,$subtable_fields=false,$class=false,$f_id_field=false,$depends_on=false,$level=false,$f_id=false) {
+	function filterSelect($field_name,$caption=false,$options_array=false,$subtable=false,$subtable_fields=false,$class=false,$f_id_field=false,$depends_on=false,$level=false,$f_id=false,$use_enum_values=false) {
 		global $CFG;
 		
 		$this->filters[$field_name] = array(
@@ -272,7 +273,9 @@ class Grid {
 			'f_id_field'=>$f_id_field,
 			'level'=>$level,
 			'depends_on'=>$depends_on,
-			'f_id'=>$f_id);
+			'f_id'=>$f_id,
+			'use_enum_values'=>$use_enum_values
+		);
 	}
 	
 	function filterTokenizer($field_name,$caption=false,$options_array=false,$subtable=false,$subtable_fields=false,$class=false,$f_id_field=false,$depends_on=false) {
@@ -289,7 +292,7 @@ class Grid {
 			'method_id'=>$CFG->method_id);
 	}
 	
-	function filterCheckbox($field_name,$caption=false,$checked=false,$class=false) {
+	function filterCheckbox($field_name,$caption=false,$checked=false,$class=false,$value=false,$not_equals=false) {
 		global $CFG;
 		
 		$this->filters[$field_name] = array(
@@ -298,6 +301,8 @@ class Grid {
 			'caption'=>$caption,
 			'checked' => $checked,
 			'class'=> $class,
+			'value'=>$value,
+			'not_equals'=>$not_equals,
 			'method_id'=>$CFG->method_id);
 	}
 	
@@ -398,12 +403,13 @@ class Grid {
 	function display($page=0) {
 		global $CFG;
 		
+		$filters = self::getFilterResults();
 		$page = ($page > 0) ? $page : $_SESSION['page'.$this->i];
 		$_SESSION['page'.$this->i] = $page;
 		$page = (!($page > 0) || $_REQUEST['submit'] || $this->order_asc_changed || $this->order_by_changed) ? 1 : $page;
 		$fields = DB::getTableFields($this->table);
-		$total_rows = DB::get($this->table,$this->fields,$page,$this->rows_per_page,$this->order_by,$this->order_asc,1,$this->filter_results,$this->inset_id,$this->inset_id_field,false,false,false,false,false,false,false,$this->sql_filter,$this->group_by,$this->no_group_by);
-		$data = DB::get($this->table,$this->fields,$page,$this->rows_per_page,$this->order_by,$this->order_asc,0,$this->filter_results,$this->inset_id,$this->inset_id_field,false,false,false,false,false,false,false,$this->sql_filter,$this->group_by,$this->no_group_by);
+		$total_rows = DB::get($this->table,$this->fields,$page,$this->rows_per_page,$this->order_by,$this->order_asc,1,$filters,$this->inset_id,$this->inset_id_field,false,false,false,false,false,false,false,$this->sql_filter,$this->group_by,$this->no_group_by);
+		$data = DB::get($this->table,$this->fields,$page,$this->rows_per_page,$this->order_by,$this->order_asc,0,$filters,$this->inset_id,$this->inset_id_field,false,false,false,false,false,false,false,$this->sql_filter,$this->group_by,$this->no_group_by);
 		$HTML = "";
 		
 		if ($CFG->backstage_mode && (User::permission(0,0,$this->link_url,false,$this->is_tab) > 1) && !($this->inset_id > 0)) {
@@ -1353,7 +1359,7 @@ class Grid {
 						case 'select':
 							$CFG->o_method_id = $filter['method_id'];
 							$CFG->o_method_name = 'filterSelect';
-							$form_filters->selectInput($name,$filter['caption'],false,$value,$filter['options_array'],$filter['subtable'],$filter['subtable_fields'],$filter['f_id'],false,$filter['class'],false,false,$filter['f_id_field'],false,$filter['depends_on'],false,false,false,false,false,$filter['level']);
+							$form_filters->selectInput($name,$filter['caption'],false,$value,$filter['options_array'],(($filter['use_enum_values'] && !$filter['subtable']) ? $this->table : $filter['subtable']),$filter['subtable_fields'],$filter['f_id'],false,$filter['class'],false,false,$filter['f_id_field'],false,$filter['depends_on'],false,false,false,false,false,$filter['level'],$filter['use_enum_values']);
 							break;
 						case 'checkbox':
 							$CFG->o_method_id = $filter['method_id'];
@@ -1471,6 +1477,7 @@ class Grid {
 			$inset_i = $this->inset_i;
 			$target_elem = ($this->inset_i > 0) ? 'inset_area_'.$this->inset_i : $target_elem;
 			$grid_i = $this->i;
+			$filter_results = $_REQUEST['form_filters'.$this->i];
 		}
 		else {
 			$link_url = $CFG->url;
@@ -1492,10 +1499,11 @@ class Grid {
 				if ($alpha < $p_deviation) $beta = $beta + ($p_deviation - $alpha);
 				if ($beta < $p_deviation) $alpha = $alpha + ($p_deviation - $beta);
 			}
+			
 			if ($page != 1) 
-				$first_page = Link::url($link_url,$CFG->first_page_text,false,array('page'.$grid_i=>1,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i),true,$target_elem,'first');
+				$first_page = Link::url($link_url,$CFG->first_page_text,false,array('page'.$grid_i=>1,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i,'form_filters'.$grid_i=>$filter_results,'search_fields'.$grid_i=>$_REQUEST['search_fields'.$grid_i]),true,$target_elem,'first');
 			if ($page != $num_pages)
-				$last_page = Link::url($link_url,$CFG->last_page_text,false,array('page'.$grid_i=>$num_pages,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i),true,$target_elem,'last');
+				$last_page = Link::url($link_url,$CFG->last_page_text,false,array('page'.$grid_i=>$num_pages,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i,'form_filters'.$grid_i=>$filter_results,'search_fields'.$grid_i=>$_REQUEST['search_fields'.$grid_i]),true,$target_elem,'last');
 				
 			$pagination = '<div class="pagination"><div style="float:left;">'.$first_page;
 			foreach ($page_array as $p) {
@@ -1504,7 +1512,7 @@ class Grid {
 						$pagination .= ' <span>'.$p.'</span> ';
 					}
 					else {
-						$pagination .= Link::url($link_url,$p,false,array('page'.$grid_i=>$p,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i),true,$target_elem);
+						$pagination .= Link::url($link_url,$p,false,array('page'.$grid_i=>$p,'p_bypass'.$grid_i=>1,'mode'.$grid_i=>$mode,'inset_id'=>$inset_id,'inset_id_field'=>$inset_id_field,'inset_i'=>$inset_i,'form_filters'.$grid_i=>$filter_results,'search_fields'.$grid_i=>$_REQUEST['search_fields'.$grid_i]),true,$target_elem);
 					}
 				}
 			}
@@ -1611,6 +1619,21 @@ class Grid {
 		}
 		
 		return $value;
+	}
+	
+	private function getFilterResults() {
+		if (empty($this->filters) && empty($this->filter_results))
+			return false;
+		
+		$results = array();
+		foreach ($this->filter_results as $f_name => $f_value) {
+			if (!empty($this->filters[$f_name]))
+				$results[$f_name] = $this->filters[$f_name];
+			
+			$results[$f_name]['results'] = $f_value;
+		}
+		
+		return $results;
 	}
 }
 
