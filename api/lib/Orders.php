@@ -27,7 +27,7 @@ class Orders {
 		$conversion = ($usd_info['id'] == $currency_info['id']) ? ' currencies.'.$usd_field : ' (1 / IF(orders.currency = '.$usd_info['id'].','.$currency_info[$usd_field].', '.$currency_info[$usd_field].' / currencies.'.$usd_field.'))';
 		$cached = false;
 		
-		if ($CFG->memcached && !$order_by1) {
+		if ($CFG->memcached) {
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders)
 					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($type) ? '_t'.$type : ''));
@@ -37,10 +37,14 @@ class Orders {
 			else {
 				$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : ''));
 			}
-			if ($cached)
+			if (is_array($cached)) {
+				if (count($cached) == 0)
+					return false;
+				
 				return $cached;
+			}
 		}
-		
+
 		if ($CFG->cross_currency_trades) {
 			$price_str = '(CASE orders.currency WHEN '.$currency_info['id'].' THEN orders.btc_price';
 			$price_str_usd = '(CASE orders.currency';
@@ -125,10 +129,13 @@ class Orders {
 		
 		$result = db_query_array($sql);
 		
-		if ($CFG->memcached && $result && !$count) {
+		if ($CFG->memcached && !$count) {
 			$cached = $CFG->m->get('orders_cache');
 			if (!$cached)
 				$cached = array();
+			
+			if (!$result)
+				$result = array();
 			
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders) {
@@ -173,6 +180,9 @@ class Orders {
 			
 			$CFG->m->set('orders_cache',$cached,300);
 		}
+		
+		if ($result && count($result) == 0)
+			$result = false;
 		
 		if (!$count)
 			return $result;
