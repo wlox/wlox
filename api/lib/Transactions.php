@@ -29,7 +29,7 @@ class Transactions {
 			$type = $CFG->transactions_sell_id;
 		else
 			$type = preg_replace("/[^0-9]/", "",$type);
-		
+
 		if ($CFG->memcached) {
 			$cached = null;
 			if ($per_page == 5 && !$count && !$public_api_all)
@@ -77,7 +77,7 @@ class Transactions {
 		$currency_abbr2 .= ' END)';
 		
 		if (!$count && !$public_api_all)
-			$sql = "SELECT transactions.*, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,transactions.currency,transactions.currency1) AS currency" : ", ROUND($price_str,2) AS btc_price, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type").", UNIX_TIMESTAMP(transactions.date) AS datestamp ".(($order_by == 'usd_price') ? ', ('.$usd_str.' * transactions.btc_price) AS usd_price' : '').(($order_by == 'usd_amount') ? ', ('.$usd_str.' * transactions.fiat) AS usd_amount' : '');
+			$sql = "SELECT transactions.id,transactions.date,transactions.site_user,transactions.site_user1,transactions.btc,transactions.currency,transactions.currency1,transactions.btc_price,transactions.orig_btc_price,transactions.fiat, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,transactions.currency,transactions.currency1) AS currency" : ", ROUND($price_str,2) AS btc_price, LOWER(transaction_types1.name_en) AS maker_type").", UNIX_TIMESTAMP(transactions.date) AS datestamp ".(($order_by == 'usd_price') ? ', ROUND(('.$usd_str.' * transactions.btc_price),2) AS usd_price' : '').(($order_by == 'usd_amount') ? ', ROUND(('.$usd_str.' * transactions.fiat),2) AS usd_amount' : '');
 		elseif ($public_api_all && $user)
 			$sql = "SELECT transactions.id AS id, transactions.date AS date, UNIX_TIMESTAMP(transactions.date) AS `timestamp`, transactions.btc AS btc, LOWER(IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language})) AS side, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS price, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1)),2) AS amount, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.fee,transactions.fee1)),2) AS fee, $currency_abbr AS currency ";
 		elseif ($public_api_all && !$user && $currency)
