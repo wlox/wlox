@@ -48,6 +48,7 @@ class Transactions {
 		}
 		
 		$price_str = '(CASE WHEN transactions.currency = '.$currency_info['id'].' THEN transactions.btc_price WHEN transactions.currency1 = '.$currency_info['id'].' THEN transactions.orig_btc_price ELSE (CASE transactions.currency1 ';
+		$amount_str = '(CASE WHEN transactions.currency = '.$currency_info['id'].' THEN (transactions.btc_price * transactions.btc) WHEN transactions.currency1 = '.$currency_info['id'].' THEN (transactions.orig_btc_price * transactions.btc) ELSE (CASE transactions.currency1 ';
 		$usd_str = '(CASE transactions.currency ';
 		$currency_abbr = '(CASE IF(transactions.site_user = '.$user.',transactions.currency,transactions.currency1) ';
 		$currency_abbr1 = '(CASE transactions.currency ';
@@ -62,23 +63,25 @@ class Transactions {
 	
 			$conversion = (empty($currency_info) || $currency_info['currency'] == 'USD') ? $currency1[$usd_field] : $currency1[$usd_field] / $currency_info[$usd_field];
 			$price_str .= ' WHEN '.$currency1['id'].' THEN (transactions.orig_btc_price * '.$conversion.')';
+			$amount_str .= ' WHEN '.$currency1['id'].' THEN ((transactions.orig_btc_price * transactions.btc) * '.$conversion.')';
 			$usd_str .= ' WHEN '.$currency1['id'].' THEN '.$currency1[$usd_field].' ';
 			$currency_abbr .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
 			$currency_abbr1 .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
 			$currency_abbr2 .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
 		}
 		$price_str .= ' END) END)';
+		$amount_str .= ' END) END)';
 		$usd_str .= ' END)';
 		$currency_abbr .= ' END)';
 		$currency_abbr1 .= ' END)';
 		$currency_abbr2 .= ' END)';
 		
 		if (!$count && !$public_api_all)
-			$sql = "SELECT transactions.*, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,transactions.currency,transactions.currency1) AS currency" : ", $price_str AS btc_price, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type").", UNIX_TIMESTAMP(transactions.date) AS datestamp ".(($order_by == 'usd_price') ? ', ('.$usd_str.' * transactions.btc_price) AS usd_price' : '').(($order_by == 'usd_amount') ? ', ('.$usd_str.' * transactions.fiat) AS usd_amount' : '');
+			$sql = "SELECT transactions.*, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since ".(($user > 0) ? ",IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language}) AS type, IF(transactions.site_user = $user,transactions.fee,transactions.fee1) AS fee, IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1) AS btc_net, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS fiat_price, IF(transactions.site_user = $user,transactions.currency,transactions.currency1) AS currency" : ", ROUND($price_str,2) AS btc_price, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type").", UNIX_TIMESTAMP(transactions.date) AS datestamp ".(($order_by == 'usd_price') ? ', ('.$usd_str.' * transactions.btc_price) AS usd_price' : '').(($order_by == 'usd_amount') ? ', ('.$usd_str.' * transactions.fiat) AS usd_amount' : '');
 		elseif ($public_api_all && $user)
 			$sql = "SELECT transactions.id AS id, transactions.date AS date, UNIX_TIMESTAMP(transactions.date) AS `timestamp`, transactions.btc AS btc, LOWER(IF(transactions.site_user = $user,transaction_types.name_{$CFG->language},transaction_types1.name_{$CFG->language})) AS side, IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) AS price, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.btc_net,transactions.btc_net1)),2) AS amount, ROUND((IF(transactions.site_user1 = $user,transactions.orig_btc_price,transactions.btc_price) * IF(transactions.site_user = $user,transactions.fee,transactions.fee1)),2) AS fee, $currency_abbr AS currency ";
 		elseif ($public_api_all && !$user && $currency)
-			$sql = "SELECT transactions.id AS id, transactions.date AS date, UNIX_TIMESTAMP(transactions.date) AS `timestamp`, transactions.btc AS btc, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type, ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN transactions.btc_price WHEN transactions.currency1 = {$currency_info['id']} THEN transactions.orig_btc_price ELSE (transactions.orig_btc_price * $conversion1) END),2) AS price, ROUND((CASE WHEN transactions.currency = {$currency_info['id']} THEN (transactions.btc_price * transactions.btc) WHEN transactions.currency1 = {$currency_info['id']} THEN (transactions.orig_btc_price * transactions.btc) ELSE ((transactions.orig_btc_price * transactions.btc) * $conversion1) END),2) AS amount, IF(transactions.currency != {$currency_info['id']} AND transactions.currency1 != {$currency_info['id']},currencies1.currency,'{$currency_info['currency']}') AS currency ";
+			$sql = "SELECT transactions.id AS id, transactions.date AS date, UNIX_TIMESTAMP(transactions.date) AS `timestamp`, transactions.btc AS btc, LOWER(transaction_types1.name_{$CFG->language}) AS maker_type, ROUND($price_str,2) AS price, ROUND($amount_str,2) AS amount, IF(transactions.currency != {$currency_info['id']} AND transactions.currency1 != {$currency_info['id']},$currency_abbr2,'{$currency_info['currency']}') AS currency ";
 		elseif ($public_api_all && !$user)
 			$sql = "SELECT transactions.id AS id, transactions.date AS date, UNIX_TIMESTAMP(transactions.date) AS `timestamp`, transactions.btc AS btc, transactions.btc_price AS price, transactions.orig_btc_price AS price1, ROUND((transactions.btc_price * transactions.btc),2) AS amount, ROUND((transactions.orig_btc_price * transactions.btc),2) AS amount1, $currency_abbr1 AS currency, $currency_abbr2 AS currency1 ";
 		else
