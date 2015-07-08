@@ -330,6 +330,7 @@ function updateTransactions() {
 	var update = setInterval(function(){
 		while (!ajax_active) {
 			var currency = (notrades) ? (($('#user_fee').length > 0) ? $('#buy_currency').val() : $('#graph_orders_currency').val()) : $('#graph_price_history_currency').val();
+			var currency_id = (currency) ? $('.curr_abbr_'+currency.toUpperCase()).attr('name') : null;
 			var order_by = $('#order_by').val();
 			
 			if ($('#order_by').length > 0) {
@@ -350,6 +351,9 @@ function updateTransactions() {
 						if ($('#order_'+this.id).length > 0)
 							return true;
 						
+						var this_currency_abbr = (this.currency == currency_id) ? '' : ((this.currency1 == currency_id) ? '' : ' ('+($('#curr_abbr_'+this.currency1).val())+')');
+						var this_fa_symbol = (this.currency == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ((this.currency1 == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ' ('+($('#curr_sym_'+this.currency1).val())+')');
+						
 						if (i == 0) {
 							current_price = parseFloat(this.btc_price.replace(',',''));
 							if (current_price > 0) {
@@ -361,8 +365,9 @@ function updateTransactions() {
 								var open_price = parseFloat($('#stats_open').html().replace(',',''));
 								var change_perc = formatCurrency(current_price - open_price);
 								var change_abs = Math.abs(change_perc);
+								
 								$('#stats_last_price').html(formatCurrency(current_price));
-								$('#stats_last_price_curr').html((((this.currency).toLowerCase() == currency) ? false : (((this.currency1).toLowerCase() == currency) ? false : ' ('+this.currency1+')')));
+								$('#stats_last_price_curr').html((this.currency == currency_id) ? '' : ((this.currency1 == currency_id) ? '' : ' ('+($('#curr_abbr_'+this.currency1).val())+')'));
 								$('#stats_daily_change_abs').html(change_abs);
 								$('#stats_daily_change_perc').html(formatCurrency((change_abs/current_price) * 100));
 								
@@ -382,7 +387,7 @@ function updateTransactions() {
 						if (this.btc_price > current_max)
 							$('#stats_max').html(formatCurrency(this.btc_price));
 						
-						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>'+this.fa_symbol+formatCurrency(this.btc_price)+(((this.currency).toLowerCase() == currency) ? '' : (((this.currency1).toLowerCase() == currency) ? '' : ' ('+this.currency1+')'))+'</td></tr>').insertAfter(insert_elem);
+						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>' + this_fa_symbol + formatCurrency(this.btc_price) + this_currency_abbr + '</td></tr>').insertAfter(insert_elem);
 						insert_elem = elem;
 						
 						timeSince($(elem).find('.time_since'));
@@ -771,14 +776,15 @@ function updateTransactionsList() {
 							last = this_transaction;
 							return;
 						}
-						
+						console.log(transaction);
+						var this_fa_symbol = $('#curr_sym_'+transaction.currency).val();
 						var string = '<tr id="transaction_'+transaction.id+'">';
 						string += '<td>'+transaction.type+'</td>';
 						string += '<td><input type="hidden" class="localdate" value="'+(parseInt(transaction.datestamp))+'" /></td>';
 						string += '<td>'+((parseFloat(transaction.btc_net)).toFixed(8))+'</td>';
-						string += '<td>'+transaction.fa_symbol+formatCurrency(transaction.btc_net * transaction.fiat_price)+'</td>';
-						string += '<td>'+transaction.fa_symbol+formatCurrency(transaction.fiat_price)+'</td>';
-						string += '<td>'+transaction.fa_symbol+formatCurrency(transaction.fee * transaction.fiat_price)+'</td>';
+						string += '<td>'+this_fa_symbol+formatCurrency(transaction.btc_net * transaction.fiat_price)+'</td>';
+						string += '<td>'+this_fa_symbol+formatCurrency(transaction.fiat_price)+'</td>';
+						string += '<td>'+this_fa_symbol+formatCurrency(transaction.fee * transaction.fiat_price)+'</td>';
 						string += '</tr>';
 						
 						var elem = $(string).insertAfter((last) ? $(last) : $('#table_first'));

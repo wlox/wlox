@@ -98,8 +98,8 @@ class Lang {
 		global $CFG;
 		
 		foreach ($CFG->currencies as $currency) {
-			echo '<input type="hidden" id="curr_abbr_'.$currency['id'].'" value="'.$currency['currency'].'" />';
-			echo '<input type="hidden" id="curr_sym_'.$currency['id'].'" value="'.$currency['fa_symbol'].'" />';
+			echo '<input type="hidden" class="curr_abbr_'.$currency['currency'].'" id="curr_abbr_'.$currency['id'].'" name="'.$currency['id'].'" value="'.$currency['currency'].'" />';
+			echo '<input type="hidden" class="curr_sym_'.$currency['currency'].'" id="curr_sym_'.$currency['id'].'" name="'.$currency['id'].'" value="'.$currency['fa_symbol'].'" />';
 		}
 	}
 }

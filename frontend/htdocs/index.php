@@ -9,7 +9,7 @@ elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
 
 $page_title = Lang::string('home-title');
-$currency1 = strtolower($_SESSION['currency']);
+$currency1 = (!empty($CFG->currencies[strtoupper($_SESSION['currency'])])) ? strtolower($_SESSION['currency']) : 'usd';
 $currency_symbol = strtoupper($currency1);
 	
 $currency_info = $CFG->currencies[strtoupper($currency1)];
@@ -163,7 +163,7 @@ else
         <div class="mar_top3"></div>
         <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-last-price') ?></h6>
-        	<p class="stat1 <?= ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red' ?>"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?><small id="stats_last_price_curr"><?= (strtolower($query['Transactions']['get']['results'][0][0]['currency']) == $currency1) ? false : ((strtolower($query['Transactions']['get']['results'][0][0]['currency1']) == $currency1) ? false : ' ('.$query['Transactions']['get']['results'][0][0]['currency1'].')') ?></small></p>
+        	<p class="stat1 <?= ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red' ?>"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?><small id="stats_last_price_curr"><?= ($query['Transactions']['get']['results'][0][0]['currency'] == $currency_info['id']) ? false : (($query['Transactions']['get']['results'][0][0]['currency1'] == $currency_info['id']) ? false : ' ('.$CFG->currencies[$query['Transactions']['get']['results'][0][0]['currency1']]['currency'].')') ?></small></p>
         </div>
         <div class="one_fifth">
         	<h6><?= Lang::string('home-stats-daily-change') ?></h6>
@@ -240,7 +240,7 @@ else
 					<tr id="order_'.$transaction['id'].'">
 						<td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'.strtotime($transaction['date']).'" /></td>
 						<td>'.number_format($transaction['btc'],8).' BTC</td>
-						<td>'.$currency_info['fa_symbol'].number_format($transaction['btc_price'],2).((strtolower($transaction['currency']) == $currency1) ? false : ((strtolower($transaction['currency1']) == $currency1) ? false : ' ('.$transaction['currency1'].')')).'</td>
+						<td>'.$currency_info['fa_symbol'].number_format($transaction['btc_price'],2).((strtolower($transaction['currency']) == $currency_info['id']) ? false : ((strtolower($transaction['currency1']) == $currency_info['id']) ? false : ' ('.$CFG->currencies[$transaction['currency1']]['currency'].')')).'</td>
 					</tr>';
 						}
 					}

@@ -11,7 +11,7 @@ elseif (empty($_REQUEST['currency']) && empty($_SESSION['currency']) && empty(Us
 elseif (!empty($_REQUEST['currency']))
 	$_SESSION['currency'] = preg_replace("/[^a-z]/", "",$_REQUEST['currency']);
 	
-$currency1 = strtolower($_SESSION['currency']);
+$currency1 = (!empty($CFG->currencies[strtoupper($_SESSION['currency'])])) ? strtolower($_SESSION['currency']) : 'usd';
 $currency_symbol = strtoupper($currency1);
 $currency_info = $CFG->currencies[$currency_symbol];
 
@@ -23,7 +23,8 @@ $query = API::send();
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $last_transaction = $query['Transactions']['get']['results'][0][0];
-$last_trans_currency = (strtolower($last_transaction['currency']) == $currency1) ? false : ((strtolower($last_transaction['currency1']) == $currency1) ? false : ' ('.$last_transaction['currency1'].')');
+$last_trans_currency = ($last_transaction['currency'] == $currency_info['id']) ? false : (($last_transaction['currency1'] == $currency_info['id']) ? false : ' ('.$CFG->currencies[$last_transaction['currency1']]['currency'].')');
+$last_trans_symbol = ($last_transaction['currency'] == $currency_info['id'] || $last_transaction['currency1'] == $currency_info['id']) ? $currency_info['fa_symbol'] : $CFG->currencies[$last_transaction['currency1']]['fa_symbol'];
 $last_trans_color = ($last_transaction['maker_type'] == 'sell') ? 'price-green' : 'price-red';
 
 include 'includes/head.php';
@@ -67,7 +68,7 @@ include 'includes/head.php';
 					</li>
 					<li>
 						<label for="last_price"><?= Lang::string('home-stats-last-price') ?></label>
-						<input type="text" id="last_price" class="<?= $last_trans_color ?>" value="<?= $last_transaction['fa_symbol'].number_format($last_transaction['btc_price'],2).$last_trans_currency ?>" disabled="disabled" />
+						<input type="text" id="last_price" class="<?= $last_trans_color ?>" value="<?= $last_trans_symbol.number_format($last_transaction['btc_price'],2).$last_trans_currency ?>" disabled="disabled" />
 						<a target="_blank" href="https://support.1btcxe.com/support/solutions/articles/1000146628" title="<?= Lang::string('order-book-last-price-explain') ?>"><i class="fa fa-question-circle"></i></a>
 					</li>
 				</ul>

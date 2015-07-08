@@ -115,14 +115,15 @@ if (!$bypass) {
         			<? 
         			if ($transactions) {
 						foreach ($transactions as $transaction) {
+							$trans_symbol = $CFG->currencies[$transaction['currency']]['fa_symbol'];
 							echo '
 					<tr id="transaction_'.$transaction['id'].'">
 						<td>'.$transaction['type'].'</td>
 						<td><input type="hidden" class="localdate" value="'.(strtotime($transaction['date'])/* + $CFG->timezone_offset*/).'" /></td>
 						<td>'.number_format($transaction['btc'],8).'</td>
-						<td>'.$transaction['fa_symbol'].number_format($transaction['btc_net'] * $transaction['fiat_price'],2).'</td>
-						<td>'.$transaction['fa_symbol'].number_format($transaction['fiat_price'],2).'</td>
-						<td>'.$transaction['fa_symbol'].number_format($transaction['fee'] * $transaction['fiat_price'],2).'</td>
+						<td>'.$trans_symbol.number_format($transaction['btc_net'] * $transaction['fiat_price'],2).'</td>
+						<td>'.$trans_symbol.number_format($transaction['fiat_price'],2).'</td>
+						<td>'.$trans_symbol.number_format($transaction['fee'] * $transaction['fiat_price'],2).'</td>
 					</tr>';
 						}
 					}
