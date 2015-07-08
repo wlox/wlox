@@ -16,7 +16,7 @@ class Orders {
 		$r1 = $page * $per_page;
 		$order_arr = array('date'=>'orders.id','btc'=>'orders.btc','btcprice'=>'usd_price','fiat'=>'orders.btc');
 		$order_by = ($order_by1) ? $order_arr[$order_by1] : ((!$currency && $user) ? 'usd_price' : 'btc_price');
-		$order_desc = ($order_desc && ($order_by1 != 'date' && $order_by1 != 'fiat')) ? 'ASC' : 'DESC';
+		$order_desc = ($order_desc && ($order_by1 != 'date' && $order_by1 != 'fiat' && $order_by1 != 'btc')) ? 'ASC' : 'DESC';
 		$currency_info = (!empty($CFG->currencies[strtoupper($currency)])) ? $CFG->currencies[strtoupper($currency)] : false;
 		$usd_info = $CFG->currencies['USD'];
 		$user = ($user) ? User::$info['id'] : false;

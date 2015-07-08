@@ -30,7 +30,6 @@ class Transactions {
 		else
 			$type = preg_replace("/[^0-9]/", "",$type);
 		
-		/*
 		if ($CFG->memcached) {
 			$cached = null;
 			if ($per_page == 5 && !$count && !$public_api_all)
@@ -47,7 +46,6 @@ class Transactions {
 				return $cached;
 			}
 		}
-		*/
 		
 		$price_str = '(CASE WHEN transactions.currency = '.$currency_info['id'].' THEN transactions.btc_price WHEN transactions.currency1 = '.$currency_info['id'].' THEN transactions.orig_btc_price ELSE (CASE transactions.currency1 ';
 		$usd_str = '(CASE transactions.currency ';
@@ -143,29 +141,6 @@ class Transactions {
 	
 	public static function getTypes() {
 		$sql = "SELECT * FROM transaction_types ORDER BY id ASC ";
-		return db_query_array($sql);
-	}
-	
-	public static function getList($currency=false,$notrades=false,$limit_7=false) {
-		global $CFG;
-		
-		$currency1 = preg_replace("/[^a-zA-Z]/", "",$currency);
-		$currency_info = $CFG->currencies[strtoupper($currency1)];
-		
-		if ($limit_7)
-			$limit = " LIMIT 0,10";
-		elseif (!$notrades)
-			$limit = " LIMIT 0,5 ";
-		
-		$sql = "
-		SELECT transactions.id AS id, transactions.btc AS btc, transactions.btc_price AS btc_price, currencies.fa_symbol AS fa_symbol, (UNIX_TIMESTAMP(transactions.date) - ({$CFG->timezone_offset})) AS time_since
-		FROM transactions
-		LEFT JOIN currencies ON (currencies.id = transactions.currency)
-		WHERE 1
-		AND transactions.currency = {$currency_info['id']}
-		AND (transactions.transaction_type = $CFG->transactions_buy_id OR transactions.transaction_type1 = $CFG->transactions_buy_id)
-		ORDER BY transactions.date DESC $limit ";
-		//return $sql;
 		return db_query_array($sql);
 	}
 
