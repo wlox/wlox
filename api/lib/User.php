@@ -33,27 +33,39 @@ class User {
 		if (!($user_id > 0))
 			return false;
 		
-		/*
-		if ($CFG->memcached && !$currencies) {
-			$cached = $CFG->m->get('balances_'.$user_id);
-			if ($cached) {
-				return $cached;
-			}
+		$m_currencies = array();
+		$sql = 'SELECT balance, currency FROM site_users_balances WHERE site_user = '.$user_id.' ';
+		if (!is_array($currencies) && $currencies > 0) {
+			$sql .= ' AND currency = '.$currencies;
+			$m_currencies[] = 'balances_'.$user_id.'_'.$currencies;
 		}
-		*/
-		
-		$sql = 'SELECT site_users_balances.*, currencies.currency AS currency_abbr FROM site_users_balances LEFT JOIN currencies ON (site_users_balances.currency = currencies.id) WHERE site_users_balances.site_user = '.$user_id.' ';
-		if (!is_array($currencies) && $currencies > 0)
-			$sql .= ' AND site_users_balances.currency = '.$currencies;
 		else if (is_array($currencies)) {
 			$sub_sql = array();
 			foreach ($currencies as $id) {
-				$sub_sql[] = ' site_users_balances.currency = '.$id;
+				$sub_sql[] = ' currency = '.$id;
+				$m_currencies[] = 'balances_'.$user_id.'_'.$id;
 			}
 			$sql .= ' AND ('.implode(' OR ',$sub_sql).')';
 		}
+		
 		if ($for_update)
 			$sql .= ' FOR UPDATE';
+		/*
+		else if ($CFG->memcached) {
+			if (!$currencies) {
+				foreach ($CFG->currencies AS $k => $v) {
+					if (!is_numeric($k))
+						continue;
+					
+					$m_currencies[] = $k;
+				}
+			}
+			
+			$cached = $CFG->m->getMulti($m_currencies);
+			if ($cached)
+				return $cached;
+		}
+		*/
 		
 		$result = db_query_array($sql);
 		if (!$result)
@@ -61,14 +73,12 @@ class User {
 		
 		$sorted = array();
 		foreach ($result as $row) {
-			$sorted[strtolower($row['currency_abbr'])] = $row['balance'];
+			$sorted[strtolower($CFG->currencies[$row['currency']]['currency'])] = $row['balance'];
+			/*
+			if ($CFG->memcached)
+				$CFG->m->set('balances_'.$user_id.'_'.$row['currency'],$sorted,0);
+			*/
 		}
-		
-		/*
-		if ($CFG->memcached && !$currencies)
-			$CFG->m->set('balances_'.$user_id,$sorted,0);
-		*/
-		
 		return $sorted;
 	}
 	
@@ -78,19 +88,25 @@ class User {
 		if (!($user_id > 0) || empty($currencies_balances) || !is_array($currencies_balances))
 			return false;
 		
-		/*
-		if ($CFG->memcached)
-			$CFG->m->delete('balances_'.$user_id);
-		*/
-		
 		$currencies_str = '(CASE currency ';
 		$currency_ids = array();
+		$del_keys = array();
+		
 		foreach ($currencies_balances as $curr_abbr => $balance) {
 			$curr_info = $CFG->currencies[strtoupper($curr_abbr)];
 			$currencies_str .= ' WHEN '.$curr_info['id'].' THEN '.$balance.' ';
 			$currency_ids[] = $curr_info['id'];
+			/*
+			if ($CFG->memcached)
+				$del_keys[] = 'balances_'.$user_id.'_'.$curr_info['id'];
+			*/
 		}
 		$currencies_str .= ' END)';
+		
+		/*
+		if ($CFG->memcached)
+			$CFG->m->deleteMulti($del_keys);
+		*/
 		
 		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
 		$result = db_query($sql);
@@ -226,12 +242,8 @@ class User {
 			return false;
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
-		$user_fee = (is_array($user_fee)) ? $user_fee : FeeSchedule::getUserFees($user_id);
-		$lock = ($for_update) ? 'LOCK IN SHARE MODE' : '';
-		$on_hold = array();
-		
 		/*
-		if ($CFG->memcached) {
+		if ($CFG->memcached && !$for_update) {
 			$cached = $CFG->m->get('on_hold_'.$user_id);
 			if ($cached) {
 				self::$on_hold = $cached;
@@ -239,50 +251,44 @@ class User {
 			}
 		}
 		*/
+		
+		$user_fee = (is_array($user_fee)) ? $user_fee : FeeSchedule::getUserFees($user_id);
+		$fee = $user_fee['fee1'] * 0.01;
+		$lock = ($for_update) ? 'LOCK IN SHARE MODE' : '';
+		$on_hold = array();
 	
-		$sql = " SELECT currencies.currency AS currency, requests.amount AS amount FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.site_user = ".$user_id." AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ".$lock;
+		$sql = "
+		SELECT currency, SUM(IF(currency != {$CFG->btc_currency_id},amount,0)) AS fiat, SUM(IF(currency = {$CFG->btc_currency_id},amount,0)) AS btc, 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND (request_status = {$CFG->request_pending_id} OR request_status = {$CFG->request_awaiting_id}) GROUP BY currency
+		UNION
+		SELECT currency, SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id GROUP BY currency $lock";
 		$result = db_query_array($sql);
+		
 		if ($result) {
+			$btc_total_req = 0;
+			$btc_total_ord = 0;
+			
 			foreach ($result as $row) {
-				if (!empty($on_hold[$row['currency']]['withdrawal']))
-					$on_hold[$row['currency']]['withdrawal'] += floatval($row['amount']);
-				else
-					$on_hold[$row['currency']]['withdrawal'] = floatval($row['amount']);
-					
-				if (!empty($on_hold[$row['currency']]['total']))
-					$on_hold[$row['currency']]['total'] += floatval($row['amount']);
-				else
-					$on_hold[$row['currency']]['total'] = floatval($row['amount']);
-			}
-		}
-	
-		$sql = " SELECT currencies.currency AS currency, orders.fiat AS amount, orders.btc AS btc_amount, orders.order_type AS type FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) WHERE orders.site_user = ".$user_id." ".$lock;
-		$result = db_query_array($sql);
-		if ($result) {
-			foreach ($result as $row) {
-				if ($row['type'] == $CFG->order_type_bid) {
-					if (!empty($on_hold[$row['currency']]['order']))
-						$on_hold[$row['currency']]['order'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
-					else
-						$on_hold[$row['currency']]['order'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
-					
-					if (!empty($on_hold[$row['currency']]['total']))
-						$on_hold[$row['currency']]['total'] += round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
-					else
-						$on_hold[$row['currency']]['total'] = round(floatval($row['amount']) + (floatval($row['amount']) * ($user_fee['fee1'] * 0.01)),2,PHP_ROUND_HALF_UP);
+				$fiat_total = 0;
+				$curr_abbr = $CFG->currencies[$row['currency']]['currency'];
+								
+				if ($row['type'] == 'r') {
+					$on_hold['BTC']['withdrawal'] = floatval($row['btc']) + (!empty($on_hold['BTC']['withdrawal']) ? $on_hold['BTC']['withdrawal'] : 0);
+					$on_hold[$curr_abbr]['withdrawal'] = $row['fiat'];
 				}
 				else {
-					if (!empty($on_hold['BTC']['order']))
-						$on_hold['BTC']['order'] += floatval($row['btc_amount']);
-					else 
-						$on_hold['BTC']['order'] = floatval($row['btc_amount']);
-						
-					if (!empty($on_hold['BTC']['total']))
-						$on_hold['BTC']['total'] += floatval($row['btc_amount']);
-					else 
-						$on_hold['BTC']['total'] = floatval($row['btc_amount']);
+					$on_hold['BTC']['order'] = floatval($row['btc']) + (!empty($on_hold['BTC']['order']) ? $on_hold['BTC']['order'] : 0);
+					$on_hold[$curr_abbr]['order'] = $row['fiat'];
 				}
+				
+				$on_hold['BTC']['total'] = floatval($row['btc']) + (!empty($on_hold['BTC']['total']) ? $on_hold['BTC']['total'] : 0);
+				$on_hold[$curr_abbr]['total'] = floatval($row['btc']) + (!empty($on_hold[$curr_abbr]['total']) ? $on_hold[$curr_abbr]['total'] : 0);
 			}
+		}
+		
+		if ($on_hold['BTC'] && count($on_hold) > 1) {
+			$btc_row = array_shift($on_hold);
+			ksort($on_hold);
+			$on_hold = array_merge(array('BTC'=>$btc_row),$on_hold);
 		}
 		
 		/*
