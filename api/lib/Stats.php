@@ -58,7 +58,7 @@ class Stats {
 				return $cached;
 			}
 		}
-
+		
 		$bid_ask = Orders::getBidAsk(false,$currency_id);
 		$bid = $bid_ask['bid'];
 		$ask = $bid_ask['ask'];
@@ -78,8 +78,8 @@ class Stats {
 		
 		$sql = 'SELECT r2.btc_price AS btc_price2, r3.btc_price AS btc_price3, r2.last_transaction_type AS last_transaction_type2, r2.last_transaction_currency AS last_transaction_currency2, r3.last_transaction_currency AS last_transaction_currency3, r4.total_btc_traded, r5.max, r5.min, current_stats.total_btc, current_stats.market_cap, current_stats.trade_volume FROM current_stats ';
 
-		$sql_arr[] = "LEFT JOIN (SELECT transactions.btc_price, IF(transactions.transaction_type = {$CFG->transactions_buy_id},'BUY','SELL') AS last_transaction_type, IF(transactions.currency != $currency_id AND transactions.currency1 != $currency_id,transactions.currency1,$currency_id) AS last_transaction_currency FROM transactions WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.id DESC LIMIT 0,1) AS r2 ON (1)";
-		$sql_arr[] = "LEFT JOIN (SELECT transactions.btc_price, IF(transactions.currency != $currency_id AND transactions.currency1 != $currency_id,transactions.currency1,$currency_id) AS last_transaction_currency FROM transactions WHERE transactions.date < DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.id DESC LIMIT 0,1) AS r3  ON (1)";
+		$sql_arr[] = "LEFT JOIN (SELECT IF(transactions.currency = $currency_id,transactions.btc_price,transactions.orig_btc_price) AS btc_price, IF(transactions.transaction_type = {$CFG->transactions_buy_id},'BUY','SELL') AS last_transaction_type, IF(transactions.currency != $currency_id AND transactions.currency1 != $currency_id,transactions.currency1,$currency_id) AS last_transaction_currency FROM transactions WHERE 1 ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.id DESC LIMIT 0,1) AS r2 ON (1)";
+		$sql_arr[] = "LEFT JOIN (SELECT IF(transactions.currency = $currency_id,transactions.btc_price,transactions.orig_btc_price) AS btc_price, IF(transactions.currency != $currency_id AND transactions.currency1 != $currency_id,transactions.currency1,$currency_id) AS last_transaction_currency FROM transactions WHERE transactions.date < DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." ORDER BY transactions.id DESC LIMIT 0,1) AS r3  ON (1)";
 		$sql_arr[] = "LEFT JOIN (SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ORDER BY transactions.id DESC LIMIT 0,1) AS r4 ON (1)";
 		$sql_arr[] = "LEFT JOIN (SELECT MAX(".(($CFG->cross_currency_trades) ? "ROUND($price_str,2)" : 'transactions.btc_price').") AS `max`, MIN(".(($CFG->cross_currency_trades) ? "ROUND($price_str,2)" : 'transactions.btc_price').") AS `min` FROM transactions WHERE transactions.date >= CURDATE() ".((!$CFG->cross_currency_trades) ? "AND transactions.currency = $currency_id" : '')." LIMIT 0,1) AS r5 ON (1)";
 		
