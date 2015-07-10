@@ -776,7 +776,7 @@ function updateTransactionsList() {
 							last = this_transaction;
 							return;
 						}
-						console.log(transaction);
+						
 						var this_fa_symbol = $('#curr_sym_'+transaction.currency).val();
 						var string = '<tr id="transaction_'+transaction.id+'">';
 						string += '<td>'+transaction.type+'</td>';

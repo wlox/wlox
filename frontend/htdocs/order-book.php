@@ -15,8 +15,8 @@ $currency1 = (!empty($CFG->currencies[strtoupper($_SESSION['currency'])])) ? str
 $currency_symbol = strtoupper($currency1);
 $currency_info = $CFG->currencies[$currency_symbol];
 
-API::add('Orders','get',array(false,false,false,$currency1,false,false,1,false,false,1));
-API::add('Orders','get',array(false,false,false,$currency1,false,false,false,false,1,1));
+API::add('Orders','get',array(false,false,false,$currency1,false,false,1));
+API::add('Orders','get',array(false,false,false,$currency1,false,false,false,false,1));
 API::add('Transactions','get',array(false,false,1,$currency1));
 $query = API::send();
 
