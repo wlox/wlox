@@ -7,6 +7,13 @@ class SiteEmail{
 		
 		if (empty($key))
 			return false;	
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('email_'.$key.'_'.$CFG->language);
+			if ($cached) {
+				return $cached;
+			}
+		}
 			
 		$sql="SELECT * FROM emails WHERE emails.key='$key' ";	
 		$result = db_query_array($sql);
@@ -19,6 +26,9 @@ class SiteEmail{
 		$result[0]['content'] = str_replace('[exchange_name]',$CFG->exchange_name,$result[0]['content']);
 		$result[0]['title'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['title']);
 		$result[0]['content'] = str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['content']);
+		
+		if ($CFG->memcached)
+			$CFG->m->set('email_'.$key.'_'.$CFG->language,$result[0],300);
 		
 		return $result[0];
 	}
