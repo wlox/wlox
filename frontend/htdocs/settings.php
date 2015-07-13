@@ -299,7 +299,7 @@ if (!empty($_REQUEST['reactivate_account'])) {
 			$request_2fa = true;
 	}
 }
-
+/*
 if (!empty($_REQUEST['lock_account'])) {
 	if (!$email_auth && (empty($_SESSION["settings_uniq"]) || $_SESSION["settings_uniq"] != $_REQUEST['uniq']))
 		Errors::add('Page expired.');
@@ -363,7 +363,7 @@ if (!empty($_REQUEST['unlock_account'])) {
 			$request_2fa = true;
 	}
 }
-
+*/
 if (!empty($_REQUEST['message'])) {
 	if ($_REQUEST['message'] == 'settings-personal-message')
 		Messages::add(Lang::string('settings-personal-message'));
@@ -505,6 +505,7 @@ include 'includes/head.php';
 	            <div class="clear"></div>
             </div>
             <div class="mar_top3"></div>
+            <? /*
             <div class="clear"></div>
             <div class="content1">
 	            <h3 class="section_label">
@@ -521,6 +522,7 @@ include 'includes/head.php';
 				</ul>
 				<div class="clear"></div>
 			</div>
+			*/ ?>
             <div class="clear"></div>
             <div class="content1">
 	            <h3 class="section_label">
@@ -540,18 +542,21 @@ include 'includes/head.php';
 			<? } elseif ($account_locked && !$request_2fa) { ?>
 			<div class="content1">
 	            <h3 class="section_label">
-					<span class="left"><i class="fa fa-unlock fa-2x"></i></span>
-					<span class="right"><?= Lang::string('settings-unlock-account') ?></span>
+					<span class="left"><i class="fa fa-lock fa-2x"></i></span>
+					<span class="right"><?= Lang::string('settings-account-locked') ?></span>
 				</h3>
 				<div class="clear"></div>
-				<div class="mar_top1"></div>
-				<div class="text"><?= Lang::string('settings-unlock-account-explain') ?></div>
+				<div class="mar_top3"></div>
+				<div class="clear"></div>
+				<div class="notice"><div class="message-box-wrap"><?= Lang::string('settings-account-locked-explain') ?></div></div>
 				<div class="mar_top3"></div>
            		<div class="clear"></div>
+           		<? /*
 				<ul class="list_empty">
 					<li><a class="but_user" href="settings.php?unlock_account=1&submitted=1&uniq=<?= $_SESSION["settings_uniq"] ?>"><?= Lang::string('settings-unlock-account') ?></a></li>
 				</ul>
 				<div class="clear"></div>
+				*/ ?>
 			</div>
 			<? } elseif ($account_deactivated && !$request_2fa) { ?>
 			<div class="content1">
