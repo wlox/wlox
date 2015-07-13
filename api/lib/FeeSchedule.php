@@ -6,8 +6,22 @@ class FeeSchedule {
 		$currency = preg_replace("/[^a-zA-Z]/", "",$currency);
 		$currency_info = ($currency) ? $CFG->currencies[strtoupper($currency)] : $CFG->currencies['USD'];
 		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('fee_schedule_'.$currency_info['id']);
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$sql = "SELECT fee_schedule.*, (fee_schedule.from_usd/currencies.usd_ask) AS from_usd, (fee_schedule.to_usd/currencies.usd_ask) AS to_usd, currencies.fa_symbol AS fa_symbol FROM fee_schedule LEFT JOIN currencies ON (currencies.id = {$currency_info['id']}) ORDER BY fee_schedule.order ASC, fee_schedule.id ASC";
-		return db_query_array($sql);
+		$result = db_query_array($sql);
+		if ($result) {
+			if ($CFG->memcached)
+				$CFG->m->set('fee_schedule_'.$currency_info['id'],300);
+				
+			return $result[0];
+		}
+		return false;
 	}
 	
 	public static function getRecord($braket_id=false,$user=false) {
@@ -31,8 +45,22 @@ class FeeSchedule {
 		if (!$user_id)
 			return false;
 		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('user_fee_'.$user_id);
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$sql = 'SELECT fee_schedule.* FROM fee_schedule LEFT JOIN site_users ON (site_users.fee_schedule = fee_schedule.id) WHERE site_users.id = '.$user_id.' LIMIT 0,1';
 		$result = db_query_array($sql);
-		return ($result) ? $result[0] : false;
+		
+		if ($result) {
+			if ($CFG->memcached)
+				$CFG->m->set('user_fee_'.$user_id,300);
+			
+			return $result[0];
+		}
+		return false;
 	}
 }
