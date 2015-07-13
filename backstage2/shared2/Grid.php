@@ -829,8 +829,9 @@ class Grid {
 							$dir_img = ($this->order_asc) ? $CFG->up : $CFG->down;
 						else
 							$dir_img = false;
-
-						$HTML .= "<th>".Link::url($CFG->url,$value['header_caption'].$dir_img,"filter{$this->i}=$name&order_by{$this->i}={$this->order_by}&order_asc{$this->i}={$order_asc}&is_tab={$this->is_tab}&inset_id={$this->inset_id}&inset_id_field={$this->inset_id_field}&inset_i={$this->inset_i}",false,false,(($this->inset_i > 0) ? 'inset_area_'.$this->inset_i : 'content')).$method_name."</th>";		
+						
+						$filter_results = $_REQUEST['form_filters'.$this->i];
+						$HTML .= "<th>".Link::url($CFG->url,$value['header_caption'].$dir_img,false,array('filter'.$this->i=>$name,'order_by'.$this->i=>$this->order_by,'order_asc'.$this->i=>$order_asc,'is_tab'=>$this->is_tab,'inset_id'=>$this->inset_id,'inset_id_field'=>$this->inset_id_field,'inset_i'=>$this->inset_i,'form_filters'.$this->i=>$filter_results,'search_fields'.$this->i=>$_REQUEST['search_fields'.$this->i]),false,false,(($this->inset_i > 0) ? 'inset_area_'.$this->inset_i : 'content')).$method_name."</th>";		
 					}
 					else {
 						$HTML .= "<th>".$value['header_caption'].$method_name.'</th>';
