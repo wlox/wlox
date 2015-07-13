@@ -7,15 +7,29 @@ class Content{
 		
 		if(empty($url))
 			return false;
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('content_'.$url.'_'.$CFG->language);
+			if ($cached) {
+				return $cached;
+			}
+		}
 			
 		$sql = "SELECT * FROM content WHERE url = '$url' ";
 		$result = db_query_array($sql);
 		
-		$result[0]['title'] = (empty($result[0]['title_'.$CFG->language])) ? $result[0]['title']: $result[0]['title_'.$CFG->language];
-		$result[0]['content'] = (empty($result[0]['content_'.$CFG->language])) ? $result[0]['content']: $result[0]['content_'.$CFG->language];
-		$result[0]['title'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['title']));
-		$result[0]['content'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['content']));
-		return $result[0];				
+		if ($result) {
+			$result[0]['title'] = (empty($result[0]['title_'.$CFG->language])) ? $result[0]['title']: $result[0]['title_'.$CFG->language];
+			$result[0]['content'] = (empty($result[0]['content_'.$CFG->language])) ? $result[0]['content']: $result[0]['content_'.$CFG->language];
+			$result[0]['title'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['title']));
+			$result[0]['content'] = str_replace('[exchange_name]',$CFG->exchange_name,str_replace('[baseurl]',$CFG->frontend_baseurl,$result[0]['content']));
+			
+			if ($CFG->memcached)
+				$CFG->m->set('content_'.$url.'_'.$CFG->language,$result[0],300);
+			
+			return $result[0];
+		}
+		return false;				
 	}
 	
 }

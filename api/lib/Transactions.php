@@ -143,7 +143,21 @@ class Transactions {
 	}
 	
 	public static function getTypes() {
+		global $CFG;
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('lang');
+			if ($cached) {
+				return $cached;
+			}
+		}
+		
 		$sql = "SELECT * FROM transaction_types ORDER BY id ASC ";
-		return db_query_array($sql);
+		$result = db_query_array($sql);
+		
+		if ($CFG->memcached)
+			$CFG->m->set('transaction_types',$result,300);
+		
+		return $result;
 	}
 }

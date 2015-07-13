@@ -17,7 +17,7 @@ class FeeSchedule {
 		$result = db_query_array($sql);
 		if ($result) {
 			if ($CFG->memcached)
-				$CFG->m->set('fee_schedule_'.$currency_info['id'],300);
+				$CFG->m->set('fee_schedule_'.$currency_info['id'],$result[0],300);
 				
 			return $result[0];
 		}
@@ -42,6 +42,8 @@ class FeeSchedule {
 	}
 	
 	public static function getUserFees($user_id=false) {
+		global $CFG;
+		
 		if (!$user_id)
 			return false;
 		
@@ -57,7 +59,7 @@ class FeeSchedule {
 		
 		if ($result) {
 			if ($CFG->memcached)
-				$CFG->m->set('user_fee_'.$user_id,300);
+				$CFG->m->set('user_fee_'.$user_id,$result[0],300);
 			
 			return $result[0];
 		}
