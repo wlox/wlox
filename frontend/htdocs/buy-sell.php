@@ -18,11 +18,9 @@ elseif (!empty($_REQUEST['currency']))
 if (empty($CFG->currencies[strtoupper($_SESSION['currency'])]))
 	$_SESSION['currency'] = 'usd';
 
-if (!empty($_REQUEST['buy']) || !empty($_REQUEST['sell'])) {
-	if (empty($_SESSION["buysell_uniq"]) || empty($_REQUEST['uniq']) || !in_array($_REQUEST['uniq'],$_SESSION["buysell_uniq"]))
-		Errors::add('Page expired.');
-}
 
+$buy = (!empty($_REQUEST['buy']));
+$sell = (!empty($_REQUEST['sell']));
 $ask_confirm = false;
 $currency1 = preg_replace("/[^a-z]/", "",strtolower($_SESSION['currency']));
 $currency_info = $CFG->currencies[strtoupper($currency1)];
@@ -34,24 +32,17 @@ $sell_market_price1 = 0;
 $buy_limit = 1;
 $sell_limit = 1;
 
+if ($buy || $sell) {
+	if (empty($_SESSION["buysell_uniq"]) || empty($_REQUEST['uniq']) || !in_array($_REQUEST['uniq'],$_SESSION["buysell_uniq"]))
+		Errors::add('Page expired.');
+}
+
 API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
 API::add('User','getAvailable');
 API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
 API::add('BankAccounts','get',array($currency_info['id']));
-
-if (!empty($_REQUEST['buy']) && empty($_REQUEST['buy_market_price']) && !empty($_REQUEST['buy_price'])) {
-	API::add('Orders','checkOutbidSelf',array($_REQUEST['buy_price'],$currency1));
-	API::add('Orders','checkOutbidStops',array($_REQUEST['buy_price'],$currency1));
-}
-elseif (!empty($_REQUEST['sell']) && empty($_REQUEST['sell_market_price'])) {
-	if (!empty($_REQUEST['sell_price']))
-		API::add('Orders','checkOutbidSelf',array($_REQUEST['sell_price'],$currency1,1));
-	if (!empty($_REQUEST['sell_stop_price']))
-		API::add('Orders','checkStopsOverBid',array($_REQUEST['sell_stop_price'],$currency1));
-}
-
 $query = API::send();
 
 $user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
@@ -60,17 +51,11 @@ $current_bid = $query['Orders']['getBidAsk']['results'][0]['bid'];
 $current_ask =  $query['Orders']['getBidAsk']['results'][0]['ask'];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
-$self_orders = (!empty($query['Orders']['checkOutbidSelf']) && (!empty($_REQUEST['buy_limit']) || !empty($_REQUEST['sell_limit']))) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['price'] : false;
-$self_stops =(!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['price'] : false;
-$self_limits = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['price'] : false;
-$self_orders_currency = (!empty($query['Orders']['checkOutbidSelf'])) ? $query['Orders']['checkOutbidSelf']['results'][0][0]['currency'] : false;
-$self_stops_currency = (!empty($query['Orders']['checkOutbidStops'])) ? $query['Orders']['checkOutbidStops']['results'][0][0]['currency'] : false;
-$self_limits_currency = (!empty($query['Orders']['checkStopsOverBid'])) ? $query['Orders']['checkStopsOverBid']['results'][0][0]['currency'] : false;
-$user_fee_bid = (!empty($_REQUEST['buy']) && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || !empty($_REQUEST['buy_market_price']) || empty($_REQUEST['buy_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
-$user_fee_ask = (!empty($_REQUEST['sell']) && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$user_fee_bid = ($buy && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || !empty($_REQUEST['buy_market_price']) || empty($_REQUEST['buy_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$user_fee_ask = ($sell && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 
-$buy_amount1 = (!empty($_REQUEST['buy_amount']) && $_REQUEST['buy_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : 0;
-$buy_price1 = (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask;
+$buy_amount1 = ($buy && $_REQUEST['buy_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : 0;
+$buy_price1 = ($buy && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
 $buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 $buy_total1 = round($buy_subtotal1 + $buy_fee_amount1,2,PHP_ROUND_HALF_UP);
@@ -88,72 +73,60 @@ $sell_stop_price1 = false;
 if ($CFG->trading_status == 'suspended')
 	Errors::add(Lang::string('buy-trading-disabled'));
 
-if (!empty($_REQUEST['buy'])) {
+if ($buy && !is_array(Errors::$errors)) {
 	$buy_market_price1 = (!empty($_REQUEST['buy_market_price']));
 	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
 	$buy_stop = (!empty($_REQUEST['buy_stop']));
 	$buy_stop_price1 = ($buy_stop) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']) : false;
 	$buy_limit = (!empty($_REQUEST['buy_limit']));
 	$buy_limit = (!$buy_stop && !$buy_market_price1) ? 1 : $buy_limit;
-
-	if (!($buy_amount1 > 0))
-		Errors::add(Lang::string('buy-errors-no-amount'));
-	if (!($_REQUEST['buy_price'] > 0) && ($buy_limit || $buy_market_price1))
-		Errors::add(Lang::string('buy-errors-no-price'));
-	if (!$currency1)
-		Errors::add(Lang::string('buy-errors-no-currency'));
-	if ($buy_total1 > $user_available[strtoupper($currency1)])
-		Errors::add(Lang::string('buy-errors-balance-too-low'));
-	if (!$asks && $buy_market_price1)
-		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($buy_subtotal1 * $currency_info['usd_ask']) < $CFG->orders_min_usd && $buy_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
-	if ($self_orders)
-		Errors::add(Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-max-price')) : ''));
-	if ($buy_stop_price1 <= $current_ask && $buy_stop)
-		Errors::add(Lang::string('buy-stop-lower-ask'));
-	if ($buy_stop_price1 <= $buy_price1 && $buy_stop && $buy_limit)
-		Errors::add(Lang::string('buy-stop-lower-price'));
-	if ($buy_stop && !($buy_stop_price1 > 0))
-		Errors::add(Lang::string('buy-errors-no-stop'));
-	if ($buy_price1 < ($current_ask - ($current_ask * (0.01 * $CFG->orders_under_market_percent))))
-		Errors::add(str_replace('[percent]',$CFG->orders_under_market_percent,Lang::string('buy-errors-under-market')));
-	if ($self_stops)
-		Errors::add(Lang::string('buy-limit-under-stops').(($currency_info['id'] != $self_stops_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_stops,2),' '.Lang::string('limit-min-price')) : ''));
 	
-	if (!is_array(Errors::$errors) && !$cancel) {
-		if ($confirmed) {
-			$buy_price1 = ($buy_stop && !$buy_limit) ? $buy_stop_price1 : $buy_price1;
-			API::add('Orders','executeOrder',array(1,$buy_price1,$buy_amount1,$currency1,$user_fee_bid,$buy_market_price1,false,false,false,$buy_stop_price1));
-			$query = API::send();
-			$operations = $query['Orders']['executeOrder']['results'][0];
-
-			if ($operations['new_order'] > 0) {
-			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
-			    if (count($_SESSION["buysell_uniq"]) > 3) {
-			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
-			    }
-			    
-				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
-				exit;
-			}
-			else {
-			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
-			    if (count($_SESSION["buysell_uniq"]) > 3) {
-			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
-			    }
-			    
-				Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
-				exit;
-			}
+	if (!$confirmed && !$cancel) {
+		API::add('Orders','checkPreconditions',array(1,$currency_info,$buy_amount1,(($buy_stop && !$buy_limit) ? $buy_stop_price1 : $buy_price1),$buy_stop_price1,$user_fee_bid,$user_available[strtoupper($currency1)],$current_bid,$current_ask,$buy_market_price1));
+		if (!$buy_market_price1)
+			API::add('Orders','checkUserOrders',array(1,$currency_info,false,(($buy_stop && !$buy_limit) ? $buy_stop_price1 : $buy_price1),$buy_stop_price1,$user_fee_bid,$buy_stop));
+		
+		$query = API::send();
+		$errors1 = $query['Orders']['checkPreconditions']['results'][0];
+		if (!empty($errors1['error']))
+			Errors::add($errors1['error']['message']);
+		$errors2 = $query['Orders']['checkUserOrders']['results'][0];
+		if (!empty($errors2['error']))
+			Errors::add($errors2['error']['message']);
+		
+		if (!$errors1 && !$errors2)
+			$ask_confirm = true;
+	}
+	else if (!$cancel) {
+		API::add('Orders','executeOrder',array(1,(($buy_stop && !$buy_limit) ? $buy_stop_price1 : $buy_price1),$buy_amount1,$currency1,$user_fee_bid,$buy_market_price1,false,false,false,$buy_stop_price1));
+		$query = API::send();
+		$operations = $query['Orders']['executeOrder']['results'][0];
+		
+		if (!empty($operations['error'])) {
+			Errors::add($operations['error']['message']);
+		}
+		else if ($operations['new_order'] > 0) {
+		    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["buysell_uniq"]) > 3) {
+		    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+		    }
+		    
+			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
+			exit;
 		}
 		else {
-			$ask_confirm = true;
+		    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["buysell_uniq"]) > 3) {
+		    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+		    }
+		    
+			Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
+			exit;
 		}
 	}
 }
 
-if (!empty($_REQUEST['sell'])) {
+if ($sell && !is_array(Errors::$errors)) {
 	$sell_market_price1 = (!empty($_REQUEST['sell_market_price']));
 	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
 	$sell_stop = (!empty($_REQUEST['sell_stop']));
@@ -161,63 +134,53 @@ if (!empty($_REQUEST['sell'])) {
 	$sell_limit = (!empty($_REQUEST['sell_limit']));
 	$sell_limit = (!$sell_stop && !$sell_market_price1) ? 1 : $sell_limit;
 	
-	if (!($sell_amount1 > 0))
-		Errors::add(Lang::string('sell-errors-no-amount'));
-	if (!($_REQUEST['sell_price'] > 0) && ($sell_limit || $sell_market_price1))
-		Errors::add(Lang::string('sell-errors-no-price'));
-	if (!$currency1)
-		Errors::add(Lang::string('buy-errors-no-currency'));
-	if ($sell_amount1 > $user_available['BTC'])
-		Errors::add(Lang::string('sell-errors-balance-too-low'));
-	if (!$bids && $buy_market_price1)
-		Errors::add(Lang::string('buy-errors-no-compatible'));
-	if (($sell_subtotal1 * $currency_info['usd_ask']) < $CFG->orders_min_usd && $sell_amount1 > 0)
-		Errors::add(str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))));
-	if ($self_orders)
-		Errors::add(Lang::string('buy-errors-outbid-self').(($currency_info['id'] != $self_orders_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_orders,2),' '.Lang::string('limit-min-price')) : ''));
-	if ($sell_stop_price1 >= $current_bid && $sell_stop)
-		Errors::add(Lang::string('sell-stop-higher-bid'));
-	if ($sell_stop_price1 >= $sell_price1 && $sell_stop && $sell_limit)
-		Errors::add(Lang::string('sell-stop-lower-price'));
-	if ($sell_stop && !($sell_stop_price1 > 0))
-		Errors::add(Lang::string('buy-errors-no-stop'));
-	if ($self_limits)
-		Errors::add(Lang::string('sell-limit-under-stops').(($currency_info['id'] != $self_limits_currency) ? str_replace('[price]',$currency_info['fa_symbol'].number_format($self_limits,2),' '.Lang::string('limit-max-price')) : ''));
+	if (!$confirmed && !$cancel) {
+		API::add('Orders','checkPreconditions',array(0,$currency_info,$sell_amount1,(($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1),$sell_stop_price1,$user_fee_ask,$user_available['BTC'],$current_bid,$current_ask,$sell_market_price1));
+		if (!$buy_market_price1)
+			API::add('Orders','checkUserOrders',array(0,$currency_info,false,(($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1),$sell_stop_price1,$user_fee_ask,$sell_stop));
 	
-	if (!is_array(Errors::$errors) && !$cancel) {
-		if ($confirmed) {
-			$sell_price1 = ($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1;
-			API::add('Orders','executeOrder',array(0,$sell_price1,$sell_amount1,$currency1,$user_fee_ask,$sell_market_price1,false,false,false,$sell_stop_price1));
-			$query = API::send();
-			$operations = $query['Orders']['executeOrder']['results'][0];
+		$query = API::send();
+		$errors1 = $query['Orders']['checkPreconditions']['results'][0];
+		if (!empty($errors1['error']))
+			Errors::add($errors1['error']['message']);
+		$errors2 = $query['Orders']['checkUserOrders']['results'][0];
+		if (!empty($errors2['error']))
+			Errors::add($errors2['error']['message']);
+	
+		if (!$errors1 && !$errors2)
+			$ask_confirm = true;
+	}
+	else if (!$cancel) {
+		API::add('Orders','executeOrder',array(0,($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1,$sell_amount1,$currency1,$user_fee_ask,$sell_market_price1,false,false,false,$sell_stop_price1));
+		$query = API::send();
+		$operations = $query['Orders']['executeOrder']['results'][0];
 
-			if ($operations['new_order'] > 0) {
-			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
-			    if (count($_SESSION["buysell_uniq"]) > 3) {
-			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
-			    }
-			    
-				Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
-				exit;
-			}
-			else {
-			    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
-			    if (count($_SESSION["buysell_uniq"]) > 3) {
-			    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
-			    }
-			    
-				Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
-				exit;
-			}
+		if (!empty($operations['error'])) {
+			Errors::add($operations['error']['message']);
+		}
+		else if ($operations['new_order'] > 0) {
+		    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["buysell_uniq"]) > 3) {
+		    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+		    }
+		    
+			Link::redirect('open-orders.php',array('transactions'=>$operations['transactions'],'new_order'=>1));
+			exit;
 		}
 		else {
-			$ask_confirm = true;
+		    $_SESSION["buysell_uniq"][time()] = md5(uniqid(mt_rand(),true));
+		    if (count($_SESSION["buysell_uniq"]) > 3) {
+		    	unset($_SESSION["buysell_uniq"][min(array_keys($_SESSION["buysell_uniq"]))]);
+		    }
+		    
+			Link::redirect('transactions.php',array('transactions'=>$operations['transactions']));
+			exit;
 		}
 	}
 }
 
 $notice = '';
-if ($ask_confirm && !empty($_REQUEST['sell'])) {
+if ($ask_confirm && $sell) {
 	$bank_accounts = $query['BankAccounts']['get']['results'][0];
 	if (!$bank_accounts)
 		$notice .= '<div class="message-box-wrap">'.str_replace('[currency]',$currency_info['currency'],Lang::string('buy-errors-no-bank-account')).'</div>';
@@ -444,7 +407,7 @@ if (!$bypass) {
 					<form id="confirm_form" action="buy-sell.php" method="POST">
 						<input type="hidden" name="confirmed" value="1" />
 						<input type="hidden" id="cancel" name="cancel" value="" />
-						<? if (!empty($_REQUEST['buy'])) { ?>
+						<? if ($buy) { ?>
 						<div class="balances" style="margin-left:0;">
 							<div class="label"><?= Lang::string('buy-amount') ?></div>
 							<div class="amount"><?= number_format($buy_amount1,8) ?></div>
