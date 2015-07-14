@@ -53,6 +53,7 @@ $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $user_fee_bid = ($buy && (($_REQUEST['buy_amount'] > 0 && $_REQUEST['buy_price'] >= $asks[0]['btc_price']) || !empty($_REQUEST['buy_market_price']) || empty($_REQUEST['buy_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 $user_fee_ask = ($sell && (($_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
+$bank_accounts = $query['BankAccounts']['get']['results'][0];
 
 $buy_amount1 = ($buy && $_REQUEST['buy_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : 0;
 $buy_price1 = ($buy && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask;
@@ -181,7 +182,6 @@ if ($sell && !is_array(Errors::$errors)) {
 
 $notice = '';
 if ($ask_confirm && $sell) {
-	$bank_accounts = $query['BankAccounts']['get']['results'][0];
 	if (!$bank_accounts)
 		$notice .= '<div class="message-box-wrap">'.str_replace('[currency]',$currency_info['currency'],Lang::string('buy-errors-no-bank-account')).'</div>';
 	

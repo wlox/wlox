@@ -21,24 +21,20 @@ if ($buy || $sell) {
 }
 
 API::add('Orders','getRecord',array($order_id1));
-API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
-API::add('User','getAvailable');
 $query = API::send();
-
 $order_info = $query['Orders']['getRecord']['results'][0];
-$user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
-$user_available = $query['User']['getAvailable']['results'][0];
-
-API::add('Currencies','getRecord',array(false,$order_info['currency']));
-$query = API::send();
-$currency_info = $query['Currencies']['getRecord']['results'][0];
+$currency_info = $CFG->currencies[$order_info['currency']];
 $currency1 = strtolower($currency_info['currency']);
 
 API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
+API::add('FeeSchedule','getRecord',array(User::$info['fee_schedule']));
+API::add('User','getAvailable');
 $query = API::send();
 
+$user_fee_both = $query['FeeSchedule']['getRecord']['results'][0];
+$user_available = $query['User']['getAvailable']['results'][0];
 $current_bid = $query['Orders']['getBidAsk']['results'][0]['bid'];
 $current_ask = $query['Orders']['getBidAsk']['results'][0]['ask'];
 $bids = $query['Orders']['get']['results'][0];
