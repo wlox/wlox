@@ -352,7 +352,7 @@ function updateTransactions() {
 							return true;
 						
 						var this_currency_abbr = (this.currency == currency_id) ? '' : ((this.currency1 == currency_id) ? '' : ' ('+($('#curr_abbr_'+this.currency1).val())+')');
-						var this_fa_symbol = (this.currency == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ((this.currency1 == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ' ('+($('#curr_sym_'+this.currency1).val())+')');
+						var this_fa_symbol = (this.currency == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ((this.currency1 == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ($('#curr_sym_'+this.currency1).val()));
 						
 						if (i == 0) {
 							current_price = parseFloat(this.btc_price.replace(',',''));
@@ -536,7 +536,7 @@ function updateTransactions() {
 									string += '<tr class="bid_tr double" id="bid_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 							}
 							else
-								var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+								var string = '<tr class="bid_tr" id="bid_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td></tr>';
 							
 							if (before)
 								var elem = $(string).insertBefore(insert_elem);
@@ -685,7 +685,7 @@ function updateTransactions() {
 									string += '<tr class="ask_tr double" id="ask_'+json_elem.id+'"><td><div class="identify stop_order">S</div></td><td>'+mine+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.stop_price))+'</span></td><td><span class="order_amount">'+json_elem.btc+'</span></td><td>'+fa_symbol+'<span class="order_value">'+formatCurrency(parseFloat(json_elem.btc) * parseFloat(json_elem.btc_price))+'</span></td><td><span class="oco"><i class="fa fa-arrow-up"></i> OCO</span></td></tr>';
 							}
 							else
-								var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span></td></tr>';
+								var string = '<tr class="ask_tr" id="ask_'+json_elem.id+'"><td>'+mine+'<span class="order_amount">'+json_elem.btc+'</span> BTC</td><td>'+fa_symbol+'<span class="order_price">'+(formatCurrency(json_elem.btc_price))+'</span> '+((json_elem.btc_price != json_elem.fiat_price) ? '<a title="'+$('#orders_converted_from').val().replace('[currency]',currency_abbr)+'" class="fa fa-exchange" href="" onclick="return false;"></a>' : '')+'</td></tr>';
 							
 							if (before)
 								var elem = $(string).insertBefore(insert_elem);
