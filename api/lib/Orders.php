@@ -25,7 +25,7 @@ class Orders {
 		$usd_field = 'usd_ask';
 		$conv_comp = ($show_bids) ? '-' : '+';
 		$cached = false;
-		
+
 		if ($CFG->memcached) {
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders)
@@ -117,15 +117,15 @@ class Orders {
 		if ($public_api_order_book)
 			$sql .= ' GROUP BY orders.btc_price,orders.currency ';
 			
-		if (!$count && !$open_orders)
+		if (!$count && !$open_orders && !$public_api_open_orders && !$public_api_order_book)
 			$sql .= " ORDER BY $order_by $order_desc ".((!$CFG->memcached && $per_page) ? "LIMIT $r1,$per_page" : '');
 		if (!$count && $open_orders && !$public_api_open_orders && !$public_api_order_book)
 			$sql .= " ORDER BY $order_by $order_desc ";
 		if ($public_api_open_orders)
-			$sql .= " ORDER BY price $order_desc LIMIT $r1,$per_page";
-		if ($public_api_order_book)
 			$sql .= " ORDER BY price $order_desc";
-
+		if ($public_api_order_book)
+			$sql .= " ORDER BY price $order_desc LIMIT $r1,$per_page";
+		
 		$result = db_query_array($sql);
 		
 		if ($CFG->memcached && !$count) {
@@ -1226,7 +1226,7 @@ class Orders {
 		if (!($order_log_id > 0) && !($user_id > 0))
 			return false;
 		
-		$currency_abbr = '(CASE orders.currency';
+		$currency_abbr = '(CASE order_log.currency';
 		foreach ($CFG->currencies as $curr_id => $currency1) {
 			if (is_numeric($curr_id) || $currency1['currency'] == 'BTC')
 				continue;
