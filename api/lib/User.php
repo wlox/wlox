@@ -34,7 +34,7 @@ class User {
 			return false;
 		
 		$sorted = array();
-		if ($CFG->memcached && !$currencies && !$CFG->m_skip) {
+		if ($CFG->memcached && !$currencies) {
 			$cached = $CFG->m->get('balances_'.$user_id);
 			if (is_array($cached)) {
 				if (!empty($cached))
@@ -228,7 +228,7 @@ class User {
 			return false;
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
-		if ($CFG->memcached && !$currencies && !$CFG->m_skip) {
+		if ($CFG->memcached && !$currencies && empty($CFG->m_skip)) {
 			$cached = $CFG->m->get('on_hold_'.$user_id);
 			if (is_array($cached)) {
 				self::$on_hold = $cached;
@@ -349,7 +349,7 @@ class User {
 		if (!$CFG->session_active)
 			return false;
 		
-		if ($CFG->memcached && !$CFG->m_skip) {
+		if ($CFG->memcached && empty($CFG->m_skip)) {
 			$cached = $CFG->m->get('user_volume_'.User::$info['id']);
 			if ($cached)
 				return $cached;
@@ -861,13 +861,10 @@ class User {
 			return false;
 	
 		$CFG->m_skip = true;
+		$available = self::getAvailable();
 		$on_hold = ($CFG->memcached) ? $CFG->m->get('on_hold_'.User::$info['id']) : false;
 		if (!$on_hold)
 			$on_hold = self::getOnHold();
-		
-		$available = ($CFG->memcached) ? $CFG->m->get('balances_'.User::$info['id']) : false;
-		if (!$available)
-			$available = self::getAvailable();
 		
 		$volume = ($CFG->memcached) ? $CFG->m->get('user_volume_'.User::$info['id']) : false;
 		if ($volume)

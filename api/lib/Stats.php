@@ -115,7 +115,7 @@ class Stats {
 	public static function getBTCTraded() {
 		global $CFG;
 
-		if ($CFG->memcached && !$CFG->m_skip) {
+		if ($CFG->memcached && empty($CFG->m_skip)) {
 			$cached = $CFG->m->get('btc_traded');
 			if ($cached) {
 				return $cached;
