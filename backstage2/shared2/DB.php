@@ -669,7 +669,7 @@ class DB {
 		
 		if (!$count && !$get_average && !$get_total) {
 			if ($order_by) {
-				$order_by = (!strstr('.',$order_by)) ? $table.'.'.$order_by : '`'.$order_by.'`';
+				$order_by = (!strstr('.',$order_by) && !($fields[$order_by]['is_op'])) ? $table.'.'.$order_by : '`'.$order_by.'`';
 				
 				$sql .= " ORDER BY $order_by $order_asc ";
 			}
