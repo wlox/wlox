@@ -92,8 +92,8 @@ elseif ($endpoint == 'order-book') {
 		$limit1 = (!empty($_REQUEST['limit'])) ? preg_replace("/[^0-9]/","",$_REQUEST['limit']) : 50;
 		$limit1 = ($limit1 > 100) ? 100 : $limit1;
 		
-		API::add('Orders','get',array(false,false,50,$currency1,false,false,1,false,false,false,false,1));
-		API::add('Orders','get',array(false,false,50,$currency1,false,false,false,false,1,false,false,1));
+		API::add('Orders','get',array(false,false,$limit1,$currency1,false,false,1,false,false,false,false,1));
+		API::add('Orders','get',array(false,false,$limit1,$currency1,false,false,false,false,1,false,false,1));
 		$query = API::send();
 		
 		$return['order-book']['request_currency'] = strtoupper($currency1);
