@@ -34,7 +34,7 @@ class Orders {
 					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : ''));
 			}
 			else {
-				$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : ''));
+				$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_open_orders ? 'oo' : '').($public_api_order_book ? 'ob' : ''));
 			}
 			if (is_array($cached)) {
 				if (count($cached) == 0)
@@ -167,12 +167,12 @@ class Orders {
 				}
 			}
 			else if ($public_api_open_orders) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : '');
+				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').'oo';
 				$cached[$key] = true;
 				$CFG->m->set('orders'.$key,$result,300);
 			}
 			else if ($public_api_order_book) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '');
+				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').'ob';
 				$cached[$key] = true;
 				$CFG->m->set('orders'.$key,$result,300);
 			}
