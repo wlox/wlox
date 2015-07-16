@@ -26,8 +26,8 @@ API::add('Transactions','getTypes');
 $query = API::send();
 
 $transactions = $query['Transactions']['get']['results'][0];
-$pagination = Content::pagination('transactions.php',$page1,$total,30,5,false);
 $transaction_types = $query['Transactions']['getTypes']['results'][0];
+$pagination = Content::pagination('transactions.php',$page1,$total,30,5,false);
 
 $currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : array();
 

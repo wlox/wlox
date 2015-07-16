@@ -91,7 +91,7 @@ if ($buy && !is_array(Errors::$errors)) {
 		$errors1 = $query['Orders']['checkPreconditions']['results'][0];
 		if (!empty($errors1['error']))
 			Errors::add($errors1['error']['message']);
-		$errors2 = $query['Orders']['checkUserOrders']['results'][0];
+		$errors2 = (!empty($query['Orders']['checkUserOrders']['results'][0])) ? $query['Orders']['checkUserOrders']['results'][0] : false;
 		if (!empty($errors2['error']))
 			Errors::add($errors2['error']['message']);
 		
@@ -144,7 +144,7 @@ if ($sell && !is_array(Errors::$errors)) {
 		$errors1 = $query['Orders']['checkPreconditions']['results'][0];
 		if (!empty($errors1['error']))
 			Errors::add($errors1['error']['message']);
-		$errors2 = $query['Orders']['checkUserOrders']['results'][0];
+		$errors2 = (!empty($query['Orders']['checkUserOrders']['results'][0])) ? $query['Orders']['checkUserOrders']['results'][0] : false;
 		if (!empty($errors2['error']))
 			Errors::add($errors2['error']['message']);
 	

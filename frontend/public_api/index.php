@@ -115,11 +115,7 @@ elseif ($endpoint == 'balances-and-info') {
 	if ($post) {
 		if (!$invalid_signature && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_view'] == 'Y') {
-				API::add('User','getOnHold');
-				API::add('User','getAvailable');
-				API::add('User','getVolume');
-				API::add('FeeSchedule','getRecord',array(false,1));
-				API::add('Stats','getBTCTraded');
+				API::add('User','getBalancesAndInfo');
 				API::apiKey($api_key1);
 				API::apiSignature($api_signature1,$params_json);
 				API::apiUpdateNonce();
@@ -127,12 +123,7 @@ elseif ($endpoint == 'balances-and-info') {
 				
 
 				if (empty($query['error'])) {
-					$return['balances-and-info']['on_hold'] = ($query['User']['getOnHold']['results'][0]) ? $query['User']['getOnHold']['results'][0] : array();
-					$return['balances-and-info']['available'] = ($query['User']['getAvailable']['results'][0]) ? $query['User']['getAvailable']['results'][0] : array();
-					$return['balances-and-info']['usd_volume'] = ($query['User']['getVolume']['results'][0]) ? $query['User']['getVolume']['results'][0] : 0;
-					$return['balances-and-info']['fee_bracket']['maker'] = ($query['FeeSchedule']['getRecord']['results'][0]['fee1']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee1'] : 0;
-					$return['balances-and-info']['fee_bracket']['taker'] = ($query['FeeSchedule']['getRecord']['results'][0]['fee']) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : 0;
-					$return['balances-and-info']['global_btc_volume'] = ($query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'] > 0) ? $query['Stats']['getBTCTraded']['results'][0][0]['total_btc_traded'] : 0;
+					$return['balances-and-info']['on_hold'] = $query['User']['getBalancesAndInfo']['results'][0];
 				}
 				else
 					$return['errors'][] = array('message'=>'Invalid authentication.','code'=>$query['error']);
@@ -712,7 +703,7 @@ elseif ($endpoint == 'withdrawals/new') {
 	}
 }
 
-if ($return)
+if (!empty($return))
 	echo json_encode($return);
 
 
