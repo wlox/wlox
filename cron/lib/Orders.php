@@ -356,11 +356,7 @@ class Orders {
 					".(($get_all_market) ? " OR orders.market_price = 'Y' " : false)."
 				)
 				AND orders.btc_price > 0
-<<<<<<< HEAD
-				AND orders.site_user != ".User::$info['id']."
-=======
 				".((!$get_all_market) ? " AND orders.site_user != ".$site_user : false)."
->>>>>>> edd56105f6b0f4294ca05f89d95ebf836dd45d83
 				ORDER BY fiat_price $order_asc, orders.id ASC";
 	
 		if ($for_update)
