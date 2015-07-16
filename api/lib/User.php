@@ -34,7 +34,7 @@ class User {
 			return false;
 		
 		$sorted = array();
-		if ($CFG->memcached && !$currencies) {
+		if ($CFG->memcached && !$currencies && !$CFG->m_skip) {
 			$cached = $CFG->m->get('balances_'.$user_id);
 			if (is_array($cached)) {
 				if (!empty($cached))
@@ -228,7 +228,7 @@ class User {
 			return false;
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
-		if ($CFG->memcached && !$currencies) {
+		if ($CFG->memcached && !$currencies && !$CFG->m_skip) {
 			$cached = $CFG->m->get('on_hold_'.$user_id);
 			if (is_array($cached)) {
 				self::$on_hold = $cached;
@@ -349,7 +349,7 @@ class User {
 		if (!$CFG->session_active)
 			return false;
 		
-		if ($CFG->memcached) {
+		if ($CFG->memcached && !$CFG->m_skip) {
 			$cached = $CFG->m->get('user_volume_'.User::$info['id']);
 			if ($cached)
 				return $cached;
@@ -852,6 +852,40 @@ class User {
 		$result1 = curl_exec($ch);
 		$result = json_decode($result1,true);
 		curl_close($ch);
+	}
+
+	public static function getBalancesAndInfo() {
+		global $CFG;
+		
+		if (!$CFG->session_active)
+			return false;
+	
+		$CFG->m_skip = true;
+		$on_hold = ($CFG->memcached) ? $CFG->m->get('on_hold_'.User::$info['id']) : false;
+		if (!$on_hold)
+			$on_hold = self::getOnHold();
+		
+		$available = ($CFG->memcached) ? $CFG->m->get('balances_'.User::$info['id']) : false;
+		if (!$available)
+			$available = self::getAvailable();
+		
+		$volume = ($CFG->memcached) ? $CFG->m->get('user_volume_'.User::$info['id']) : false;
+		if ($volume)
+			$volume = self::getVolume();
+		
+		$global_btc_vol = ($CFG->memcached) ? $CFG->m->get('btc_traded') : false;
+		if (!$global_btc_vol)
+			$global_btc_vol = Stats::getBTCTraded();
+		
+		$fees = FeeSchedule::getRecord(false,1);
+		
+		$return['on_hold'] = ($on_hold) ? $on_hold : array();
+		$return['available'] = ($available) ? $available : array();
+		$return['usd_volume'] = ($volume) ? $volume : 0;
+		$return['fee_bracket']['maker'] = ($fees['fee1']) ? $fees['fee1'] : 0;
+		$return['fee_bracket']['taker'] = ($fees['fee']) ? $fees['fee'] : 0;
+		$return['global_btc_volume'] = ($global_btc_vol[0]['total_btc_traded'] > 0) ? $global_btc_vol[0]['total_btc_traded'] : 0;
+		return $return;
 	}
 
 	public static function deleteCache($session_id=false) {
