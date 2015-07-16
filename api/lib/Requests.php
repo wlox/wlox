@@ -16,18 +16,39 @@ class Requests{
 		$page = ($page > 0) ? $page - 1 : 0;
 		$r1 = $page * $per_page;
 		
+		if ($CFG->memcached && !$count && $public_api) {
+			$cached = $CFG->m->get('requests_u'.User::$info['id'].(($type) ? '_t'.$type : '').(($currency) ? '_c'.$currency_info['id'] : '').(($status) ? '_s'.$status : '').(($id) ? '_i'.$id : '').(($per_page) ? '_l'.$per_page : ''));
+			if (is_array($cached)) {
+				if (!empty($cached))
+					return $cached;
+				else 
+					return false;
+			}
+		}
+		
+		$currency_abbr = '(CASE requests.currency';
+		$currency_abbr1 = '(CASE requests.currency';
+		foreach ($CFG->currencies as $curr_id => $currency1) {
+			if (is_numeric($curr_id))
+				continue;
+		
+			$currency_abbr .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['fa_symbol'].'" ';
+			$currency_abbr1 .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
+		}
+		$currency_abbr .= ' END)';
+		$currency_abbr1 .= ' END)';
+		
 		if (!$count && !$public_api)
-			$sql = "SELECT requests.*, request_descriptions.name_{$CFG->language} AS description, request_status.name_{$CFG->language} AS status, currencies.fa_symbol AS fa_symbol ";
+			$sql = "SELECT requests.*, request_descriptions.name_{$CFG->language} AS description, request_status.name_{$CFG->language} AS status, $currency_abbr AS fa_symbol ";
 		elseif (!$count && $public_api)
-			$sql = "SELECT requests.id AS id, requests.date AS date, currencies.currency AS currency, IF(requests.currency = {$CFG->btc_currency_id},requests.amount,ROUND(requests.amount,2)) AS amount, (IF(requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id},'PENDING',IF(requests.request_status = {$CFG->request_completed_id},'COMPLETED','CANCELED'))) AS status, requests.account AS account_number, requests.send_address AS address";
+			$sql = "SELECT requests.id AS id, requests.date AS date, $currency_abbr1 AS currency, IF(requests.currency = {$CFG->btc_currency_id},requests.amount,ROUND(requests.amount,2)) AS amount, (IF(requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id},'PENDING',IF(requests.request_status = {$CFG->request_completed_id},'COMPLETED','CANCELED'))) AS status, requests.account AS account_number, requests.send_address AS address";
 		else
 			$sql = "SELECT COUNT(requests.id) AS total ";
 		
 		$sql .= " 
 		FROM requests 
 		LEFT JOIN request_descriptions ON (request_descriptions.id = requests.description) 
-		LEFT JOIN request_status ON (request_status.id = requests.request_status) 
-		LEFT JOIN currencies ON (requests.currency = currencies.id) 
+		LEFT JOIN request_status ON (request_status.id = requests.request_status)
 		WHERE 1 AND requests.site_user = ".User::$info['id'];
 		
 		if ($type > 0 && !($id > 0))
@@ -38,13 +59,13 @@ class Requests{
 		
 		if ($status == 'pending')
 			$sql .= " AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id}) ";
-		
-		if ($status == 'completed')
+		else if ($status == 'completed')
 			$sql .= " AND requests.request_status = {$CFG->request_completed_id} ";
-		
-		if ($status == 'cancelled')
+		else if ($status == 'cancelled')
 			$sql .= " AND requests.request_status = {$CFG->request_cancelled_id} ";
-		
+		else
+			$status = false;
+			
 		if ($id > 0)
 			$sql .= " AND requests.id = $id ";
 		
@@ -52,6 +73,16 @@ class Requests{
 			$sql .= " ORDER BY requests.id DESC LIMIT $r1,$per_page ";
 
 		$result = db_query_array($sql);
+		
+		if ($CFG->memcached && !$count && $public_api) {
+			$result = ($result) ? $result : array();
+			$key = User::$info['id'].(($type) ? '_t'.$type : '').(($currency) ? '_c'.$currency_info['id'] : '').(($status) ? '_s'.$status : '').(($id) ? '_i'.$id : '').(($per_page) ? '_l'.$per_page : '');
+			$CFG->m->set('requests_u'.$key,$result,60);
+			$cached = $CFG->m->get('requests_cache_'.User::$info['id']);
+			$cached[$key] = true;
+			$CFG->m->set('requests_cache_'.User::$info['id'],$cached,60);
+		}
+		
 		if (!$count)
 			return $result;
 		else
@@ -141,6 +172,11 @@ class Requests{
 			}
 		}
 		
+		if ($request_id && $CFG->memcached) {
+			User::deleteBalanceCache(User::$info['id'],1);
+			self::unsetCache(User::$info['id']);
+		}
+		
 		if ($CFG->session_api && $request_id > 0) {
 			$result = self::get(false,false,false,false,false,false,1,$request_id);
 			return $result[0];
@@ -173,6 +209,20 @@ class Requests{
 		        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($request['amount'],2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
 		    }
 			return db_update('requests',$request_id,array('request_status'=>$CFG->request_pending_id));
+		}
+	}
+	
+	public static function unsetCache($user_id) {
+		if (!$user_id || !$CFG->memcached)
+			return false;
+		
+		$cached = $CFG->m->get('requests_cache_'.User::$info['id']);
+		if ($cached) {
+			$delete_keys = array();
+			foreach ($cached as $key) {
+				$delete_keys[] = 'requests_u'.$key;
+			}
+			$CFG->m->deleteMulti($delete_keys);
 		}
 	}
 }

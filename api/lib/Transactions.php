@@ -146,7 +146,7 @@ class Transactions {
 		global $CFG;
 		
 		if ($CFG->memcached) {
-			$cached = $CFG->m->get('lang');
+			$cached = $CFG->m->get('transaction_types');
 			if ($cached) {
 				return $cached;
 			}

@@ -644,7 +644,7 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$user_balances = User::getBalances($this_user_id,array($currency_info['id'],$CFG->btc_currency_id),true);
 		$user_fee = FeeSchedule::getUserFees($this_user_id);
-		$on_hold = User::getOnHold(1,$this_user_id,$user_fee);
+		$on_hold = User::getOnHold(1,$this_user_id,$user_fee,array($currency_info['id'],$CFG->btc_currency_id));
 		$this_btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
 		$this_fiat_balance = (!empty($user_balances[$currency1])) ? $user_balances[$currency1] : 0;
 		$this_triggered_stop = ($stop_price > 0 && $market_price);
@@ -1199,8 +1199,10 @@ class Orders {
 		$email = SiteEmail::getRecord('order-cancelled');
 		Email::send($CFG->form_email,$user_info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user_info);
 	
-		if ($CFG->memcached)
+		if ($CFG->memcached) {
 			self::unsetCache();
+			User::deleteBalanceCache(User::$info['id']);
+		}
 	}
 	
 	private static function setStatus($order_id,$status,$order_log_id=false,$btc_remaining=false) {
@@ -1289,8 +1291,10 @@ class Orders {
 		self::setStatus(false,'CANCELLED_USER',$del_order['log_id'],$del_order['btc']);
 		db_delete('orders',$del_order['id']);
 		
-		if ($CFG->memcached)
+		if ($CFG->memcached) {
 			self::unsetCache();
+			User::deleteBalanceCache(User::$info['id']);
+		}
 		
 		return self::getStatus($del_order['log_id']);
 	}
@@ -1329,8 +1333,10 @@ class Orders {
 		}
 		db_commit();
 		
-		if ($CFG->memcached)
+		if ($CFG->memcached) {
 			self::unsetCache();
+			User::deleteBalanceCache(User::$info['id']);
+		}
 		
 		return $orders_info;
 	}

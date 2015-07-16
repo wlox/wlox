@@ -33,52 +33,43 @@ class User {
 		if (!($user_id > 0))
 			return false;
 		
-		$m_currencies = array();
-		$sql = 'SELECT balance, currency FROM site_users_balances WHERE site_user = '.$user_id.' ';
-		if (!is_array($currencies) && $currencies > 0) {
-			$sql .= ' AND currency = '.$currencies;
-			$m_currencies[] = 'balances_'.$user_id.'_'.$currencies;
+		$sorted = array();
+		if ($CFG->memcached && !$currencies) {
+			$cached = $CFG->m->get('balances_'.$user_id);
+			if (is_array($cached)) {
+				if (!empty($cached))
+					return $cached;
+				else
+					return false;
+			}
 		}
-		else if (is_array($currencies)) {
+
+		if (!is_array($currencies) && $currencies > 0)
+			$currencies = array($currencies);
+		
+		$sql = 'SELECT balance, currency FROM site_users_balances WHERE site_user = '.$user_id.' ';
+		if (is_array($currencies)) {
 			$sub_sql = array();
 			foreach ($currencies as $id) {
 				$sub_sql[] = ' currency = '.$id;
-				$m_currencies[] = 'balances_'.$user_id.'_'.$id;
 			}
 			$sql .= ' AND ('.implode(' OR ',$sub_sql).')';
 		}
 		
 		if ($for_update)
 			$sql .= ' FOR UPDATE';
-		/*
-		else if ($CFG->memcached) {
-			if (!$currencies) {
-				foreach ($CFG->currencies AS $k => $v) {
-					if (!is_numeric($k))
-						continue;
-					
-					$m_currencies[] = $k;
-				}
-			}
-			
-			$cached = $CFG->m->getMulti($m_currencies);
-			if ($cached)
-				return $cached;
-		}
-		*/
 		
 		$result = db_query_array($sql);
-		if (!$result)
-			return false;
-		
-		$sorted = array();
-		foreach ($result as $row) {
-			$sorted[strtolower($CFG->currencies[$row['currency']]['currency'])] = $row['balance'];
-			/*
-			if ($CFG->memcached)
-				$CFG->m->set('balances_'.$user_id.'_'.$row['currency'],$sorted,0);
-			*/
+		if ($result) {		
+			foreach ($result as $row) {
+				$key = strtolower($CFG->currencies[$row['currency']]['currency']);
+				$sorted[$key] = $row['balance'];
+			}
 		}
+		
+		if ($CFG->memcached && !$currencies)
+			$CFG->m->set('balances_'.$user_id,$sorted,60);
+		
 		return $sorted;
 	}
 	
@@ -96,17 +87,8 @@ class User {
 			$curr_info = $CFG->currencies[strtoupper($curr_abbr)];
 			$currencies_str .= ' WHEN '.$curr_info['id'].' THEN '.$balance.' ';
 			$currency_ids[] = $curr_info['id'];
-			/*
-			if ($CFG->memcached)
-				$del_keys[] = 'balances_'.$user_id.'_'.$curr_info['id'];
-			*/
 		}
 		$currencies_str .= ' END)';
-		
-		/*
-		if ($CFG->memcached)
-			$CFG->m->deleteMulti($del_keys);
-		*/
 		
 		$sql = 'UPDATE site_users_balances SET balance = '.$currencies_str.' WHERE currency IN ('.implode(',',$currency_ids).') AND site_user = '.$user_id;
 		$result = db_query($sql);
@@ -130,6 +112,10 @@ class User {
 				$result = db_query($sql);
 			}
 		}
+		
+		if ($result)
+			self::deleteBalanceCache($user_id);
+		
 		return $result;
 	}
 	
@@ -235,32 +221,40 @@ class User {
 		return db_delete('sessions',$session_id,'session_id');
 	}
 	
-	public static function getOnHold($for_update=false,$user_id=false,$user_fee=false) {
+	public static function getOnHold($for_update=false,$user_id=false,$user_fee=false,$currencies=false) {
 		global $CFG;
 		
 		if (!$CFG->session_active)
 			return false;
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
-		/*
-		if ($CFG->memcached && !$for_update) {
+		if ($CFG->memcached && !$currencies) {
 			$cached = $CFG->m->get('on_hold_'.$user_id);
-			if ($cached) {
+			if (is_array($cached)) {
 				self::$on_hold = $cached;
-				return $cached;
+				if (!empty($cached))
+					return $cached;
+				else 
+					return false;
 			}
 		}
-		*/
-		
+
 		$user_fee = (is_array($user_fee)) ? $user_fee : FeeSchedule::getUserFees($user_id);
 		$fee = $user_fee['fee1'] * 0.01;
 		$lock = ($for_update) ? 'LOCK IN SHARE MODE' : '';
 		$on_hold = array();
-	
+		
+		if (!is_array($currencies) && $currencies > 0)
+			$currencies = array($currencies);
+		
+		$currencies_str = '';
+		if (is_array($currencies))
+			$currencies_str .= 'AND currency IN ('.implode(',',$currencies).')';
+		
 		$sql = "
-		SELECT currency, ROUND(SUM(IF(currency != {$CFG->btc_currency_id},amount,0)),2) AS fiat, SUM(IF(currency = {$CFG->btc_currency_id},amount,0)) AS btc, 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND (request_status = {$CFG->request_pending_id} OR request_status = {$CFG->request_awaiting_id}) GROUP BY currency
+		SELECT currency, ROUND(SUM(IF(currency != {$CFG->btc_currency_id},amount,0)),2) AS fiat, SUM(IF(currency = {$CFG->btc_currency_id},amount,0)) AS btc, 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND request_status IN ({$CFG->request_pending_id},{$CFG->request_awaiting_id}) $currencies_str GROUP BY currency
 		UNION
-		SELECT currency, ROUND(SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)),2) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id GROUP BY currency $lock";
+		SELECT currency, ROUND(SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)),2) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id $currencies_str GROUP BY currency $lock";
 		$result = db_query_array($sql);
 		
 		if ($result) {
@@ -291,10 +285,10 @@ class User {
 			$on_hold = array_merge(array('BTC'=>$btc_row),$on_hold);
 		}
 		
-		/*
-		if ($CFG->memcached)
-			$CFG->m->set('on_hold_'.$user_id,$on_hold,0);
-		*/
+		if ($CFG->memcached && !$currencies) {
+			$on_hold1 = ($on_hold) ? $on_hold : array();
+			$CFG->m->set('on_hold_'.$user_id,$on_hold,60);
+		}
 		
 		self::$on_hold = $on_hold;
 		return $on_hold;
@@ -354,13 +348,22 @@ class User {
 		
 		if (!$CFG->session_active)
 			return false;
-	
+		
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('user_volume_'.User::$info['id']);
+			if ($cached)
+				return $cached;
+		}	
+
 		$sql = "SELECT ROUND(SUM(transactions.btc * transactions.btc_price * currencies.usd_ask),2) AS volume FROM transactions
 				LEFT JOIN currencies ON (currencies.id = transactions.currency)
 				WHERE (site_user = ".User::$info['id']." OR site_user1 = ".User::$info['id'].")
 				AND transactions.date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
 				LIMIT 0,1";
 		$result = db_query_array($sql);
+		if ($CFG->memcached)
+			$CFG->m->set('user_volume_'.User::$info['id'],300);
+		
 		return $result[0]['volume'];
 	}
 	
@@ -857,6 +860,20 @@ class User {
 		$session_id = (!$session_id) ? $CFG->session_id : $session_id;
 		if ($CFG->memcached && $CFG->session_id)
 			$CFG->delete_cache = $CFG->m->delete('session_'.$CFG->session_id);
+	}
+	
+	public static function deleteBalanceCache($user_id,$only_on_hold=false) {
+		global $CFG;
+		
+		if (!$user_id || !$CFG->memcached)
+			return false;
+		
+		if (!$only_on_hold) {
+			$CFG->m->delete('balances_'.$user_id);
+			$CFG->m->delete('user_volume_'.$user_id);
+		}
+		
+		$CFG->m->delete('on_hold_'.$user_id);
 	}
 }
 

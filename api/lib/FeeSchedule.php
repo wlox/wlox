@@ -54,7 +54,7 @@ class FeeSchedule {
 			}
 		}
 		
-		$sql = 'SELECT fee_schedule.* FROM fee_schedule LEFT JOIN site_users ON (site_users.fee_schedule = fee_schedule.id) WHERE site_users.id = '.$user_id.' LIMIT 0,1';
+		$sql = 'SELECT fee_schedule.fee, fee_schedule.fee1 FROM fee_schedule LEFT JOIN site_users ON (site_users.fee_schedule = fee_schedule.id) WHERE site_users.id = '.$user_id.' LIMIT 0,1';
 		$result = db_query_array($sql);
 		
 		if ($result) {
