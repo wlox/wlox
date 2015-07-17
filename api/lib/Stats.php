@@ -122,7 +122,7 @@ class Stats {
 			}
 		}
 		
-		$sql = "SELECT ROUND(SUM(btc),8) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) LIMIT 0,1";
+		$sql = "SELECT btc_24h FROM status LIMIT 0,1";
 		$result = db_query_array($sql);
 		
 		if ($CFG->memcached)
