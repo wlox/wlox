@@ -1,6 +1,5 @@
 ALTER TABLE `orders` ADD INDEX ( `order_type` ) ;
 ALTER TABLE site_users ADD `own_account` ENUM('Y','N') NOT NULL DEFAULT 'N';
-ALTER TABLE `status` ADD `btc_24h` DOUBLE( 10, 2 ) NOT NULL DEFAULT '0' AFTER `withdrawals_status` 
 
 INSERT INTO `admin_controls_methods` (`id`, `method`, `arguments`, `order`, `control_id`, `p_id`) VALUES
 (2393, 'textInput', 'a:13:{s:4:"name";s:7:"name_en";s:7:"caption";s:9:"Name (EN)";s:8:"required";s:0:"";s:5:"value";s:0:"";s:2:"id";s:0:"";s:13:"db_field_type";s:0:"";s:5:"class";s:0:"";s:7:"jscript";s:0:"";s:5:"style";s:0:"";s:15:"is_manual_array";s:0:"";s:9:"is_unique";s:0:"";s:12:"default_text";s:0:"";s:17:"delete_whitespace";s:0:"";}', 6, 256, 0),
