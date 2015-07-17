@@ -61,12 +61,12 @@ $sql = "DELETE FROM ip_access_log WHERE `timestamp` < ('".date('Y-m-d H:i:s')."'
 db_query($sql);
 
 // set market price orders at market price
-$sql = "SELECT orders.id AS id,orders.btc AS btc,orders.order_type AS order_type,currencies.currency AS currency, fee_schedule.fee AS fee, orders.site_user AS site_user FROM orders LEFT JOIN currencies ON (currencies.id = orders.currency) LEFT JOIN site_users ON (orders.site_user = site_users.id) LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id) WHERE orders.market_price = 'Y' ORDER BY orders.date ASC";
+$sql = "SELECT id,btc,currency,order_type,site_user FROM orders WHERE orders.market_price = 'Y' ORDER BY orders.id ASC";
 $result = db_query_array($sql);
 if ($result) {
 	foreach ($result as $row) {
 		$buy = ($row['order_type'] == $CFG->order_type_bid);
-		$operations = Orders::executeOrder($buy,false,$row['btc'],$row['currency'],$row['fee'],1,$row['id'],$row['site_user'],true);
+		$operations = Orders::executeOrder($buy,false,$row['btc'],$CFG->currencies[$row['currency']]['currency'],false,1,$row['id'],$row['site_user'],true);
 	}
 }
 
