@@ -7,22 +7,21 @@ $CFG->session_active = 1;
 $CFG->in_cron = 1;
 
 // get 24 hour BTC volume
-$sql = "SELECT IFNULL(SUM(btc),0) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) ORDER BY `date` ASC LIMIT 0,1";
+$sql = "SELECT IFNULL(SUM(btc),0) AS total_btc_traded FROM transactions WHERE `date` >= DATE_SUB(DATE_ADD(NOW(), INTERVAL ".((($CFG->timezone_offset)/60)/60)." HOUR), INTERVAL 1 DAY) LIMIT 0,1";
 $result = db_query_array($sql);
 $total_btc_traded = ($result[0]['total_btc_traded']) ? $result[0]['total_btc_traded'] : '0';
+db_update('status',1,array('btc_24h'=>$total_btc_traded));
 
 // determine users' monthly volume
 $sql = 'SELECT id, global_btc, from_usd, to_usd FROM fee_schedule ORDER BY global_btc ASC, from_usd ASC';
 $result = db_query_array($sql);
 if ($result && count($result) > 1) {
-	$sql = 'SELECT ROUND(SUM(IF(transactions.id IS NOT NULL,transactions.btc * transactions.btc_price * currencies.usd_ask,transactions1.btc * transactions1.btc_price * currencies1.usd_ask)),2) AS volume, site_users.id AS user_id
-		FROM site_users
-		LEFT JOIN transactions ON (transactions.site_user = site_users.id AND transactions.date >= DATE_SUB(CURDATE(),INTERVAL 1 MONTH))
-		LEFT JOIN transactions transactions1 ON (transactions1.site_user1 = site_users.id AND transactions1.date >= DATE_SUB(CURDATE(),INTERVAL 1 MONTH))
+	$sql = 'SELECT ROUND(SUM(IF(transactions.site_user = site_users.id,transactions.btc * transactions.btc_price * currencies.usd_ask,transactions.btc * transactions.orig_btc_price * currencies1.usd_ask)),2) AS volume
+		FROM transactions
 		LEFT JOIN currencies ON (currencies.id = transactions.currency)
-		LEFT JOIN currencies currencies1 ON (currencies1.id = transactions1.currency)
-		WHERE transactions.id IS NOT NULL OR transactions1.id IS NOT NULL
-		GROUP BY site_users.id';
+		LEFT JOIN currencies currencies1 ON (currencies1.id = transactions.currency1)
+		WHERE transactions.date >= DATE_SUB(CURDATE(),INTERVAL 1 MONTH)
+		GROUP BY currencies.site_user';
 	$volumes = db_query_array($sql);
 	
 	$global_fc_id = false;
