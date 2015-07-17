@@ -402,22 +402,12 @@ class Orders {
 		$sql = "SELECT orders.id, orders.market_price AS is_market, orders.order_type AS order_type, orders.btc_price,
 				orders.btc AS btc_outstanding, 
 				orders.site_user AS site_user, 
-				fee_schedule.fee AS fee, 
-				fee_schedule.fee1 AS fee1, 
-				btc_balance.balance AS btc_balance, 
-				(IFNULL((SELECT ROUND(SUM(orders1.fiat + (orders1.fiat * (fee1 * 0.01))),2) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_bid} AND orders1.currency = orders.currency AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = orders.currency AND requests.site_user = orders.site_user AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})),0)) AS fiat_on_hold, 
-				(IFNULL((SELECT SUM(orders1.btc) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_ask} AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = {$CFG->btc_currency_id} AND requests.site_user = orders.site_user AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})),0)) AS btc_on_hold, 
 				orders.log_id AS log_id, 
 				orders.currency AS currency_id,
-				fiat_balance.balance AS fiat_balance,
 				orders.stop_price AS stop_price,
 				ROUND($price_str,2) AS fiat_price
 				".(($market_price && !$get_all_market) ? ',@running_total := @running_total + orders.btc AS cumulative_sum' : '')."
 				FROM orders
-				LEFT JOIN site_users_balances btc_balance ON (orders.site_user = btc_balance.site_user AND btc_balance.currency = {$CFG->btc_currency_id})
-				LEFT JOIN site_users_balances fiat_balance ON (orders.site_user = fiat_balance.site_user AND fiat_balance.currency = orders.currency)
-				LEFT JOIN site_users ON (orders.site_user = site_users.id )
-				LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id)
 				".(($market_price && !$get_all_market) ? 'JOIN (SELECT @running_total := 0) r' : '')."
 				WHERE 1
 				".((!$get_all_market) ? "AND orders.order_type = $type " : false)."
@@ -428,8 +418,8 @@ class Orders {
 				".(($market_price && !$get_all_market) ? " AND @running_total <= $amount " : false)."
 				".((!$get_all_market) ? " AND orders.site_user != ".$site_user : false).' ORDER BY '.(($market_price && !$get_all_market) ? 'fiat_price '.$order_asc : 'NULL');
 
-		if ($for_update)
-			$sql .= ' FOR UPDATE';
+		//if ($for_update)
+			//$sql .= ' FOR UPDATE';
 		
 		$result = db_query_array($sql);
 		if ($result){
@@ -467,6 +457,22 @@ class Orders {
 			}
 		}
 		return $result;
+	}
+	
+	public static function lockOrder($user_id,$order_id,$currency_id) {
+		global $CFG;
+		
+		$user_fee = FeeSchedule::getUserFees($user_id);
+		$orig_order = DB::getRecord('orders',$order_id,0,1,false,false,false,1);
+		$user_balances = User::getBalances($user_id,array($currency_id,$CFG->btc_currency_id),true);
+		$on_hold = User::getOnHold(1,$user_id,$user_fee,array($currency_id,$CFG->btc_currency_id));
+		
+		$fiat_on_hold = (!empty($on_hold[$CFG->currencies[$currency_id]['currency']]['total'])) ? $on_hold[$CFG->currencies[$currency_id]['currency']]['total'] : 0;
+		$btc_on_hold = $fiat_on_hold = (!empty($on_hold['BTC']['total'])) ? $on_hold['BTC']['total'] : 0;
+		$btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
+		$fiat_balance = (!empty($user_balances[strtolower($CFG->currencies[$currency_id]['currency'])])) ? $user_balances[strtolower($CFG->currencies[$currency_id]['currency'])] : 0;
+		
+		return array('fiat_on_hold'=>$fiat_on_hold,'btc_on_hold'=>$btc_on_hold,'btc_balance'=>$btc_balance,'fiat_balance'=>$fiat_balance,'fee'=>$user_fee['fee'],'fee1'=>$user_fee['fee1']);
 	}
 	
 	public static function checkUserOrders($buy,$currency_info,$user_id=false,$price,$stop_price,$fee,$is_stop=false) {
@@ -725,6 +731,11 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+						
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price < $bid) {
 						$hidden_executions[] = $comp_order;
 						continue;
@@ -917,6 +928,11 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+					
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price > $ask) {
 						$hidden_executions[] = $comp_order;
 						continue;
