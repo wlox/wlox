@@ -731,11 +731,6 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
-					if (!$comp_user_info)
-						continue;
-						
-					$comp_order = array_merge($comp_order,$comp_user_info);
 					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price < $bid) {
 						$hidden_executions[] = $comp_order;
 						continue;
@@ -778,6 +773,11 @@ class Orders {
 						continue;
 					}
 					
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+					
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					$comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					$comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_btc_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_btc_on_hold)) ? $comp_btc_on_hold[$comp_order['site_user']] : $comp_order['btc_on_hold'];
@@ -928,11 +928,6 @@ class Orders {
 			
 			if ($compatible) {
 				foreach ($compatible as $comp_order) {
-					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
-					if (!$comp_user_info)
-						continue;
-					
-					$comp_order = array_merge($comp_order,$comp_user_info);
 					if (!empty($comp_order['is_market']) && $comp_order['is_market'] == 'Y' && $price > $ask) {
 						$hidden_executions[] = $comp_order;
 						continue;
@@ -975,6 +970,11 @@ class Orders {
 						continue;
 					}
 					
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+						
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					$comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					$comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_fiat_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_fiat_on_hold)) ? $comp_fiat_on_hold[$comp_order['site_user']] : round($comp_order['fiat_on_hold'],2,PHP_ROUND_HALF_UP);											
