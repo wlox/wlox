@@ -859,6 +859,7 @@ function switchBuyCurrency() {
 				$('#sell_price').val(json_data.current_bid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
 				$('#sell_user_available').html(json_data.available_btc);
 				$('#buy_user_available').html(json_data.available_fiat);
+				$('#this_currency_id').val(json_data.currency_info.id);
 				calculateBuyPrice();
 			});
 		}
