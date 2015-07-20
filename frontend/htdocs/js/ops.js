@@ -352,7 +352,7 @@ function updateTransactions() {
 							return true;
 						
 						var this_currency_abbr = (this.currency == currency_id) ? '' : ((this.currency1 == currency_id) ? '' : ' ('+($('#curr_abbr_'+this.currency1).val())+')');
-						var this_fa_symbol = (this.currency == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ((this.currency1 == currency_id) ? ($('#curr_sym_'+currency_id).val()) : ($('#curr_sym_'+this.currency1).val()));
+						var this_fa_symbol = $('#curr_sym_'+currency_id).val();
 						
 						if (i == 0) {
 							current_price = parseFloat(this.btc_price.replace(',',''));
