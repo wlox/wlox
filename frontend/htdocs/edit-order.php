@@ -26,6 +26,11 @@ $order_info = $query['Orders']['getRecord']['results'][0];
 $currency_info = $CFG->currencies[$order_info['currency']];
 $currency1 = strtolower($currency_info['currency']);
 
+if (empty($order_info['id']) || $order_info['site_user'] != $order_info['user_id']) {
+	Link::redirect('open-orders.php?message=order-doesnt-exist');
+	exit;
+}
+
 API::add('Orders','getBidAsk',array($currency1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,1));
 API::add('Orders','get',array(false,false,10,$currency1,false,false,false,false,1));
@@ -59,11 +64,6 @@ $buy_total1 = false;
 $sell_total1 = false;
 $user_fee_bid = false;
 $user_fee_ask = false;
-
-if ($order_info['site_user'] != $order_info['user_id'] || empty($order_info['id'])) {
-	Link::redirect('open-orders.php');
-	exit;
-}
 
 if ($order_info['is_bid']) {
 	$buy_amount1 = (!empty($_REQUEST['buy_amount'])) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : $order_info['btc'];
