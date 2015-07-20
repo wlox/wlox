@@ -67,7 +67,7 @@ class User {
 			}
 		}
 		
-		if ($CFG->memcached && !$currencies)
+		if ($CFG->memcached)
 			$CFG->m->set('balances_'.$user_id,$sorted,60);
 		
 		return $sorted;
@@ -285,7 +285,7 @@ class User {
 			$on_hold = array_merge(array('BTC'=>$btc_row),$on_hold);
 		}
 		
-		if ($CFG->memcached && !$currencies) {
+		if ($CFG->memcached) {
 			$on_hold1 = ($on_hold) ? $on_hold : array();
 			$CFG->m->set('on_hold_'.$user_id,$on_hold,60);
 		}

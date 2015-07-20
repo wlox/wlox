@@ -344,8 +344,10 @@ class Orders {
 		}
 		
 		$sql = "UPDATE orders 
+				LEFT JOIN (SELECT btc_price, order_type, currency FROM orders WHERE order_type = {$CFG->order_type_bid} ORDER BY btc_price DESC LIMIT 0,1) AS max_bid ON (orders.currency = max_bid.currency)
+				LEFT JOIN (SELECT btc_price, order_type, currency FROM orders WHERE order_type = {$CFG->order_type_ask} ORDER BY btc_price DESC LIMIT 0,1) AS max_ask ON (orders.currency = max_ask.currency)
 				SET orders.market_price = 'Y', orders.btc_price = IF(orders.btc_price > 0,orders.btc_price,orders.stop_price)
-				WHERE ((orders.stop_price >= $price_str AND orders.order_type = {$CFG->order_type_ask}) OR (orders.stop_price <= $price_str1 AND orders.order_type = {$CFG->order_type_bid}))
+				WHERE ((orders.stop_price >= IF($price_str < max_bid.btc_price,max_bid.btc_price,$price_str) AND orders.order_type = {$CFG->order_type_ask}) OR (orders.stop_price <= IF($price_str1 > max_ask.btc_price,max_ask.btc_price,$price_str1) AND orders.order_type = {$CFG->order_type_bid}))
 				AND orders.stop_price > 0
 				".((!$CFG->cross_currency_trades) ? "AND orders.currency = {$currency_info['id']}" : false);
 
@@ -788,7 +790,7 @@ class Orders {
 					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						if ($comp_funds_finished)
-							self::cancelOrder($comp_order['id'],0,$comp_order['site_user']);
+							self::cancelOrder($comp_order['id'],$comp_order['btc_outstanding'],$comp_order['site_user']);
 						
 						$i++;
 						continue;
@@ -986,7 +988,7 @@ class Orders {
 					
 					if (!($max_amount > 0) || !($max_comp_amount > 0)) {
 						if ($comp_funds_finished)
-							self::cancelOrder($comp_order['id'],0,$comp_order['site_user']);
+							self::cancelOrder($comp_order['id'],$comp_order['btc_outstanding'],$comp_order['site_user']);
 						
 						$i++;
 						continue;
