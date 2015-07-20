@@ -25,25 +25,7 @@ class Orders {
 		$usd_field = 'usd_ask';
 		$conv_comp = ($show_bids) ? '-' : '+';
 		$cached = false;
-		/*
-		if ($CFG->memcached) {
-			if (!$public_api_open_orders && !$public_api_order_book) {
-				if (!$open_orders)
-					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($per_page) ? '_l'.$per_page : '').(($type) ? '_t'.$type : ''));
-				else
-					$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : ''));
-			}
-			else {
-				$cached = $CFG->m->get('orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : ''));
-			}
-			if (is_array($cached)) {
-				if (count($cached) == 0)
-					return false;
-				
-				return $cached;
-			}
-		}
-		*/
+
 		if ($CFG->cross_currency_trades) {
 			$price_str = '(orders.btc_price * CASE orders.currency WHEN '.$currency_info['id'].' THEN 1';
 			$price_str_usd = '(orders.btc_price * CASE orders.currency';
@@ -117,70 +99,16 @@ class Orders {
 		if ($public_api_order_book)
 			$sql .= ' GROUP BY orders.btc_price,orders.currency ';
 			
-		if (!$count && !$open_orders)
-			$sql .= " ORDER BY $order_by $order_desc ".((/*!$CFG->memcached &&*/ $per_page) ? "LIMIT $r1,$per_page" : '');
+		if (!$count && !$open_orders && !$public_api_open_orders && !$public_api_order_book)
+			$sql .= " ORDER BY $order_by $order_desc ".($per_page ? "LIMIT $r1,$per_page" : '');
 		if (!$count && $open_orders && !$public_api_open_orders && !$public_api_order_book)
 			$sql .= " ORDER BY $order_by $order_desc ";
 		if ($public_api_open_orders)
-			$sql .= " ORDER BY price $order_desc LIMIT $r1,$per_page";
-		if ($public_api_order_book)
 			$sql .= " ORDER BY price $order_desc";
-
-		$result = db_query_array($sql);
-		/*
-		if ($CFG->memcached && !$count) {
-			$cached = $CFG->m->get('orders_cache');
-			if (!$cached)
-				$cached = array();
-			
-			if (!$result)
-				$result = array();
-			
-			if (!$public_api_open_orders && !$public_api_order_book) {
-				if (!$open_orders) {
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result,300);
-					
-					$result_sub[30] = array_slice($result,0,30);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[30],300);
-					
-					$result_sub[10] = array_slice($result,0,10);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[10],300);
-					
-					$result_sub[5] = array_slice($result,0,5);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[5],300);
-					
-					if ($per_page > 0)
-						$result = $result_sub[$per_page];
-				}
-				else {
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result,300);
-				}
-			}
-			else if ($public_api_open_orders) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'oo' : '');
-				$cached[$key] = true;
-				$CFG->m->set('orders'.$key,$result,300);
-			}
-			else if ($public_api_order_book) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').($public_api_order_book ? 'ob' : '');
-				$cached[$key] = true;
-				$CFG->m->set('orders'.$key,$result,300);
-			}
-			
-			$CFG->m->set('orders_cache',$cached,300);
-		}
-		*/
+		if ($public_api_order_book)
+			$sql .= " ORDER BY price $order_desc LIMIT $r1,$per_page";
 		
+		$result = db_query_array($sql);
 		if ($result && count($result) == 0)
 			$result = false;
 		
@@ -240,14 +168,7 @@ class Orders {
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$currency_info = ($currency_id > 0) ? $CFG->currencies[$currency_id] : $CFG->currencies[strtoupper($currency)];
 		$usd_field = 'usd_ask';
-		/*
-		if ($CFG->memcached && !$absolute) {
-			$cached = $CFG->m->get('bid_ask_'.$currency_info['currency']);
-			if ($cached) {
-				return $cached;
-			}
-		}
-		*/
+		
 		if ($CFG->cross_currency_trades) {
 			$price_str_bid = '(orders.btc_price * CASE orders.currency WHEN '.$currency_info['id'].' THEN 1';
 			$price_str_ask = '(orders.btc_price * CASE orders.currency WHEN '.$currency_info['id'].' THEN 1';
@@ -306,10 +227,7 @@ class Orders {
 			if ($result)
 				$res = array('bid'=>$result[0]['fiat_price'],'ask'=>$result[0]['fiat_price']);
 		}
-		/*
-		if ($CFG->memcached)
-			$CFG->m->set('bid_ask_'.$currency_info['currency'],$res,300);
-		*/
+		
 		return $res;
 	}
 	
@@ -403,22 +321,12 @@ class Orders {
 		$sql = "SELECT orders.id, orders.market_price AS is_market, orders.order_type AS order_type, orders.btc_price,
 				orders.btc AS btc_outstanding, 
 				orders.site_user AS site_user, 
-				fee_schedule.fee AS fee, 
-				fee_schedule.fee1 AS fee1, 
-				btc_balance.balance AS btc_balance, 
-				(IFNULL((SELECT ROUND(SUM(orders1.fiat + (orders1.fiat * (fee1 * 0.01))),2) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_bid} AND orders1.currency = orders.currency AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = orders.currency AND requests.site_user = orders.site_user AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})),0)) AS fiat_on_hold, 
-				(IFNULL((SELECT SUM(orders1.btc) FROM orders orders1 WHERE orders1.order_type = {$CFG->order_type_ask} AND orders1.site_user = orders.site_user),0) + IFNULL((SELECT SUM(amount) FROM requests WHERE requests.currency = {$CFG->btc_currency_id} AND requests.site_user = orders.site_user AND requests.request_type = {$CFG->request_widthdrawal_id} AND (requests.request_status = {$CFG->request_pending_id} OR requests.request_status = {$CFG->request_awaiting_id})),0)) AS btc_on_hold, 
 				orders.log_id AS log_id, 
 				orders.currency AS currency_id,
-				fiat_balance.balance AS fiat_balance,
 				orders.stop_price AS stop_price,
 				ROUND($price_str,2) AS fiat_price
 				".(($market_price && !$get_all_market) ? ',@running_total := @running_total + orders.btc AS cumulative_sum' : '')."
 				FROM orders
-				LEFT JOIN site_users_balances btc_balance ON (orders.site_user = btc_balance.site_user AND btc_balance.currency = {$CFG->btc_currency_id})
-				LEFT JOIN site_users_balances fiat_balance ON (orders.site_user = fiat_balance.site_user AND fiat_balance.currency = orders.currency)
-				LEFT JOIN site_users ON (orders.site_user = site_users.id )
-				LEFT JOIN fee_schedule ON (site_users.fee_schedule = fee_schedule.id)
 				".(($market_price && !$get_all_market) ? 'JOIN (SELECT @running_total := 0) r' : '')."
 				WHERE 1
 				".((!$get_all_market) ? "AND orders.order_type = $type " : false)."
@@ -429,8 +337,8 @@ class Orders {
 				".(($market_price && !$get_all_market) ? " AND @running_total <= $amount " : false)."
 				".((!$get_all_market) ? " AND orders.site_user != ".$site_user : false).' ORDER BY '.(($market_price && !$get_all_market) ? 'fiat_price '.$order_asc : 'NULL');
 
-		if ($for_update)
-			$sql .= ' FOR UPDATE';
+		//if ($for_update)
+			//$sql .= ' FOR UPDATE';
 		
 		$result = db_query_array($sql);
 		if ($result){
@@ -468,6 +376,22 @@ class Orders {
 			}
 		}
 		return $result;
+	}
+	
+	public static function lockOrder($user_id,$order_id,$currency_id) {
+		global $CFG;
+		
+		$user_fee = FeeSchedule::getUserFees($user_id);
+		$orig_order = DB::getRecord('orders',$order_id,0,1,false,false,false,1);
+		$user_balances = User::getBalances($user_id,array($currency_id,$CFG->btc_currency_id),true);
+		$on_hold = User::getOnHold(1,$user_id,$user_fee,array($currency_id,$CFG->btc_currency_id));
+		
+		$fiat_on_hold = (!empty($on_hold[$CFG->currencies[$currency_id]['currency']]['total'])) ? $on_hold[$CFG->currencies[$currency_id]['currency']]['total'] : 0;
+		$btc_on_hold = $fiat_on_hold = (!empty($on_hold['BTC']['total'])) ? $on_hold['BTC']['total'] : 0;
+		$btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
+		$fiat_balance = (!empty($user_balances[strtolower($CFG->currencies[$currency_id]['currency'])])) ? $user_balances[strtolower($CFG->currencies[$currency_id]['currency'])] : 0;
+		
+		return array('fiat_on_hold'=>$fiat_on_hold,'btc_on_hold'=>$btc_on_hold,'btc_balance'=>$btc_balance,'fiat_balance'=>$fiat_balance,'fee'=>$user_fee['fee'],'fee1'=>$user_fee['fee1']);
 	}
 	
 	public static function checkUserOrders($buy,$currency_info,$user_id=false,$price,$stop_price,$fee,$is_stop=false) {
@@ -645,7 +569,7 @@ class Orders {
 		$usd_info = $CFG->currencies['USD'];
 		$user_balances = User::getBalances($this_user_id,array($currency_info['id'],$CFG->btc_currency_id),true);
 		$user_fee = FeeSchedule::getUserFees($this_user_id);
-		$on_hold = User::getOnHold(1,$this_user_id,$user_fee);
+		$on_hold = User::getOnHold(1,$this_user_id,$user_fee,array($currency_info['id'],$CFG->btc_currency_id));
 		$this_btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
 		$this_fiat_balance = (!empty($user_balances[$currency1])) ? $user_balances[$currency1] : 0;
 		$this_triggered_stop = ($stop_price > 0 && $market_price);
@@ -768,6 +692,11 @@ class Orders {
 						continue;
 					}
 					
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+					
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					$comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					$comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_btc_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_btc_on_hold)) ? $comp_btc_on_hold[$comp_order['site_user']] : $comp_order['btc_on_hold'];
@@ -959,6 +888,11 @@ class Orders {
 						continue;
 					}
 					
+					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					if (!$comp_user_info)
+						continue;
+						
+					$comp_order = array_merge($comp_order,$comp_user_info);
 					$comp_order['btc_balance'] = (array_key_exists($comp_order['site_user'],$comp_btc_balance)) ? $comp_btc_balance[$comp_order['site_user']] : $comp_order['btc_balance'];
 					$comp_order['fiat_balance'] = (array_key_exists($comp_order['site_user'],$comp_fiat_balance)) ? $comp_fiat_balance[$comp_order['site_user']] : $comp_order['fiat_balance'];
 					$comp_fiat_on_hold[$comp_order['site_user']] = (array_key_exists($comp_order['site_user'],$comp_fiat_on_hold)) ? $comp_fiat_on_hold[$comp_order['site_user']] : round($comp_order['fiat_on_hold'],2,PHP_ROUND_HALF_UP);											
@@ -1141,10 +1075,7 @@ class Orders {
 
 			$order_info = array('id'=>$order_log_id,'side'=>($buy ? 'buy' : 'sell'),'type'=>(($market_price) ? 'market' : (($stop_price > 0) ? 'stop' : 'limit')),'amount'=>$orig_amount,'amount_remaining'=>$amount,'price'=>round($price,8,PHP_ROUND_HALF_UP),'avg_price_executed'=>((count($executed_prices) > 0) ? round(array_sum($avg_exec),2,PHP_ROUND_HALF_UP) : 0),'stop_price'=>$stop_price,'currency'=>strtoupper($currency1),'status'=>$order_status,'replaced'=>($edit_id ? $orig_order['log_id'] : 0),'comp_orig_prices'=>$executed_orig_prices);
 		}
-		/*
-		if ($CFG->memcached)
-			self::unsetCache();
-		*/
+		
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
 	}
 	
@@ -1198,10 +1129,6 @@ class Orders {
 		
 		$email = SiteEmail::getRecord('order-cancelled');
 		Email::send($CFG->form_email,$user_info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user_info);
-		/*
-		if ($CFG->memcached)
-			self::unsetCache();
-		*/
 	}
 	
 	private static function setStatus($order_id,$status,$order_log_id=false,$btc_remaining=false) {
@@ -1227,10 +1154,18 @@ class Orders {
 		if (!($order_log_id > 0) && !($user_id > 0))
 			return false;
 		
-		$sql = "SELECT order_log.id AS id, IF(order_log.order_type = {$CFG->order_type_bid},'buy','sell') AS side, IF(order_log.market_price = 'Y','market',IF(order_log.stop_price > 0,'stop','limit')) AS `type`, order_log.btc AS amount, IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining) AS amount_remaining, order_log.btc_price AS price, ROUND(SUM(IF(transactions.id IS NOT NULL OR transactions1.id IS NOT NULL,(IF(transactions.id IS NOT NULL,transactions.btc,transactions1.btc)  / (order_log.btc - IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining))) * IF(transactions.id IS NOT NULL,transactions.btc_price,transactions1.orig_btc_price),0)),2) AS avg_price_executed, order_log.stop_price AS stop_price, LOWER(currencies.currency) AS currency, order_log.status AS status, order_log.p_id AS replaced, IF(order_log.status = 'REPLACED',replacing_order.id,0) AS replaced_by
+		$currency_abbr = '(CASE order_log.currency';
+		foreach ($CFG->currencies as $curr_id => $currency1) {
+			if (is_numeric($curr_id) || $currency1['currency'] == 'BTC')
+				continue;
+		
+			$currency_abbr .= ' WHEN '.$currency1['id'].' THEN "'.$currency1['currency'].'" ';
+		}
+		$currency_abbr .= ' END)';
+		
+		$sql = "SELECT order_log.id AS id, IF(order_log.order_type = {$CFG->order_type_bid},'buy','sell') AS side, IF(order_log.market_price = 'Y','market',IF(order_log.stop_price > 0,'stop','limit')) AS `type`, order_log.btc AS amount, IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining) AS amount_remaining, order_log.btc_price AS price, ROUND(SUM(IF(transactions.id IS NOT NULL OR transactions1.id IS NOT NULL,(IF(transactions.id IS NOT NULL,transactions.btc,transactions1.btc)  / (order_log.btc - IF(order_log.status = 'ACTIVE',orders.btc,order_log.btc_remaining))) * IF(transactions.id IS NOT NULL,transactions.btc_price,transactions1.orig_btc_price),0)),2) AS avg_price_executed, order_log.stop_price AS stop_price, $currency_abbr AS currency, order_log.status AS status, order_log.p_id AS replaced, IF(order_log.status = 'REPLACED',replacing_order.id,0) AS replaced_by
 		FROM order_log 
 		LEFT JOIN orders ON (order_log.id = orders.log_id) 
-		LEFT JOIN currencies ON (currencies.id = order_log.currency) 
 		LEFT JOIN transactions ON (order_log.id = transactions.log_id)
 		LEFT JOIN transactions transactions1 ON (order_log.id = transactions1.log_id1)
 		LEFT JOIN order_log replacing_order ON (order_log.id = replacing_order.p_id)
@@ -1281,10 +1216,6 @@ class Orders {
 		
 		self::setStatus(false,'CANCELLED_USER',$del_order['log_id'],$del_order['btc']);
 		db_delete('orders',$del_order['id']);
-		/*
-		if ($CFG->memcached)
-			self::unsetCache();
-		*/
 		
 		return self::getStatus($del_order['log_id']);
 	}
@@ -1322,10 +1253,6 @@ class Orders {
 			}
 		}
 		db_commit();
-		/*
-		if ($CFG->memcached)
-			self::unsetCache();
-		*/
 		return $orders_info;
 	}
 }
