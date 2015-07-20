@@ -558,8 +558,8 @@ class Orders {
 		
 		$subtotal = $amount * (($stop_price > 0 && !($price) > 0) ? $stop_price : $price);
 		$fee_amount = ($fee * 0.01) * $subtotal;
-		$total = ($buy) ? $subtotal + $fee_amount : $subtotal - $fee_amount;
-		$edit_old_fiat = ($orig_order) ? ($orig_order['btc'] * $orig_order['btc_price']) + (($orig_order['btc'] * $orig_order['btc_price']) * ($fee * 0.01)) : 0; 
+		$total = ($buy) ? round($subtotal + $fee_amount,2,PHP_ROUND_HALF_UP) : $subtotal - $fee_amount;
+		$edit_old_fiat = ($orig_order) ? round(($orig_order['btc'] * $orig_order['btc_price']) + (($orig_order['btc'] * $orig_order['btc_price']) * ($fee * 0.01)),2,PHP_ROUND_HALF_UP) : 0; 
 		$edit_old_btc = ($orig_order) ? $orig_order['btc'] : 0;
 		$user_id = (!$user_id) ? User::$info['id'] : $user_id;
 		
@@ -658,6 +658,7 @@ class Orders {
 		$this_triggered_stop = ($stop_price > 0 && $market_price);
 		$stop_price = ($stop_price > 0 && $market_price) ? false : $stop_price;
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
+		$fee = ($buy && $price < $ask || !$buy && $price > $bid) ? $user_fee['fee1'] : $fee;
 		
 		$insert_id = 0;
 		$transactions = 0;
@@ -1160,8 +1161,10 @@ class Orders {
 			$order_info = array('id'=>$order_log_id,'side'=>($buy ? 'buy' : 'sell'),'type'=>(($market_price) ? 'market' : (($stop_price > 0) ? 'stop' : 'limit')),'amount'=>$orig_amount,'amount_remaining'=>$amount,'price'=>round($price,8,PHP_ROUND_HALF_UP),'avg_price_executed'=>((count($executed_prices) > 0) ? round(array_sum($avg_exec),2,PHP_ROUND_HALF_UP) : 0),'stop_price'=>$stop_price,'currency'=>strtoupper($currency1),'status'=>$order_status,'replaced'=>($edit_id ? $orig_order['log_id'] : 0),'comp_orig_prices'=>$executed_orig_prices);
 		}
 		
-		if ($CFG->memcached)
+		if ($CFG->memcached) {
 			self::unsetCache();
+			User::deleteBalanceCache($this_user_id);
+		}
 		
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
 	}
