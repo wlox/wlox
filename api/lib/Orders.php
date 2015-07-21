@@ -461,20 +461,45 @@ class Orders {
 		return $result;
 	}
 	
-	public static function lockOrder($user_id,$order_id,$currency_id) {
+	public static function lockOrder($order_id,$currency_abbr) {
 		global $CFG;
 		
-		$user_fee = FeeSchedule::getUserFees($user_id);
 		$orig_order = DB::getRecord('orders',$order_id,0,1,false,false,false,1);
-		$user_balances = User::getBalances($user_id,array($currency_id,$CFG->btc_currency_id),true);
-		$on_hold = User::getOnHold(1,$user_id,$user_fee,array($currency_id,$CFG->btc_currency_id));
+		if (!$orig_order)
+			return false;
+		
+		$usd_field = 'usd_ask';
+		$currency1 = $CFG->currencies[$orig_order['currency']];
+		$currency_info = $CFG->currencies[strtoupper($currency_abbr)];
+		$currency_id = $currency1['id'];
+		$conversion = ($currency_info['currency'] == 'USD') ? $currency1[$usd_field] : $currency1[$usd_field] / $currency_info[$usd_field];
+		$user_fee = FeeSchedule::getUserFees($orig_order['site_user']);
+		$user_balances = User::getBalances($orig_order['site_user'],array($currency_id,$CFG->btc_currency_id),true);
+		$on_hold = User::getOnHold(1,$orig_order['site_user'],$user_fee,array($currency_id,$CFG->btc_currency_id));
 		
 		$fiat_on_hold = (!empty($on_hold[$CFG->currencies[$currency_id]['currency']]['total'])) ? $on_hold[$CFG->currencies[$currency_id]['currency']]['total'] : 0;
 		$btc_on_hold = $fiat_on_hold = (!empty($on_hold['BTC']['total'])) ? $on_hold['BTC']['total'] : 0;
 		$btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
 		$fiat_balance = (!empty($user_balances[strtolower($CFG->currencies[$currency_id]['currency'])])) ? $user_balances[strtolower($CFG->currencies[$currency_id]['currency'])] : 0;
 		
-		return array('fiat_on_hold'=>$fiat_on_hold,'btc_on_hold'=>$btc_on_hold,'btc_balance'=>$btc_balance,'fiat_balance'=>$fiat_balance,'fee'=>$user_fee['fee'],'fee1'=>$user_fee['fee1']);
+		$return = array(
+			'id'=>$orig_order['id'],
+			'is_market'=>$orig_order['market_price'],
+			'order_type'=>$orig_order['order_type'],
+			'btc_price'=>$orig_order['btc_price'],
+			'btc_outstanding'=>$orig_order['btc'],
+			'site_user'=>$orig_order['site_user'],
+			'log_id'=>$orig_order['log_id'],
+			'currency_id'=>$orig_order['currency'],
+			'stop_price'=>$orig_order['stop_price'],
+			'fiat_price'=>round($orig_order['btc_price'] * ($conversion + (($conversion * $CFG->currency_conversion_fee) * ($orig_order['order_type'] == $CFG->order_type_ask ? 1 : -1))),2,PHP_ROUND_HALF_UP),
+			'fiat_on_hold'=>$fiat_on_hold,
+			'btc_on_hold'=>$btc_on_hold,
+			'btc_balance'=>$btc_balance,
+			'fiat_balance'=>$fiat_balance,
+			'fee'=>$user_fee['fee'],
+			'fee1'=>$user_fee['fee1']);
+		return $return;
 	}
 	
 	public static function checkUserOrders($buy,$currency_info,$user_id=false,$price,$stop_price,$fee,$is_stop=false) {
@@ -776,7 +801,7 @@ class Orders {
 						continue;
 					}
 					
-					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					$comp_user_info = self::lockOrder($comp_order['id'],$currency1);
 					if (!$comp_user_info)
 						continue;
 					
@@ -973,7 +998,7 @@ class Orders {
 						continue;
 					}
 					
-					$comp_user_info = self::lockOrder($comp_order['site_user'],$comp_order['id'],$comp_order['currency_id']);
+					$comp_user_info = self::lockOrder($comp_order['id'],$currency1);
 					if (!$comp_user_info)
 						continue;
 						
