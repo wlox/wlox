@@ -248,13 +248,23 @@ class User {
 			$currencies = array($currencies);
 		
 		$currencies_str = '';
+		$currencies_str1 = '';
 		if (is_array($currencies))
 			$currencies_str .= 'AND currency IN ('.implode(',',$currencies).')';
+		if (is_array($currencies)) {
+			$currencies1 = $currencies;
+			if (in_array($CFG->btc_currency_id,$currencies1)) {
+				unset($currencies1[$CFG->btc_currency_id]);
+				$currencies_str1 .= 'AND (order_type = '.$CFG->order_type_ask.' OR currency IN ('.implode(',',$currencies).'))';
+			}
+			else
+				$currencies_str1 .= 'AND currency IN ('.implode(',',$currencies1).')';
+		}
 		
 		$sql = "
 		SELECT currency, ROUND(SUM(IF(currency != {$CFG->btc_currency_id},amount,0)),2) AS fiat, SUM(IF(currency = {$CFG->btc_currency_id},amount,0)) AS btc, 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND request_status IN ({$CFG->request_pending_id},{$CFG->request_awaiting_id}) $currencies_str GROUP BY currency
 		UNION
-		SELECT currency, ROUND(SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)),2) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id $currencies_str GROUP BY currency $lock";
+		SELECT currency, ROUND(SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)),2) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id $currencies_str1 GROUP BY currency $lock";
 		$result = db_query_array($sql);
 		
 		if ($result) {
@@ -279,7 +289,7 @@ class User {
 			}
 		}
 		
-		if (array_key_exists('BTC',$on_hold) && count($on_hold) > 1) {
+		if ($currencies && array_key_exists('BTC',$on_hold) && count($on_hold) > 1) {
 			$btc_row = array_shift($on_hold);
 			ksort($on_hold);
 			$on_hold = array_merge(array('BTC'=>$btc_row),$on_hold);

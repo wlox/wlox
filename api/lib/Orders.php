@@ -465,7 +465,7 @@ class Orders {
 		global $CFG;
 		
 		$orig_order = DB::getRecord('orders',$order_id,0,1,false,false,false,1);
-		if (!$orig_order)
+		if (!$orig_order || !($orig_order['btc'] > 0))
 			return false;
 		
 		$usd_field = 'usd_ask';
@@ -473,14 +473,14 @@ class Orders {
 		$currency_info = $CFG->currencies[strtoupper($currency_abbr)];
 		$currency_id = $currency1['id'];
 		$conversion = ($currency_info['currency'] == 'USD') ? $currency1[$usd_field] : $currency1[$usd_field] / $currency_info[$usd_field];
+		$fiat_price = ($currency_info['id'] == $currency1['id']) ? $orig_order['btc_price'] : round($orig_order['btc_price'] * ($conversion + (($conversion * $CFG->currency_conversion_fee) * ($orig_order['order_type'] == $CFG->order_type_ask ? 1 : -1))),2,PHP_ROUND_HALF_UP);
 		$user_fee = FeeSchedule::getUserFees($orig_order['site_user']);
 		$user_balances = User::getBalances($orig_order['site_user'],array($currency_id,$CFG->btc_currency_id),true);
 		$on_hold = User::getOnHold(1,$orig_order['site_user'],$user_fee,array($currency_id,$CFG->btc_currency_id));
-		
-		$fiat_on_hold = (!empty($on_hold[$CFG->currencies[$currency_id]['currency']]['total'])) ? $on_hold[$CFG->currencies[$currency_id]['currency']]['total'] : 0;
-		$btc_on_hold = $fiat_on_hold = (!empty($on_hold['BTC']['total'])) ? $on_hold['BTC']['total'] : 0;
+		$fiat_on_hold = (!empty($on_hold[$currency1['currency']]['total'])) ? $on_hold[$currency1['currency']]['total'] : 0;
+		$btc_on_hold = (!empty($on_hold['BTC']['total'])) ? $on_hold['BTC']['total'] : 0;
 		$btc_balance = (!empty($user_balances['btc'])) ? $user_balances['btc'] : 0;
-		$fiat_balance = (!empty($user_balances[strtolower($CFG->currencies[$currency_id]['currency'])])) ? $user_balances[strtolower($CFG->currencies[$currency_id]['currency'])] : 0;
+		$fiat_balance = (!empty($user_balances[strtolower($currency1['currency'])])) ? $user_balances[strtolower($currency1['currency'])] : 0;
 		
 		$return = array(
 			'id'=>$orig_order['id'],
@@ -492,13 +492,14 @@ class Orders {
 			'log_id'=>$orig_order['log_id'],
 			'currency_id'=>$orig_order['currency'],
 			'stop_price'=>$orig_order['stop_price'],
-			'fiat_price'=>round($orig_order['btc_price'] * ($conversion + (($conversion * $CFG->currency_conversion_fee) * ($orig_order['order_type'] == $CFG->order_type_ask ? 1 : -1))),2,PHP_ROUND_HALF_UP),
+			'fiat_price'=>$fiat_price,
 			'fiat_on_hold'=>$fiat_on_hold,
 			'btc_on_hold'=>$btc_on_hold,
 			'btc_balance'=>$btc_balance,
 			'fiat_balance'=>$fiat_balance,
 			'fee'=>$user_fee['fee'],
 			'fee1'=>$user_fee['fee1']);
+		
 		return $return;
 	}
 	
