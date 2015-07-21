@@ -277,15 +277,21 @@ class User {
 								
 				if ($row['type'] == 'r') {
 					$on_hold['BTC']['withdrawal'] = floatval($row['btc']) + (!empty($on_hold['BTC']['withdrawal']) ? $on_hold['BTC']['withdrawal'] : 0);
-					$on_hold[$curr_abbr]['withdrawal'] = $row['fiat'];
+					
+					if (!$currencies || in_array($row['currency'],$currencies))
+						$on_hold[$curr_abbr]['withdrawal'] = $row['fiat'];
 				}
 				else {
 					$on_hold['BTC']['order'] = floatval($row['btc']) + (!empty($on_hold['BTC']['order']) ? $on_hold['BTC']['order'] : 0);
-					$on_hold[$curr_abbr]['order'] = $row['fiat'];
+					
+					if (!$currencies || in_array($row['currency'],$currencies))
+						$on_hold[$curr_abbr]['order'] = $row['fiat'];
 				}
 				
 				$on_hold['BTC']['total'] = floatval($row['btc']) + (!empty($on_hold['BTC']['total']) ? $on_hold['BTC']['total'] : 0);
-				$on_hold[$curr_abbr]['total'] = floatval($row['fiat']) + (!empty($on_hold[$curr_abbr]['total']) ? $on_hold[$curr_abbr]['total'] : 0);
+				
+				if (!$currencies || in_array($row['currency'],$currencies))
+					$on_hold[$curr_abbr]['total'] = floatval($row['fiat']) + (!empty($on_hold[$curr_abbr]['total']) ? $on_hold[$curr_abbr]['total'] : 0);
 			}
 		}
 		
