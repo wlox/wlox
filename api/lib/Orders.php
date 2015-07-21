@@ -461,7 +461,7 @@ class Orders {
 		return $result;
 	}
 	
-	public static function lockOrder($order_id,$currency_abbr) {
+	public static function lockOrder($order_id,$currency_abbr,$last_price) {
 		global $CFG;
 		
 		$orig_order = DB::getRecord('orders',$order_id,0,1,false,false,false,1);
@@ -487,6 +487,8 @@ class Orders {
 			'is_market'=>$orig_order['market_price'],
 			'order_type'=>$orig_order['order_type'],
 			'btc_price'=>$orig_order['btc_price'],
+			'orig_btc_price'=>(($orig_order['market_price'] == 'Y') ? $last_price : $orig_order['btc_price']),
+			'real_market_price'=>(($currency_info['id'] == $currency1['id']) ? $orig_order['btc_price'] : $orig_order['btc_price'] * $conversion),
 			'btc_outstanding'=>$orig_order['btc'],
 			'site_user'=>$orig_order['site_user'],
 			'log_id'=>$orig_order['log_id'],
@@ -685,6 +687,7 @@ class Orders {
 		$stop_price = ($stop_price > 0 && $market_price) ? false : $stop_price;
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
 		$fee = ($buy && $price < $ask || !$buy && $price > $bid) ? $user_fee['fee1'] : $fee;
+		$last_price = ($buy) ? $ask : $bid;
 		
 		$insert_id = 0;
 		$transactions = 0;
@@ -802,7 +805,7 @@ class Orders {
 						continue;
 					}
 					
-					$comp_user_info = self::lockOrder($comp_order['id'],$currency1);
+					$comp_user_info = self::lockOrder($comp_order['id'],$currency1,$last_price);
 					if (!$comp_user_info)
 						continue;
 					
@@ -875,6 +878,7 @@ class Orders {
 					$executed_orders[] = $comp_order['id'];
 					$executed_prices[] = array('price'=>$comp_order['fiat_price'],'amount'=>$trans_amount);
 					$executed_orig_prices[$comp_order['id']] = array('price'=>$comp_order['orig_btc_price'],'amount'=>$trans_amount);
+					$last_price = $comp_order['fiat_price'];
 					++$transactions;
 					
 					if (round($comp_order_outstanding,8,PHP_ROUND_HALF_UP) > 0) {
@@ -999,7 +1003,7 @@ class Orders {
 						continue;
 					}
 					
-					$comp_user_info = self::lockOrder($comp_order['id'],$currency1);
+					$comp_user_info = self::lockOrder($comp_order['id'],$currency1,$last_price);
 					if (!$comp_user_info)
 						continue;
 						
@@ -1074,6 +1078,7 @@ class Orders {
 					$executed_orders[] = $comp_order['id'];
 					$executed_prices[] = array('price'=>$comp_order['fiat_price'],'amount'=>$trans_amount);
 					$executed_orig_prices[$comp_order['id']] = array('price'=>$comp_order['orig_btc_price'],'amount'=>$trans_amount);
+					$last_price = $comp_order['fiat_price'];
 					++$transactions;
 					
 					if ($currency_info['id'] != $comp_order['currency_id'])
