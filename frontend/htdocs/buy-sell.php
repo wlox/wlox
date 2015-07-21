@@ -137,7 +137,7 @@ if ($sell && !is_array(Errors::$errors)) {
 	
 	if (!$confirmed && !$cancel) {
 		API::add('Orders','checkPreconditions',array(0,$currency_info,$sell_amount1,(($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1),$sell_stop_price1,$user_fee_ask,$user_available['BTC'],$current_bid,$current_ask,$sell_market_price1));
-		if (!$buy_market_price1)
+		if (!$sell_market_price1)
 			API::add('Orders','checkUserOrders',array(0,$currency_info,false,(($sell_stop && !$sell_limit) ? $sell_stop_price1 : $sell_price1),$sell_stop_price1,$user_fee_ask,$sell_stop));
 	
 		$query = API::send();
