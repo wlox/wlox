@@ -758,6 +758,7 @@ function updateTransactionsList() {
 	if (!($('#refresh_transactions').length > 0))
 		return false;
 	
+	var gmt_offset = parseInt($('#gmt_offset').val()) * -1;
 	var update = setInterval(function(){
 		while (!ajax_active) {
 			var currency = $('#graph_orders_currency').val();
@@ -780,7 +781,7 @@ function updateTransactionsList() {
 						var this_fa_symbol = $('#curr_sym_'+transaction.currency).val();
 						var string = '<tr id="transaction_'+transaction.id+'">';
 						string += '<td>'+transaction.type+'</td>';
-						string += '<td><input type="hidden" class="localdate" value="'+(parseInt(transaction.datestamp))+'" /></td>';
+						string += '<td><input type="hidden" class="localdate" value="'+(parseInt(transaction.datestamp) + gmt_offset)+'" /></td>';
 						string += '<td>'+((parseFloat(transaction.btc_net)).toFixed(8))+'</td>';
 						string += '<td>'+this_fa_symbol+formatCurrency(transaction.btc_net * transaction.fiat_price)+'</td>';
 						string += '<td>'+this_fa_symbol+formatCurrency(transaction.fiat_price)+'</td>';
