@@ -229,7 +229,7 @@ class User {
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
 		if ($CFG->memcached && !$currencies && empty($CFG->m_skip)) {
-			$cached = $CFG->m->get('on_hold_'.$user_id);
+			//$cached = $CFG->m->get('on_hold_'.$user_id);
 			if (is_array($cached)) {
 				self::$on_hold = $cached;
 				if (!empty($cached))
@@ -249,9 +249,10 @@ class User {
 		
 		$currencies_str = '';
 		$currencies_str1 = '';
-		if (is_array($currencies))
-			$currencies_str .= 'AND currency IN ('.implode(',',$currencies).')';
+		$amounts = array();
+		$amounts1 = array();
 		if (is_array($currencies)) {
+			$currencies_str .= 'AND currency IN ('.implode(',',$currencies).')';
 			$currencies1 = $currencies;
 			if (in_array($CFG->btc_currency_id,$currencies1)) {
 				unset($currencies1[$CFG->btc_currency_id]);
@@ -259,39 +260,52 @@ class User {
 			}
 			else
 				$currencies_str1 .= 'AND currency IN ('.implode(',',$currencies1).')';
+			
+			foreach ($currencies as $currency_id) {
+				$amounts[] = 'SUM(IF(currency = '.$currency_id.',amount,0)) AS '.$CFG->currencies[$currency_id]['currency'];
+				
+				if ($currency_id != $CFG->btc_currency_id)
+					$amounts1[] = 'SUM(IF(order_type = '.$CFG->order_type_bid.' AND currency = '.$currency_id.',fiat + (fiat * '.$fee.'),0)) AS '.$CFG->currencies[$currency_id]['currency'];
+				else
+					$amounts1[] = 'SUM(IF(order_type = '.$CFG->order_type_ask.',btc,0)) AS '.$CFG->currencies[$currency_id]['currency'];
+			}
+		}
+		else {
+			foreach ($CFG->currencies as $currency_id => $currency1) {
+				if (!is_numeric($currency_id))
+					continue;
+			
+				$amounts[] = 'SUM(IF(currency = '.$currency_id.',amount,0)) AS '.$currency1['currency'];
+				
+				if ($currency_id != $CFG->btc_currency_id)
+					$amounts1[] = 'SUM(IF(order_type = '.$CFG->order_type_bid.' AND currency = '.$currency_id.',fiat + (fiat * '.$fee.'),0)) AS '.$currency1['currency'];
+				else
+					$amounts1[] = 'SUM(IF(order_type = '.$CFG->order_type_ask.',btc,0)) AS '.$currency1['currency'];
+			}
 		}
 		
 		$sql = "
-		SELECT currency, ROUND(SUM(IF(currency != {$CFG->btc_currency_id},amount,0)),2) AS fiat, SUM(IF(currency = {$CFG->btc_currency_id},amount,0)) AS btc, 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND request_status IN ({$CFG->request_pending_id},{$CFG->request_awaiting_id}) $currencies_str GROUP BY currency
+		SELECT ".implode(',',$amounts).", 'r' AS type FROM requests WHERE site_user = $user_id AND request_type = {$CFG->request_widthdrawal_id} AND request_status IN ({$CFG->request_pending_id},{$CFG->request_awaiting_id}) $currencies_str
 		UNION
-		SELECT currency, ROUND(SUM(IF(order_type = {$CFG->order_type_bid},fiat + (fiat * $fee),0)),2) AS fiat, SUM(IF(order_type = {$CFG->order_type_ask},btc,0)) AS btc, 'o' AS type FROM orders WHERE site_user = $user_id $currencies_str1 GROUP BY currency $lock";
+		SELECT ".implode(',',$amounts1).", 'o' AS type FROM orders WHERE site_user = $user_id $currencies_str1 $lock";
 		$result = db_query_array($sql);
-		
 		if ($result) {
-			$btc_total_req = 0;
-			$btc_total_ord = 0;
-			
 			foreach ($result as $row) {
-				$fiat_total = 0;
-				$curr_abbr = $CFG->currencies[$row['currency']]['currency'];
-								
-				if ($row['type'] == 'r') {
-					$on_hold['BTC']['withdrawal'] = floatval($row['btc']) + (!empty($on_hold['BTC']['withdrawal']) ? $on_hold['BTC']['withdrawal'] : 0);
+				foreach ($row as $field => $value) {
+					if (!($value > 0))
+						continue;
+					if ($field != 'BTC')
+						$value = round($value,2,PHP_ROUND_HALF_UP);
 					
-					if (!$currencies || in_array($row['currency'],$currencies))
-						$on_hold[$curr_abbr]['withdrawal'] = $row['fiat'];
-				}
-				else {
-					$on_hold['BTC']['order'] = floatval($row['btc']) + (!empty($on_hold['BTC']['order']) ? $on_hold['BTC']['order'] : 0);
+					if ($row['type'] == 'r') {
+						$on_hold[$field]['withdrawal'] = $value;
+					}
+					else {
+						$on_hold[$field]['order'] = $value;
+					}
 					
-					if (!$currencies || in_array($row['currency'],$currencies))
-						$on_hold[$curr_abbr]['order'] = $row['fiat'];
+					$on_hold[$field]['total'] = floatval($value) + (!empty($on_hold[$field]['total']) ? $on_hold[$field]['total'] : 0);
 				}
-				
-				$on_hold['BTC']['total'] = floatval($row['btc']) + (!empty($on_hold['BTC']['total']) ? $on_hold['BTC']['total'] : 0);
-				
-				if (!$currencies || in_array($row['currency'],$currencies))
-					$on_hold[$curr_abbr]['total'] = floatval($row['fiat']) + (!empty($on_hold[$curr_abbr]['total']) ? $on_hold[$curr_abbr]['total'] : 0);
 			}
 		}
 		
