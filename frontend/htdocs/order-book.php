@@ -24,7 +24,7 @@ $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
 $last_transaction = $query['Transactions']['get']['results'][0][0];
 $last_trans_currency = ($last_transaction['currency'] == $currency_info['id']) ? false : (($last_transaction['currency1'] == $currency_info['id']) ? false : ' ('.$CFG->currencies[$last_transaction['currency1']]['currency'].')');
-$last_trans_symbol = ($last_transaction['currency'] == $currency_info['id'] || $last_transaction['currency1'] == $currency_info['id']) ? $currency_info['fa_symbol'] : $CFG->currencies[$last_transaction['currency1']]['fa_symbol'];
+$last_trans_symbol = $currency_info['fa_symbol'];
 $last_trans_color = ($last_transaction['maker_type'] == 'sell') ? 'price-green' : 'price-red';
 
 include 'includes/head.php';

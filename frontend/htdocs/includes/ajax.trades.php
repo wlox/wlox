@@ -8,7 +8,7 @@ $currency1 = (array_key_exists(strtoupper($_REQUEST['currency']),$CFG->currencie
 $notrades = (!empty($_REQUEST['notrades']));
 $limit = (!empty($_REQUEST['get10'])) ? 10 : 5;
 $user = (!empty($_REQUEST['user']));
-$currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : false;
+$currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : $CFG->currencies['USD'];
 
 
 if (!$notrades) {
@@ -41,7 +41,7 @@ if (!$notrades) {
 if (!empty($_REQUEST['last_price'])) {
 	$return['last_price'] = $query['Transactions']['get']['results'][0][0]['btc_price'];
 	$return['last_price_curr'] = ($query['Transactions']['get']['results'][0][0]['currency'] == $currency_info['id']) ? '' : (($query['Transactions']['get']['results'][0][0]['currency1'] == $currency_info['id']) ? '' : ' ('.$CFG->currencies[$query['Transactions']['get']['results'][0][0]['currency1']]['currency'].')');
-	$return['fa_symbol'] = $CFG->currencies[$query['Transactions']['get']['results'][0][0]['currency1']]['fa_symbol'];
+	$return['fa_symbol'] = $currency_info['fa_symbol'];
 	$return['last_trans_color'] = ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red';
 	
 	if ($currency1) {
