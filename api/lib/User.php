@@ -229,7 +229,7 @@ class User {
 		
 		$user_id = ($user_id > 0) ? $user_id : User::$info['id'];
 		if ($CFG->memcached && !$currencies && empty($CFG->m_skip)) {
-			//$cached = $CFG->m->get('on_hold_'.$user_id);
+			$cached = $CFG->m->get('on_hold_'.$user_id);
 			if (is_array($cached)) {
 				self::$on_hold = $cached;
 				if (!empty($cached))
