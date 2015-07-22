@@ -292,8 +292,11 @@ class User {
 		if ($result) {
 			foreach ($result as $row) {
 				foreach ($row as $field => $value) {
-					if (!($value > 0))
+					if ($field == 'type')
 						continue;
+					if (!($value > 0) && !($currencies && in_array($CFG->currencies[$field]['id'],$currencies)))
+						continue;
+					
 					if ($field != 'BTC')
 						$value = round($value,2,PHP_ROUND_HALF_UP);
 					
@@ -309,8 +312,9 @@ class User {
 			}
 		}
 		
-		if ($currencies && array_key_exists('BTC',$on_hold) && count($on_hold) > 1) {
-			$btc_row = array_shift($on_hold);
+		if (!$currencies && array_key_exists('BTC',$on_hold) && count($on_hold) > 1) {
+			$btc_row = $on_hold['BTC'];
+			unset($on_hold['BTC']);
 			ksort($on_hold);
 			$on_hold = array_merge(array('BTC'=>$btc_row),$on_hold);
 		}
