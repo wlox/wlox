@@ -4,10 +4,12 @@
 	.mobilebanner { height: 380px;padding: 100px 0 0 0;}
 	.mobilebanner h1 { font-size:58px;margin-bottom: 20px;}
 	.mobilebanner .text { font-size: 16px;line-height: 26px;}
+	.m_head {display:none;}
 }
 
 @media only screen and (min-width: 1000px) and (max-width: 1169px){
-
+	
+.m_head {display:none;}
 .container {
 	width: 1000px;
 	margin: auto auto auto auto;
@@ -87,6 +89,9 @@ ul.post_meta_links {
 
 
 @media only screen and (min-width: 768px) and (max-width: 999px){
+.global_stats .stat1 {font-size:18px !important;}
+.global_stats .stat2 {font-size:18px !important;}
+.m_head {display:none;}
 .container {
 	width: 747px;
 	margin: auto auto auto auto;
@@ -426,7 +431,11 @@ a.show_hide{
 }
 
 
-
+@media only screen and (max-width: 767px){
+.panel-body .one_fifth{margin-bottom: 2px;}
+.panel-body .one_third{margin-bottom: 2px;}
+.non-mobile {display:none;}
+}
 
 @media only screen and (min-width: 480px) and (max-width: 767px){
 	

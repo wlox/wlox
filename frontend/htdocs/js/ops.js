@@ -386,13 +386,13 @@ function updateTransactions() {
 								
 								if (typeof json_data.last_price_cnv == 'object') {
 									for (key1 in json_data.last_price_cnv) {
-										$('#price_'+key1).html(json_data.last_price_cnv[key1]);
+										$('.price_'+key1).html(json_data.last_price_cnv[key1]);
 										console.log(key1,this_currency_abbr1);
 										if (key1 == this_currency_abbr1) {
 											if (this.maker_type == 'sell')
-												$('#price_'+key1).parent().removeClass('price-red').addClass('price-green');
+												$('.price_'+key1).parent().removeClass('price-red').addClass('price-green');
 											else
-												$('#price_'+key1).parent().removeClass('price-green').addClass('price-red');
+												$('.price_'+key1).parent().removeClass('price-green').addClass('price-red');
 										}
 											
 									}
@@ -1276,10 +1276,44 @@ function confirmDeleteAll(uniq,e) {
     }
 }
 
+function startTicker() {
+	var elem = $('.ticker .scroll');
+	var elem_f = $('.ticker .scroll');
+	var elem_sub_l = $('.ticker .scroll a:last');
+	var elem_sub_l_w = elem_sub_l.outerWidth();
+	var elem_w = elem.outerWidth();
+	var window_w = $(window).width();
+	var cloned = false;
+
+	var properties = {duration:400,easing:'linear',complete:function(){
+		$('.ticker .scroll').animate({left:'-=50px'},properties);
+	},progress:function(){
+		offset = elem_sub_l.offset();
+		if (elem_sub_l && offset) {
+			if ((window_w + 500) - offset.left > 0) {
+				elem = $('.ticker .scroll:last').clone().css('left',(offset.left + elem_sub_l_w)+'px').insertAfter('.ticker .scroll:last');
+				elem_sub_l = elem.find('a:last');
+				cloned = true;
+			}
+		}
+		if (elem_f && elem_f.offset()) {
+			if ((elem_f.offset().left * -1) >= elem_f.outerWidth() && cloned) {
+				console.log(elem_f.offset().left);
+				elem_f.remove();
+				elem_f = $('.ticker .scroll:first');
+				cloned = false;
+			}
+		}
+			
+	}};
+	elem.animate({left:'-=50px'},properties);
+}
+
 $(document).ready(function() {
 	if ($("#graph_price_history").length > 0) {
 		var currency = $('#graph_price_history_currency').val();
 		graphPriceHistory('1mon',currency);
+		startTicker();
 	}
 	
 	if ($("#graph_orders").length > 0) {
