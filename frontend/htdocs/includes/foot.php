@@ -76,7 +76,8 @@
     
         <div class="one_half">
         
-            <b>Copyright &copy; 2014 WLOX. All rights reserved.  <a href="terms.php">Terms of Use</a> | <a href="privacy.php">Privacy Policy</a></b>
+            <b>Copyright &copy; 2014 WLOX. All rights reserved.</b>
+
             
         </div>
     

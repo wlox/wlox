@@ -35,10 +35,11 @@ if (!empty($hostname) && !stristr($hostname,'localhost')) {
 if (!empty($_SERVER["HTTPS"]))
 	ini_set('session.cookie_secure',1);
 
-ini_set('session.cookie_httponly',1);
-ini_set('session.cookie_path','/');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
+header('unset X-Powered-By');
+ini_set('session.cookie_httponly',1);
+ini_set('session.cookie_path','/');
 
 /* Readonly Sessions */
 if (empty($ajax)) {
