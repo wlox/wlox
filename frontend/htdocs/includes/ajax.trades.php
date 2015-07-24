@@ -9,6 +9,7 @@ $notrades = (!empty($_REQUEST['notrades']));
 $limit = (!empty($_REQUEST['get10'])) ? 10 : 5;
 $user = (!empty($_REQUEST['user']));
 $currency_info = ($currency1) ? $CFG->currencies[strtoupper($currency1)] : $CFG->currencies['USD'];
+$usd_field = 'usd_ask';
 
 
 if (!$notrades) {
@@ -47,6 +48,18 @@ if (!empty($_REQUEST['last_price'])) {
 	if ($currency1) {
 		$return['available_fiat'] = (!empty($query['User']['getAvailable']['results'][0][strtoupper($currency1)])) ? number_format($query['User']['getAvailable']['results'][0][strtoupper($currency1)],2) : '0';
 		$return['available_btc'] = (!empty($query['User']['getAvailable']['results'][0]['BTC'])) ? number_format($query['User']['getAvailable']['results'][0]['BTC'],8) : '0';
+	}
+	
+	if (!$notrades) {
+		if ($CFG->currencies) {
+			foreach ($CFG->currencies as $key => $currency) {
+				if (is_numeric($key) || $currency['currency'] == 'BTC')
+					continue;
+		
+				$last_price = number_format($return['last_price'] * ((empty($currency_info) || $currency_info['currency'] == 'USD') ? 1/$currency[$usd_field] : $currency_info[$usd_field] / $currency[$usd_field]),2);
+				$return['last_price_cnv'][$currency['currency']] = $last_price;
+			}
+		}
 	}
 }
 

@@ -30,11 +30,12 @@ function graphPriceHistory(timeframe,currency) {
 	     			tickLength: 0
 	     		},
 	     		yaxis: {
+	     			labelWidth:0
 	     		},
 	     		grid: { 
 	     			backgroundColor: '#FFFFFF',
 	     			borderWidth: 1,
-	     			borderColor: '#aaaaaa',
+	     			borderColor: '#dddddd',
 	     			hoverable: true
 	     		},
 	     		crosshair: {
@@ -352,15 +353,20 @@ function updateTransactions() {
 							return true;
 						
 						var this_currency_abbr = (this.currency == currency_id) ? '' : ((this.currency1 == currency_id) ? '' : ' ('+($('#curr_abbr_'+this.currency1).val())+')');
+						var this_currency_abbr1 = $('#curr_abbr_'+currency_id).val();
 						var this_fa_symbol = $('#curr_sym_'+currency_id).val();
 						
 						if (i == 0) {
 							current_price = parseFloat(this.btc_price.replace(',',''));
 							if (current_price > 0) {
-								if (this.maker_type == 'sell')
+								if (this.maker_type == 'sell') {
 									$('#stats_last_price').parents('.stat1').removeClass('price-red').addClass('price-green');
-								else
+									$('#up_or_down1').replaceWith('<i id="up_or_down1" class="fa fa-caret-up price-green"></i>');
+								}
+								else {
 									$('#stats_last_price').parents('.stat1').removeClass('price-green').addClass('price-red');
+									$('#up_or_down1').replaceWith('<i id="up_or_down1" class="fa fa-caret-down price-red"></i>');
+								}
 								
 								var open_price = parseFloat($('#stats_open').html().replace(',',''));
 								var change_perc = formatCurrency(current_price - open_price);
@@ -377,6 +383,20 @@ function updateTransactions() {
 									$('#up_or_down').replaceWith('<i id="up_or_down" class="fa fa-caret-down" style="color:#FF5151;"></i>');
 								else
 									$('#up_or_down').replaceWith('<i id="up_or_down" class="fa fa-minus"></i>');
+								
+								if (typeof json_data.last_price_cnv == 'object') {
+									for (key1 in json_data.last_price_cnv) {
+										$('#price_'+key1).html(json_data.last_price_cnv[key1]);
+										console.log(key1,this_currency_abbr1);
+										if (key1 == this_currency_abbr1) {
+											if (this.maker_type == 'sell')
+												$('#price_'+key1).parent().removeClass('price-red').addClass('price-green');
+											else
+												$('#price_'+key1).parent().removeClass('price-green').addClass('price-red');
+										}
+											
+									}
+								}
 							}
 						}
 						
@@ -1259,7 +1279,7 @@ function confirmDeleteAll(uniq,e) {
 $(document).ready(function() {
 	if ($("#graph_price_history").length > 0) {
 		var currency = $('#graph_price_history_currency').val();
-		graphPriceHistory('1year',currency);
+		graphPriceHistory('1mon',currency);
 	}
 	
 	if ($("#graph_orders").length > 0) {

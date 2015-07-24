@@ -11,8 +11,18 @@ elseif (!empty($_REQUEST['currency']))
 $page_title = Lang::string('home-title');
 $currency1 = (!empty($CFG->currencies[strtoupper($_SESSION['currency'])])) ? strtolower($_SESSION['currency']) : 'usd';
 $currency_symbol = strtoupper($currency1);
-	
+$usd_field = 'usd_ask';
 $currency_info = $CFG->currencies[strtoupper($currency1)];
+$currency_majors = array('USD','EUR','CNY','RUB','CHF','JPY','GBP','CAD','AUD');
+$c_majors = count($currency_majors);
+$currencies = $CFG->currencies;
+
+$currencies1 = array();
+foreach ($currency_majors as $currency) {
+	$currencies1[$currency] = $currencies[$currency];
+	unset($currencies[$currency]);
+}
+$currencies = array_merge($currencies1,$currencies);
 
 if (!User::isLoggedIn()) {
 	API::add('Content','getRecord',array('home'));
@@ -41,7 +51,6 @@ $stats = $query['Stats']['getCurrent']['results'][0];
 $transactions = $query['Transactions']['get']['results'][0];
 $bids = $query['Orders']['get']['results'][0];
 $asks = $query['Orders']['get']['results'][1];
-$currencies = $CFG->currencies;
 $news = $query['News']['get']['results'][0];
 
 include 'includes/head.php';
@@ -149,6 +158,19 @@ elseif ($stats['daily_change'] < 0)
 	$arrow = '<i id="up_or_down" class="fa fa-caret-down price-red"></i> ';
 else
 	$arrow = '<i id="up_or_down" class="fa fa-minus"></i> ';
+
+if ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') {
+	$arrow1 = '<i id="up_or_down1" class="fa fa-caret-up price-green"></i> ';
+	$p_color = 'price-green';
+}
+elseif ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'buy') {
+	$arrow1 = '<i id="up_or_down1" class="fa fa-caret-down price-red"></i> ';
+	$p_color = 'price-red';
+}
+else {
+	$arrow1 = '<i id="up_or_down1" class="fa fa-minus"></i> ';
+	$p_color = '';
+}
 ?>
 <div class="fresh_projects global_stats">
 	<a name="global_stats"></a>
@@ -161,59 +183,98 @@ else
         <h2><?= Lang::string('home-overview') ?></h2>
         <? } ?>
         <div class="mar_top3"></div>
-        <div class="one_fifth">
-        	<h6><?= Lang::string('home-stats-last-price') ?></h6>
-        	<p class="stat1 <?= ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red' ?>"><?= $currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?><small id="stats_last_price_curr"><?= ($query['Transactions']['get']['results'][0][0]['currency'] == $currency_info['id']) ? false : (($query['Transactions']['get']['results'][0][0]['currency1'] == $currency_info['id']) ? false : ' ('.$CFG->currencies[$query['Transactions']['get']['results'][0][0]['currency1']]['currency'].')') ?></small></p>
-        </div>
-        <div class="one_fifth">
-        	<h6><?= Lang::string('home-stats-daily-change') ?></h6>
-        	<p class="stat1"><?= $arrow.'<span id="stats_daily_change_abs">'.number_format(abs($stats['daily_change']),2).'</span>' ?> <small><?= '<span id="stats_daily_change_perc">'.number_format(abs($stats['daily_change_percent']),2).'</span>%'?></small></p>
-        </div>
-        <div class="one_fifth">
-        	<h6><?= Lang::string('home-stats-days-range') ?></h6>
-        	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_min">'.number_format($stats['min'],2).'</span> - <span id="stats_max">'.number_format($stats['max'],2).'</span>' ?></p>
-        </div>
-        <div class="one_fifth">
-        	<h6><?= Lang::string('home-stats-todays-open') ?></h6>
-        	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_open">'.number_format($stats['open'],2).'</span>'?></p>
-        </div>
-        <div class="one_fifth last">
-        	<h6><?= Lang::string('home-stats-24h-volume') ?></h6>
-        	<p class="stat1"><?= '<span id="stats_traded">'.number_format($stats['total_btc_traded'],2).'</span>' ?> BTC</p>
-        </div>
-        <div class="mar_top3"></div>
-        <div class="one_third">
-        	<h5><?= Lang::string('home-stats-market-cap') ?>: <em class="stat2">$<?= '<span id="stats_market_cap">'.number_format($stats['market_cap']).'</span>'?></em></h5>
-        </div>
-        <div class="one_third">
-        	<h5><?= Lang::string('home-stats-total-btc') ?>: <em class="stat2"><?= '<span id="stats_total_btc">'.number_format($stats['total_btc']).'</span>' ?></em></h5>
-        </div>
-        <div class="one_third last">
-        	<h5><?= Lang::string('home-stats-global-volume') ?>: <em class="stat2">$<?= '<span id="stats_trade_volume">'.number_format($stats['trade_volume']).'</span>' ?></em></h5>
-        </div>
-        <div class="mar_top2"></div>
-        <div class="graph_options">
-        	<a href="#" data-option="1mon">1m</a>
-        	<a href="#" data-option="3mon">3m</a>
-        	<a href="#" data-option="6mon">6m</a>
-        	<a href="#" data-option="ytd">YTD</a>
-        	<a href="#" class="selected last" data-option="1year">1y</a>
-        	<span>
-        	<label for="currency_selector"><?= Lang::string('currency') ?></label>
-        	<select id="currency_selector">
-        	<? 
-        	if ($currencies) {
+        <div class="clear"></div>
+        <div class="panel panel-default">
+        	<div class="panel-heading">
+        		<div class="one_fifth"><?= Lang::string('home-stats-last-price') ?></div>
+		        <div class="one_fifth"><?= Lang::string('home-stats-daily-change') ?></div>
+		        <div class="one_fifth"><?= Lang::string('home-stats-days-range') ?></div>
+		        <div class="one_fifth"><?= Lang::string('home-stats-todays-open') ?></div>
+		        <div class="one_fifth last"><?= Lang::string('home-stats-24h-volume') ?></div>
+		        <div class="clear"></div>
+        	</div>
+        	<div class="panel-body">
+		        <div class="one_fifth">
+		        	<p class="stat1 <?= ($query['Transactions']['get']['results'][0][0]['maker_type'] == 'sell') ? 'price-green' : 'price-red' ?>"><?= $arrow1.$currency_info['fa_symbol'].'<span id="stats_last_price">'.number_format($stats['last_price'],2).'</span>'?><small id="stats_last_price_curr"><?= ($query['Transactions']['get']['results'][0][0]['currency'] == $currency_info['id']) ? false : (($query['Transactions']['get']['results'][0][0]['currency1'] == $currency_info['id']) ? false : ' ('.$CFG->currencies[$query['Transactions']['get']['results'][0][0]['currency1']]['currency'].')') ?></small></p>
+		        </div>
+		        <div class="one_fifth">
+		        	<p class="stat1"><?= $arrow.'<span id="stats_daily_change_abs">'.number_format(abs($stats['daily_change']),2).'</span>' ?> <small><?= '<span id="stats_daily_change_perc">'.number_format(abs($stats['daily_change_percent']),2).'</span>%'?></small></p>
+		        </div>
+		        <div class="one_fifth">
+		        	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_min">'.number_format($stats['min'],2).'</span> - <span id="stats_max">'.number_format($stats['max'],2).'</span>' ?></p>
+		        </div>
+		        <div class="one_fifth">
+		        	<p class="stat1"><?= $currency_info['fa_symbol'].'<span id="stats_open">'.number_format($stats['open'],2).'</span>'?></p>
+		        </div>
+		        <div class="one_fifth last">
+		        	<p class="stat1"><?= '<span id="stats_traded">'.number_format($stats['total_btc_traded'],2).'</span>' ?> BTC</p>
+		        </div>
+		        <div class="panel-divider"></div>
+		        <div class="one_third">
+		        	<h5><?= Lang::string('home-stats-market-cap') ?>: <em class="stat2">$<?= '<span id="stats_market_cap">'.number_format($stats['market_cap']).'</span>'?></em></h5>
+		        </div>
+		        <div class="one_third">
+		        	<h5><?= Lang::string('home-stats-total-btc') ?>: <em class="stat2"><?= '<span id="stats_total_btc">'.number_format($stats['total_btc']).'</span>' ?></em></h5>
+		        </div>
+		        <div class="one_third last">
+		        	<h5><?= Lang::string('home-stats-global-volume') ?>: <em class="stat2">$<?= '<span id="stats_trade_volume">'.number_format($stats['trade_volume']).'</span>' ?></em></h5>
+		        </div>
+		        <div class="clear"></div>
+			</div>
+			 <div class="clear"></div>
+		</div>
+        <div class="clear"></div>
+        <div class="currencies panel panel-default">
+        	<div class="panel-body">
+	        <? 
+	        if ($currencies) {
 				foreach ($currencies as $key => $currency) {
 					if (is_numeric($key) || $currency['currency'] == 'BTC')
 						continue;
-					
-					echo '<option value="'.strtolower($currency['currency']).'" '.(($currency1 == strtolower($currency['currency']) || (!$currency1 && strtolower($currency['currency']) == 'usd')) ? 'selected="selected"' : '').'>'.$currency['currency'].'</option>';
+						
+					$last_price = number_format($stats['last_price'] * ((empty($currency_info) || $currency_info['currency'] == 'USD') ? 1/$currency[$usd_field] : $currency_info[$usd_field] / $currency[$usd_field]),2);
+					echo '<a class="'.(($currency_info['id'] == $currency['id']) ? $p_color.' selected' : '').'" href="index.php?currency='.strtolower($currency['currency']).'#global_stats"><span class="abbr">'.$currency['currency'].'</span> <span id="price_'.$currency['currency'].'">'.$last_price.'</span></a>';
 				}
 			}
-        	?>
-        	</select>
-        	</span>
+	        ?>
+        	</div>
+        	<div class="repeat-line o1"></div>
+        	<div class="repeat-line o2"></div>
+        	<div class="repeat-line o3"></div>
+        	<div class="repeat-line o4"></div>
         </div>
+        <div class="graph_options">
+        	<a href="#" class="selected" data-option="1mon">1m</a>
+        	<a href="#" data-option="3mon">3m</a>
+        	<a href="#" data-option="6mon">6m</a>
+        	<a href="#" data-option="ytd">YTD</a>
+        	<a href="#" class="last" data-option="1year">1y</a>
+        	<div class="clear"></div>
+        </div>
+        <?php /*
+	        <div class="graph_options">
+	        	<a href="#" data-option="1mon">1m</a>
+	        	<a href="#" data-option="3mon">3m</a>
+	        	<a href="#" data-option="6mon">6m</a>
+	        	<a href="#" data-option="ytd">YTD</a>
+	        	<a href="#" class="selected last" data-option="1year">1y</a>
+	        	<span>
+	        	<label for="currency_selector"><?= Lang::string('currency') ?></label>
+	        	<select id="currency_selector">
+	        	<? 
+	        	if ($CFG->currencies) {
+					foreach ($CFG->currencies as $key => $currency) {
+						if (is_numeric($key) || $currency['currency'] == 'BTC')
+							continue;
+						
+						echo '<option value="'.strtolower($currency['currency']).'" '.(($currency1 == strtolower($currency['currency']) || (!$currency1 && strtolower($currency['currency']) == 'usd')) ? 'selected="selected"' : '').'>'.$currency['currency'].'</option>';
+					}
+				}
+	        	?>
+	        	</select>
+	        	</span>
+	        </div>
+	    */ ?>
         <div class="graph_contain">
         	<input type="hidden" id="graph_price_history_currency" value="<?= ($currency1) ? $currency1 : 'usd' ?>" />
         	<div id="graph_price_history"></div>
