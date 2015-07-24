@@ -11,7 +11,7 @@
 			<li><a href="bitcoin-addresses.php" <?= ($CFG->self == 'bitcoin-addresses.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('bitcoin-addresses') ?></a></li>
 			<li><a href="history.php" <?= ($CFG->self == 'history.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('history') ?></a></li>
 			<li><a href="api-access.php" <?= ($CFG->self == 'api-access.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('api-access') ?></a></li>
-			<li><a href="logout.php?log_out=1"><i class="fa fa-angle-right"></i> <?= Lang::string('log-out') ?></a></li>
+			<li><a href="logout.php?log_out=1&uniq=<?= $_SESSION["logout_uniq"] ?>"><i class="fa fa-angle-right"></i> <?= Lang::string('log-out') ?></a></li>
 		</ul>
 	</div>
 	<div class="clearfix mar_top3"></div>

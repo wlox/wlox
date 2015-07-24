@@ -1,4 +1,4 @@
-
+<? $_SESSION["logout_uniq"] = md5(uniqid(mt_rand(),true));?>
 <!doctype html>
 <!--[if IE 7 ]>    <html lang="<?= $CFG->language ?>" class="isie ie7 oldie no-js"> <![endif]-->
 <!--[if IE 8 ]>    <html lang="<?= $CFG->language ?>" class="isie ie8 oldie no-js"> <![endif]-->
@@ -126,7 +126,7 @@
                 <li>|</li>
                 <li><a href="<?= Lang::url('register.php') ?>"><i class="fa fa-user"></i> <?= Lang::string('home-register') ?></a></li>
                 <? } else { ?>
-                <li><a href="account.php"><i class="fa fa-user"></i> <?= User::$info['user'] ?></a> | <a href="logout.php?log_out=1"><i class="fa fa-unlock"></i> <?= Lang::string('log-out') ?></a></li>
+                <li><a href="account.php"><i class="fa fa-user"></i> <?= User::$info['user'] ?></a> | <a href="logout.php?log_out=1&uniq=<?= $_SESSION["logout_uniq"] ?>"><i class="fa fa-unlock"></i> <?= Lang::string('log-out') ?></a></li>
                 <? } ?>
                 <li class="empty margin-left">
                 	<label for="language_selector"><img src="images/<?= $CFG->language ?>.png" /></label>

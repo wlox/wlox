@@ -124,7 +124,7 @@ class User {
 	}
 	
 	static function logOut($logout) {
-		if ($logout) {
+		if ($logout && $_REQUEST['uniq'] == $_SESSION["logout_uniq"]) {
 			API::add('User','logOut',array($_SESSION['session_id']));
 			API::send();
 			

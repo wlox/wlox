@@ -16,7 +16,7 @@ $bitcoin_addresses = $query['BitcoinAddresses']['get']['results'][0];
 $content = $query['Content']['getRecord']['results'][0];
 $page_title = Lang::string('bitcoin-addresses');
 
-if (!empty($_REQUEST['action']) && $_REQUEST['action'] == 'add') {
+if (!empty($_REQUEST['action']) && $_REQUEST['action'] == 'add' && $_SESSION["btc_uniq"] == $_REQUEST['uniq']) {
 	if (strtotime($bitcoin_addresses[0]['date']) >= strtotime('-1 day'))
 		Errors::add(Lang::string('bitcoin-addresses-too-soon'));
 	
@@ -30,6 +30,7 @@ if (!empty($_REQUEST['action']) && $_REQUEST['action'] == 'add') {
 	}
 }
 
+$_SESSION["btc_uniq"] = md5(uniqid(mt_rand(),true));
 include 'includes/head.php';
 ?>
 <div class="page_title">
@@ -48,7 +49,7 @@ include 'includes/head.php';
     	<? Messages::display(); ?>
     	<div class="clear"></div>
     	<ul class="list_empty">
-			<li><a href="bitcoin-addresses.php?action=add" class="but_user"><i class="fa fa-plus fa-lg"></i> <?= Lang::string('bitcoin-addresses-add') ?></a></li>
+			<li><a href="bitcoin-addresses.php?action=add&uniq=<?= $_SESSION["btc_uniq"] ?>" class="but_user"><i class="fa fa-plus fa-lg"></i> <?= Lang::string('bitcoin-addresses-add') ?></a></li>
 		</ul>
 		<div id="filters_area">
 	    	<div class="table-style">

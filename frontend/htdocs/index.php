@@ -26,10 +26,6 @@ $currencies = array_merge($currencies1,$currencies);
 
 if (!User::isLoggedIn()) {
 	API::add('Content','getRecord',array('home'));
-	API::add('Content','getRecord',array('home-feature1'));
-	API::add('Content','getRecord',array('home-feature2'));
-	API::add('Content','getRecord',array('home-feature3'));
-	API::add('Content','getRecord',array('home-feature4'));
 }
 
 API::add('Stats','getCurrent',array($currency_info['id']));
@@ -39,13 +35,8 @@ API::add('Orders','get',array(false,false,5,$currency1,false,false,false,false,1
 API::add('News','get',array(false,false,3));
 $query = API::send();
 
-if (!User::isLoggedIn()) {
+if (!User::isLoggedIn())
 	$content = $query['Content']['getRecord']['results'][0];
-	$feature1 = $query['Content']['getRecord']['results'][1];
-	$feature2 = $query['Content']['getRecord']['results'][2];
-	$feature3 = $query['Content']['getRecord']['results'][3];
-	$feature4 = $query['Content']['getRecord']['results'][4];
-}
 
 $stats = $query['Stats']['getCurrent']['results'][0];
 $transactions = $query['Transactions']['get']['results'][0];

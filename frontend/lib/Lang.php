@@ -62,7 +62,7 @@ class Lang {
 		$urls['news.php']['en'] = 'news.php';
 		$urls['news.php']['es'] = 'es/noticias.php';
 		$urls['news.php']['ru'] = 'ru/'.urlencode('новости').'.php';
-		$urls['news.php']['zh'] = 'zh/消息'.urlencode('消息').'.php';
+		$urls['news.php']['zh'] = 'zh/'.urlencode('消息').'.php';
 		$urls['terms.php']['en'] = 'terms.php';
 		$urls['terms.php']['es'] = 'es/terminos.php';
 		$urls['terms.php']['ru'] = 'ru/'.urlencode('условия').'.php';
