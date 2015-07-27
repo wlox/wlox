@@ -83,8 +83,13 @@ elseif ($result) {
 		
 	}
 	
-	if (!$invalid_login && !$user_id)
+	if (!$invalid_login && !$user_id) {
 		$invalid_login = (!Encryption::verify_hash($pass1,$result[0]['pass']));
+		if (!$invalid_login) {
+			$sql = "DELETE FROM change_settings WHERE type = 'r' AND site_user = ".$result[0]['id'];
+			db_query($sql);
+		}
+	}
 }
 
 
