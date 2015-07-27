@@ -525,7 +525,7 @@ class User {
 		
 		self::deleteCache();
 		
-		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1));
+		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1,'type'=>'r'));
 		if ($request_id > 0) {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
@@ -717,6 +717,9 @@ class User {
 		if ($CFG->session_id) {
 		    $sql = "DELETE FROM sessions WHERE user_id = ".User::$info['id']." AND session_id != {$CFG->session_id}";
 		    db_query($sql);
+		    
+		    $sql = "DELETE FROM change_settings WHERE site_user = ".User::$info['id'];
+		    db_query($sql);
 		}
 
 		if ($update['pass'])
@@ -808,7 +811,7 @@ class User {
 		$sql = "DELETE FROM change_settings WHERE site_user = ".User::$info['id'];
 		db_query($sql);
 		
-		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request)),'site_user'=>User::$info['id']));
+		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request)),'site_user'=>User::$info['id'],'type'=>'s'));
 		if ($request_id > 0) {
 			$vars = User::$info;
 			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
