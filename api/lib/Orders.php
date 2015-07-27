@@ -811,7 +811,7 @@ class Orders {
 					$this_funds_finished = ($max_amount < $amount);
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
 					
-					if (!(round($max_amount,8,PHP_ROUND_HALF_UP) > 0) || !(round($max_comp_amount,PHP_ROUND_HALF_UP) > 0)) {
+					if (!(round($max_amount,8,PHP_ROUND_HALF_UP) > 0) || !(round($max_comp_amount,8,PHP_ROUND_HALF_UP) > 0)) {
 						if ($comp_funds_finished)
 							self::cancelOrder($comp_order['id'],$comp_order['btc_outstanding'],$comp_order['site_user']);
 						
@@ -1006,7 +1006,7 @@ class Orders {
 					$this_funds_finished = ($max_amount < $amount);
 					$comp_funds_finished = ($max_comp_amount < $comp_order['btc_outstanding']);
 					
-					if (!(round($max_amount,PHP_ROUND_HALF_UP) > 0) || !(round($max_comp_amount,PHP_ROUND_HALF_UP) > 0)) {
+					if (!(round($max_amount,PHP_ROUND_HALF_UP) > 0) || !(round($max_comp_amount,8,PHP_ROUND_HALF_UP) > 0)) {
 						if ($comp_funds_finished)
 							self::cancelOrder($comp_order['id'],$comp_order['btc_outstanding'],$comp_order['site_user']);
 						
