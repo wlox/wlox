@@ -40,6 +40,7 @@ ini_set('session.cookie_path','/');
 ini_set('expose_php','off');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
+header('X-Powered-By: WLOX');
 
 /* Readonly Sessions */
 if (empty($ajax)) {
