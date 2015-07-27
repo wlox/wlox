@@ -709,7 +709,7 @@ class User {
 		if (!$update['pass'])
 			unset($update['pass']);
 
-		if (($update['pass'] && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) /*|| !$update['first_name'] || !$update['last_name'] */|| !$update['email'])
+		if ((!empty($update['pass']) && mb_strlen($update['pass'],'utf-8') < $CFG->pass_min_chars) /*|| !$update['first_name'] || !$update['last_name'] */|| !$update['email'])
 			return false;
 		
 		self::deleteCache();
@@ -722,7 +722,7 @@ class User {
 		    db_query($sql);
 		}
 
-		if ($update['pass'])
+		if (!empty($update['pass']))
 			$update['pass'] = Encryption::hash($update['pass']);
 		
 		return db_update('site_users',User::$info['id'],$update);
