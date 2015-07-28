@@ -173,7 +173,7 @@ class Requests{
 		}
 		
 		if ($request_id && $CFG->memcached) {
-			User::deleteBalanceCache(User::$info['id'],1);
+			$CFG->unset_cache['balances'][User::$info['id']] = 2;
 			self::unsetCache(User::$info['id']);
 		}
 		

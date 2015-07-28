@@ -113,8 +113,10 @@ class User {
 			}
 		}
 		
-		if ($result)
-			self::deleteBalanceCache($user_id);
+		if ($result) {
+			$CFG->unset_cache['orders'][$user_id] = 1;
+			$CFG->unset_cache['balances'][$user_id] = 1;
+		}
 		
 		return $result;
 	}

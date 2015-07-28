@@ -136,48 +136,50 @@ class Orders {
 			if (!$result)
 				$result = array();
 			
+			$set = array();
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders) {
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
 					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result,300);
+					$set['orders'.$key] = $result;
 					
 					$result_sub[30] = array_slice($result,0,30);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
 					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[30],300);
+					$set['orders'.$key] = $result_sub[30];
 					
 					$result_sub[10] = array_slice($result,0,10);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
 					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[10],300);
+					$set['orders'.$key] = $result_sub[10];
 					
 					$result_sub[5] = array_slice($result,0,5);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
 					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result_sub[5],300);
+					$set['orders'.$key] = $result_sub[5];
 					
 					if ($per_page > 0)
 						$result = $result_sub[$per_page];
 				}
 				else {
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
-					$cached[$key] = true;
-					$CFG->m->set('orders'.$key,$result,300);
+					$cached[$key] = $user_id;
+					$set['orders'.$key] = $result;
 				}
 			}
 			else if ($public_api_open_orders) {
 				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'oo';
-				$cached[$key] = true;
-				$CFG->m->set('orders'.$key,$result,300);
+				$cached[$key] = $user_id;
+				$set['orders'.$key] = $result;
 			}
 			else if ($public_api_order_book) {
 				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'ob';
-				$cached[$key] = true;
-				$CFG->m->set('orders'.$key,$result,300);
+				$cached[$key] = ($user_id) ? $user_id : true;
+				$set['orders'.$key] = $result;
 			}
 			
-			$CFG->m->set('orders_cache',$cached,300);
+			$set['orders_cache'] = $cached;
+			$CFG->m->setMulti($set,300);
 		}
 		
 		if ($result && count($result) == 0)
@@ -239,6 +241,9 @@ class Orders {
 		$currency_id = preg_replace("/[^0-9]/", "",$currency_id);
 		$currency_info = ($currency_id > 0) ? $CFG->currencies[$currency_id] : $CFG->currencies[strtoupper($currency)];
 		$usd_field = 'usd_ask';
+		
+		if (!empty($CFG->bid_ask[$currency_info['currency']]))
+			return $CFG->bid_ask[$currency_info['currency']];
 		
 		if ($CFG->memcached && !$absolute) {
 			$cached = $CFG->m->get('bid_ask_'.$currency_info['currency']);
@@ -306,9 +311,7 @@ class Orders {
 				$res = array('bid'=>$result[0]['fiat_price'],'ask'=>$result[0]['fiat_price']);
 		}
 		
-		if ($CFG->memcached)
-			$CFG->m->set('bid_ask_'.$currency_info['currency'],$res,300);
-		
+		$CFG->bid_ask[$currency_info['currency']] = $res;
 		return $res;
 	}
 	
@@ -688,6 +691,7 @@ class Orders {
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
 		$fee = ($buy && $price < $ask || !$buy && $price > $bid) ? $user_fee['fee1'] : $fee;
 		$last_price = ($buy) ? $ask : $bid;
+		$CFG->bid_ask[$currency_info['currency']] = array('bid'=>$bid,'ask'=>$ask);
 		
 		$insert_id = 0;
 		$transactions = 0;
@@ -805,6 +809,7 @@ class Orders {
 					if (!$comp_user_info)
 						continue;
 					
+					$CFG->bid_ask[$currency_info['currency']]['ask'] = $comp_order['fiat_price'];
 					$comp_order = array_merge($comp_order,$comp_user_info);
 					$max_amount = ((($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) > ($amount + (($fee * 0.01) * $amount))) ? $amount : (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) - (($fee * 0.01) * (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']));
 					$max_comp_amount = (($comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding'])) > $comp_order['btc_outstanding']) ? $comp_order['btc_outstanding'] : $comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding']);
@@ -999,6 +1004,7 @@ class Orders {
 					if (!$comp_user_info)
 						continue;
 						
+					$CFG->bid_ask[$currency_info['currency']]['bid'] = $comp_order['fiat_price'];
 					$comp_order = array_merge($comp_order,$comp_user_info);											
 					$comp_fiat_this_on_hold = $comp_order['fiat_on_hold'] - (($comp_order['btc_outstanding'] * $comp_order['orig_btc_price']) + (($comp_order['fee1'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['orig_btc_price'])));
 					$max_amount = (($this_btc_balance - $this_btc_on_hold) > $amount) ? $amount : $this_btc_balance - $this_btc_on_hold;
@@ -1181,46 +1187,84 @@ class Orders {
 		}
 		
 		if ($CFG->memcached) {
-			self::unsetCache();
-			User::deleteBalanceCache($this_user_id);
+			$CFG->unset_cache['orders'][$this_user_id] = 1;
+			$CFG->unset_cache['balances'][$this_user_id] = 1;
 		}
 		
 		return array('transactions'=>$transactions,'new_order'=>$new_order,'edit_order'=>$edit_order,'executed'=>$executed_orders,'order_info'=>$order_info);
 	}
 	
-	public static function unsetCache() {
+	public static function unsetCache($unset) {
 		global $CFG;
 		
-		$cached = $CFG->m->getMulti(array('trans_cache','orders_cache'));
+		if (!$unset)
+			return false;
+		
+		$cached = $CFG->m->getMulti(array('trans_cache','orders_cache','stats_cache','bid_ask_cache'));
 		$delete_keys = array();
 		
-		if ($CFG->currencies) {
-			foreach ($CFG->currencies as $key => $currency) {
-				if (is_numeric($key) || $currency['currency'] == 'BTC')
+		if (array_key_exists('orders',$unset)) {
+			if (array_key_exists('bid_ask_cache',$cached)) {
+				$delete_keys[] = 'bid_ask_cache';
+				//unset($cached['bid_ask_cache']);
+				foreach ($cached['bid_ask_cache'] as $key => $n) {
+					if (empty($CFG->bid_ask[$key]))
+						$delete_keys[] = 'bid_ask'.$key;
+				}
+			}
+			
+			if (array_key_exists('stats_cache',$cached)) {
+				$delete_keys[] = 'stats_cache';
+				//unset($cached['stats_cache']);
+				foreach ($cached['stats_cache'] as $key => $n) {
+					$delete_keys[] = 'stats'.$key;
+				}
+			}
+			
+			if (array_key_exists('trans_cache',$cached)) {
+				$delete_keys[] = 'trans_cache';
+				foreach ($cached['trans_cache'] as $key => $user_id) {
+					//if (is_bool($user_id) || array_key_exists($user_id,$unset['orders']))
+						$delete_keys[] = 'trans'.$key;
+				}
+			}
+			
+			if (array_key_exists('orders_cache',$cached)) {
+				$delete_keys[] = 'orders_cache';
+				foreach ($cached['orders_cache'] as $key => $user_id) {
+					//if (is_bool($user_id) || array_key_exists($user_id,$unset['orders']))
+						$delete_keys[] = 'orders'.$key;
+				}
+			}
+		}
+		
+		if (array_key_exists('balances',$unset)) {
+			foreach ($unset['balances'] as $user_id => $t) {
+				$delete_keys[] = 'on_hold_'.$user_id;
+				if ($t == 2)
 					continue;
 				
-				$delete_keys[] = 'bid_ask_'.$key;
-				$delete_keys[] = 'stats_'.$key;
-				$delete_keys[] = 'trans_l5_'.$key;
-				$delete_keys[] = 'trans_l1_'.$key;
+				$delete_keys[] = 'balances_'.$user_id;
+				$delete_keys[] = 'user_volume_'.$user_id;
 			}
 		}
+		$d = $CFG->m->deleteMulti($delete_keys);
+	}
+	
+	public static function setBidAskCache($values) {
+		global $CFG;
 		
-		if (array_key_exists('trans_cache',$cached)) {
-			$delete_keys[] = 'trans_cache';
-			foreach ($cached['trans_cache'] as $key => $n) {
-				$delete_keys[] = 'trans_api'.$key;
+		$cached = $CFG->m->get('bid_ask_cache');
+		if (is_array($values)) {
+			$keys = array();
+			foreach ($values as $k => $v) {
+				$key = '_'.$k;
+				$keys['bid_ask'.$key] = $v;
+				$cached[$key] = true;
 			}
+			$keys['bid_ask_cache'] = $cached;
+			$CFG->m->setMulti($keys,300);
 		}
-		
-		if (array_key_exists('orders_cache',$cached)) {
-			$delete_keys[] = 'orders_cache';
-			foreach ($cached['orders_cache'] as $key => $n) {
-				$delete_keys[] = 'orders'.$key;
-			}
-		}
-		
-		$CFG->m->deleteMulti($delete_keys);
 	}
 	
 	private static function cancelOrder($order_id=false,$outstanding_btc=false,$site_user=false) {
@@ -1240,8 +1284,8 @@ class Orders {
 		Email::send($CFG->form_email,$user_info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$user_info);
 	
 		if ($CFG->memcached) {
-			self::unsetCache();
-			User::deleteBalanceCache(User::$info['id']);
+			$CFG->unset_cache['orders'][User::$info['id']] = 1;
+			$CFG->unset_cache['balances'][User::$info['id']] = 1;
 		}
 	}
 	
@@ -1332,8 +1376,8 @@ class Orders {
 		db_delete('orders',$del_order['id']);
 		
 		if ($CFG->memcached) {
-			self::unsetCache();
-			User::deleteBalanceCache(User::$info['id']);
+			$CFG->unset_cache['orders'][User::$info['id']] = 1;
+			$CFG->unset_cache['balances'][User::$info['id']] = 1;
 		}
 		
 		return self::getStatus($del_order['log_id']);
@@ -1374,8 +1418,8 @@ class Orders {
 		db_commit();
 		
 		if ($CFG->memcached) {
-			self::unsetCache();
-			User::deleteBalanceCache(User::$info['id']);
+			$CFG->unset_cache['orders'][User::$info['id']] = 1;
+			$CFG->unset_cache['balances'][User::$info['id']] = 1;
 		}
 		
 		return $orders_info;

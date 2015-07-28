@@ -25,6 +25,8 @@ $CFG->session_active = false;
 $CFG->session_api = false;
 $CFG->token_verified = false;
 $CFG->email_2fa_verified = false;
+$CFG->unset_cache = false;
+$CFG->bid_ask = false;
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) : false;
@@ -196,14 +198,15 @@ if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 		$return['error'] = 'request-expired';
 }
 
-/* Lang Key Selector */
+// select language
 $CFG->lang_table_key = $CFG->language;
 if ($CFG->language == 'en')
 	$CFG->lang_table_key = 'eng';
 elseif ($CFG->language == 'es')
 	$CFG->lang_table_key = 'esp';
 
-if (is_array($commands) && empty($return['error'])) {
+
+if (is_array($commands)) {
 	foreach ($commands as $classname => $methods_arr) {
 		if (in_array($classname,$system_classes))
 			continue;
@@ -234,6 +237,7 @@ if (is_array($commands) && empty($return['error'])) {
 	}
 }
 
+// update session nonce
 if ($update_nonce) {
 	if ($CFG->memcached && empty($CFG->delete_cache) && !$awaiting_token) {
 		$result[0]['nonce'] = $nonce1 + 1;
@@ -242,6 +246,14 @@ if ($update_nonce) {
 	else
 		$return['nonce_updated'] = db_update('sessions',$session_id1,array('nonce'=>($nonce1 + 1),'session_time'=>date('Y-m-d H:i:s')),'session_id');
 }
+
+// delete cache if necessary
+if ($CFG->memcached && $CFG->unset_cache)
+	Orders::unsetCache($CFG->unset_cache);
+
+// set bid/ask if necessary
+if ($CFG->memcached && $CFG->bid_ask)
+	Orders::setBidAskCache($CFG->bid_ask);
 
 if (is_array($return))
 	echo json_encode($return);

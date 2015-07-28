@@ -106,8 +106,17 @@ class Stats {
 		$stats['market_cap'] = $result[0]['market_cap'];
 		$stats['trade_volume'] = $result[0]['trade_volume'];
 		
-		if ($CFG->memcached)
-			$CFG->m->set('stats_'.$currency_info['currency'],$stats,120);
+		if ($CFG->memcached) {
+			$cached = $CFG->m->get('stats_cache');
+			if (!$cached)
+				$cached = array();
+			
+			$key = '_'.$currency_info['currency'];
+			$cached[$key] = true;
+			$set['stats_cache'] = $cached;
+			$set['stats'.$key] = $stats;
+			$CFG->m->setMulti($set,300);
+		}
 		
 		return $stats;
 	}
