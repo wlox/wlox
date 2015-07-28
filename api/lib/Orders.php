@@ -139,18 +139,22 @@ class Orders {
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders) {
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
 					$CFG->m->set('orders'.$key,$result,300);
 					
 					$result_sub[30] = array_slice($result,0,30);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
 					$CFG->m->set('orders'.$key,$result_sub[30],300);
 					
 					$result_sub[10] = array_slice($result,0,10);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
 					$CFG->m->set('orders'.$key,$result_sub[10],300);
 					
 					$result_sub[5] = array_slice($result,0,5);
 					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
+					$cached[$key] = true;
 					$CFG->m->set('orders'.$key,$result_sub[5],300);
 					
 					if ($per_page > 0)
@@ -1199,15 +1203,6 @@ class Orders {
 				$delete_keys[] = 'stats_'.$key;
 				$delete_keys[] = 'trans_l5_'.$key;
 				$delete_keys[] = 'trans_l1_'.$key;
-				
-				$delete_keys[] = 'orders_c'.$key.'_t1';
-				$delete_keys[] = 'orders_c'.$key.'_t2';
-				$delete_keys[] = 'orders_c'.$key.'l_30_t1';
-				$delete_keys[] = 'orders_c'.$key.'l_30_t2';
-				$delete_keys[] = 'orders_c'.$key.'l_10_t1';
-				$delete_keys[] = 'orders_c'.$key.'l_10_t2';
-				$delete_keys[] = 'orders_c'.$key.'l_5_t1';
-				$delete_keys[] = 'orders_c'.$key.'l_5_t2';
 			}
 		}
 		
