@@ -407,7 +407,7 @@ function memcached_safe_set($set,$log_str,$time_seconds,$attempts=1) {
 	
 	trigger_error("\nattempt: ".$attempts);
 	$locked = $CFG->m->get('lock');
-	if ($locked) {
+	if ($locked && $attempts < 5) {
 		usleep(400);
 		$attempts++;
 		memcached_safe_set($set,$log_str,$time_seconds,$attempts);
