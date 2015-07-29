@@ -401,10 +401,18 @@ function memcached_safe_set($set,$log_str,$time_seconds,$attempts=1) {
 	
 	if (!$set)
 		return false;
-
+	
+	if ($attempts == 1)
+		error_log(print_r(array_keys($set),1),3,'/var/www/errors.log');
+	
+	error_log("\nattempt: ".$attempts,3,'/var/www/errors.log');
 	$locked = $CFG->m->get('lock');
-	if ($locked)
+	if ($locked) {
+		usleep(400);
+		$attempts++;
+		memcached_safe_set($set,$log_str,$time_seconds,$attempts);
 		return false;
+	}
 	
 	$CFG->m->setMulti($set,$time_seconds);
 	$add = $CFG->m->add('cache_log',$log_str,$time_seconds);
