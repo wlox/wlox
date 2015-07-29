@@ -133,26 +133,21 @@ class Orders {
 				$result = array();
 			
 			$set = array();
-			$cached = array();
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders) {
 					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
-					$cached[] = $key;
 					$set[$key] = $result;
 					
 					$result_sub[30] = array_slice($result,0,30);
 					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
-					$cached[] = $key;
 					$set[$key] = $result_sub[30];
 					
 					$result_sub[10] = array_slice($result,0,10);
 					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
-					$cached[] = $key;
 					$set[$key] = $result_sub[10];
 					
 					$result_sub[5] = array_slice($result,0,5);
 					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
-					$cached[] = $key;
 					$set[$key] = $result_sub[5];
 					
 					if ($per_page > 0)
@@ -160,23 +155,19 @@ class Orders {
 				}
 				else {
 					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
-					$cached[] = $key;
 					$set[$key] = $result;
 				}
 			}
 			else if ($public_api_open_orders) {
 				$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'oo';
-				$cached[] = $key;
 				$set[$key] = $result;
 			}
 			else if ($public_api_order_book) {
 				$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'ob';
-				$cached[] = $key;
 				$set[$key] = $result;
 			}
 			
-			$log_str = implode('|',$cached);
-			memcached_safe_set($set,$log_str,300);
+			memcached_safe_set($set,300);
 		}
 		
 		if ($result && count($result) == 0)
@@ -1206,7 +1197,7 @@ class Orders {
 			
 			if ($cached) {
 				$delete_keys[] = 'lock';
-				$delete_keys = array_merge($delete_keys,explode('|',$cached));
+				$delete_keys = array_merge($delete_keys,$cached);
 			}
 			$CFG->m->deleteMulti($delete_keys);
 		}
@@ -1235,11 +1226,9 @@ class Orders {
 			foreach ($values as $k => $v) {
 				$key = 'bid_ask_'.$k;
 				$keys[$key] = $v;
-				$cached[] = $key;
 			}
 			
-			$log_str = implode('|',$cached);
-			memcached_safe_set($keys,$log_str,300);
+			memcached_safe_set($keys,300);
 		}
 	}
 	

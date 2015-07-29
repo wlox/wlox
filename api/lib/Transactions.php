@@ -115,25 +115,20 @@ class Transactions {
 				$result = array();
 			
 			$set = array();
-			$cached = array();
 			if (($per_page == 5 || $per_page == 1) && !$count && !$public_api_all) {
 				$key = 'trans_l5_'.$currency_info['currency'];
-				$cached[] = $key;
 				$set[$key] = $result;
 				
 				$result1 = array_slice($result,0,1);
 				$key = 'trans_l1_'.$currency_info['currency'];
-				$cached[] = $key;
 				$set[$key] = $result1;
 			}
 			elseif ($public_api_all) {
 				$key = 'trans_api'.(($per_page) ? '_l'.$per_page : '').(($user) ? '_u'.$user : '').(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
-				$cached[] = $key;
 				$set[$key] = $result;
 			}
 			
-			$log_str = implode('|',$cached);
-			memcached_safe_set($set,$log_str,300);
+			memcached_safe_set($set,300);
 		}
 		
 		if ($result && count($result) == 0)

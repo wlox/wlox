@@ -396,7 +396,7 @@ function db_is_syntax_error() {
 	return in_array($e,$errors);
 }
 
-function memcached_safe_set($set,$log,$time_seconds,$attempts=1) {
+function memcached_safe_set($set,$time_seconds,$attempts=1) {
 	global $CFG;
 	
 	if (!$set)
@@ -406,11 +406,10 @@ function memcached_safe_set($set,$log,$time_seconds,$attempts=1) {
 	if ($locked) 
 		return false;
 	
+	$cache_log = $CFG->m->get('cache_log');
+	$cache_log = (!$cache_log) ? array() : $cache_log;
+	$cache_log = array_merge($cache_log,array_keys($set));
+	$set['cache_log'] = $cache_log;
 	$CFG->m->setMulti($set,$time_seconds);
-	$add = $CFG->m->add('cache_log',$log_str,$time_seconds);
-	if (!$add) {
-		$CFG->m->append('cache_log','|'.$log_str);
-		$CFG->m->touch('cache_log',$time_seconds);
-	}
 }
 ?>

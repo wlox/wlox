@@ -107,8 +107,9 @@ class Stats {
 		$stats['trade_volume'] = $result[0]['trade_volume'];
 		
 		if ($CFG->memcached) {
+			$key = 'stats_'.$currency_info['currency'];
 			$set[$key] = $stats;
-			memcached_safe_set($set,$key,300);
+			memcached_safe_set($set,300);
 		}
 		
 		return $stats;
