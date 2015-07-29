@@ -403,12 +403,8 @@ function memcached_safe_set($set,$log_str,$time_seconds,$attempts=1) {
 		return false;
 
 	$locked = $CFG->m->get('lock');
-	if ($locked) {
-		usleep(400);
-		$attempts++;
-		memcached_safe_set($set,$log_str,$time_seconds,$attempts);
+	if ($locked)
 		return false;
-	}
 	
 	$CFG->m->setMulti($set,$time_seconds);
 	$add = $CFG->m->add('cache_log',$log_str,$time_seconds);
