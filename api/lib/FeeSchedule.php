@@ -1,5 +1,6 @@
 <?php
 class FeeSchedule {
+	private static $user_fees;
 	public static function get($currency=false) {
 		global $CFG;
 		
@@ -47,9 +48,13 @@ class FeeSchedule {
 		if (!$user_id)
 			return false;
 		
+		if (!empty(self::$user_fees[$user_id]))
+			return self::$user_fees[$user_id];
+		
 		if ($CFG->memcached) {
 			$cached = $CFG->m->get('user_fee_'.$user_id);
 			if ($cached) {
+				self::$user_fees[$user_id] = $cached;
 				return $cached;
 			}
 		}
@@ -61,6 +66,7 @@ class FeeSchedule {
 			if ($CFG->memcached)
 				$CFG->m->set('user_fee_'.$user_id,$result[0],300);
 			
+			self::$user_fees[$user_id] = $result[0];
 			return $result[0];
 		}
 		return false;
