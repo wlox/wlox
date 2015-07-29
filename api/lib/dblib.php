@@ -402,14 +402,19 @@ function memcached_safe_set($set,$time_seconds,$attempts=1) {
 	if (!$set)
 		return false;
 
-	$locked = $CFG->m->get('lock');
-	if ($locked) 
+	$locked = $CFG->m->add('lock');
+	if ($locked && $attempts < 5) {
+		usleep(200);
+		$attempts++;
+		memcached_safe_set($set,$time_seconds,$attempts);
 		return false;
+	}
 	
 	$cache_log = $CFG->m->get('cache_log');
 	$cache_log = (!$cache_log) ? array() : $cache_log;
 	$cache_log = array_merge($cache_log,array_keys($set));
 	$set['cache_log'] = $cache_log;
 	$CFG->m->setMulti($set,$time_seconds);
+	$CFG->m->delete('lock');
 }
 ?>
