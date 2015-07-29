@@ -401,10 +401,10 @@ function memcached_safe_set($set,$log_str,$time_seconds,$attempts=1) {
 	
 	if (!$set)
 		return false;
-	
+
 	$locked = $CFG->m->get('lock');
-	if ($attempts < 5) {
-		usleep(100);
+	if ($locked && $attempts < 5) {
+		usleep(200);
 		$attempts++;
 		memcached_safe_set($set,$log_str,$time_seconds,$attempts);
 		return false;
