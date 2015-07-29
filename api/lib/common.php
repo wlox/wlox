@@ -14,6 +14,8 @@ $CFG->m = false;
 if ($CFG->memcached) {
 	$CFG->m = (class_exists('MemcachedFallback')) ? new MemcachedFallback() : new Memcached();
 	$CFG->m->addServer('localhost', 11211);
+	$CFG->m->setOption(Memcached::OPT_COMPRESSION,false);
+	$CFG->m->setOption(Memcached::OPT_BINARY_PROTOCOL,true);
 }
 
 /* Load settings and timezone */

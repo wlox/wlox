@@ -129,57 +129,54 @@ class Orders {
 		$result = db_query_array($sql);
 		
 		if ($CFG->memcached && !$count) {
-			$cached = $CFG->m->get('orders_cache');
-			if (!$cached)
-				$cached = array();
-			
 			if (!$result)
 				$result = array();
 			
 			$set = array();
+			$cached = array();
 			if (!$public_api_open_orders && !$public_api_order_book) {
 				if (!$open_orders) {
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$set['orders'.$key] = $result;
+					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($type) ? '_t'.$type : '');
+					$cached[] = $key;
+					$set[$key] = $result;
 					
 					$result_sub[30] = array_slice($result,0,30);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$set['orders'.$key] = $result_sub[30];
+					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l30'.(($type) ? '_t'.$type : '');
+					$cached[] = $key;
+					$set[$key] = $result_sub[30];
 					
 					$result_sub[10] = array_slice($result,0,10);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$set['orders'.$key] = $result_sub[10];
+					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l10'.(($type) ? '_t'.$type : '');
+					$cached[] = $key;
+					$set[$key] = $result_sub[10];
 					
 					$result_sub[5] = array_slice($result,0,5);
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
-					$cached[$key] = true;
-					$set['orders'.$key] = $result_sub[5];
+					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').'_l5'.(($type) ? '_t'.$type : '');
+					$cached[] = $key;
+					$set[$key] = $result_sub[5];
 					
 					if ($per_page > 0)
 						$result = $result_sub[$per_page];
 				}
 				else {
-					$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
-					$cached[$key] = $user_id;
-					$set['orders'.$key] = $result;
+					$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($order_by) ? '_o'.$order_by : '');
+					$cached[] = $key;
+					$set[$key] = $result;
 				}
 			}
 			else if ($public_api_open_orders) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'oo';
-				$cached[$key] = $user_id;
-				$set['orders'.$key] = $result;
+				$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'oo';
+				$cached[] = $key;
+				$set[$key] = $result;
 			}
 			else if ($public_api_order_book) {
-				$key = (($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'ob';
-				$cached[$key] = ($user_id) ? $user_id : true;
-				$set['orders'.$key] = $result;
+				$key = 'orders'.(($currency) ? '_c'.$currency_info['currency'] : '').(($user_id) ? '_u'.$user_id : '').(($type) ? '_t'.$type : '').(($per_page) ? '_l'.$per_page : '').'ob';
+				$cached[] = $key;
+				$set[$key] = $result;
 			}
 			
-			$set['orders_cache'] = $cached;
-			$CFG->m->setMulti($set,300);
+			$log_str = implode('|',$cached);
+			memcached_safe_set($set,$log_str,300);
 		}
 		
 		if ($result && count($result) == 0)
@@ -1200,45 +1197,21 @@ class Orders {
 		if (!$unset)
 			return false;
 		
-		$cached = $CFG->m->getMulti(array('trans_cache','orders_cache','stats_cache','bid_ask_cache'));
-		$delete_keys = array();
-		
 		if (array_key_exists('orders',$unset)) {
-			if (array_key_exists('bid_ask_cache',$cached)) {
-				$delete_keys[] = 'bid_ask_cache';
-				//unset($cached['bid_ask_cache']);
-				foreach ($cached['bid_ask_cache'] as $key => $n) {
-					if (empty($CFG->bid_ask[$key]))
-						$delete_keys[] = 'bid_ask'.$key;
-				}
-			}
+			$delete_keys = array();
+			$CFG->m->set('lock',true,2);
+			$cached = $CFG->m->get('cache_log');
 			
-			if (array_key_exists('stats_cache',$cached)) {
-				$delete_keys[] = 'stats_cache';
-				//unset($cached['stats_cache']);
-				foreach ($cached['stats_cache'] as $key => $n) {
-					$delete_keys[] = 'stats'.$key;
-				}
-			}
-			
-			if (array_key_exists('trans_cache',$cached)) {
-				$delete_keys[] = 'trans_cache';
-				foreach ($cached['trans_cache'] as $key => $user_id) {
-					//if (is_bool($user_id) || array_key_exists($user_id,$unset['orders']))
-						$delete_keys[] = 'trans'.$key;
-				}
-			}
-			
-			if (array_key_exists('orders_cache',$cached)) {
-				$delete_keys[] = 'orders_cache';
-				foreach ($cached['orders_cache'] as $key => $user_id) {
-					//if (is_bool($user_id) || array_key_exists($user_id,$unset['orders']))
-						$delete_keys[] = 'orders'.$key;
-				}
+			if ($cached) {
+				$delete_keys[] = 'cache_log';
+				$delete_keys[] = 'lock';
+				$delete_keys = array_merge($delete_keys,explode('|',$cached));
+				$CFG->m->deleteMulti($delete_keys);
 			}
 		}
 		
 		if (array_key_exists('balances',$unset)) {
+			$delete_keys = array();
 			foreach ($unset['balances'] as $user_id => $t) {
 				$delete_keys[] = 'on_hold_'.$user_id;
 				if ($t == 2)
@@ -1247,23 +1220,25 @@ class Orders {
 				$delete_keys[] = 'balances_'.$user_id;
 				$delete_keys[] = 'user_volume_'.$user_id;
 			}
+			
+			$CFG->m->deleteMulti($delete_keys);
 		}
-		$d = $CFG->m->deleteMulti($delete_keys);
 	}
 	
 	public static function setBidAskCache($values) {
 		global $CFG;
 		
-		$cached = $CFG->m->get('bid_ask_cache');
+		$cached = array();
 		if (is_array($values)) {
 			$keys = array();
 			foreach ($values as $k => $v) {
-				$key = '_'.$k;
-				$keys['bid_ask'.$key] = $v;
-				$cached[$key] = true;
+				$key = 'bid_ask_'.$k;
+				$keys[$key] = $v;
+				$cached[] = $key;
 			}
-			$keys['bid_ask_cache'] = $cached;
-			$CFG->m->setMulti($keys,300);
+			
+			$log_str = implode('|',$cached);
+			memcached_safe_set($keys,$log_str,300);
 		}
 	}
 	
