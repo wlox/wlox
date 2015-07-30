@@ -118,11 +118,14 @@ function graphOrders(json_data) {
 			c = (c > 30) ? 29 : c - 1;
 			
 			var diff = (last_data.bids[c][1] && json_data.bids[c][1]) ? parseFloat(parseFloat(json_data.bids[c][1]) - (parseFloat(last_data.bids[c][1])).toFixed(2)) : 0;
+			var c_price = (diff) ? parseFloat(json_data.bids[c][0]) : Number.POSITIVE_INFINITY;
 			last_data.bids.splice(0,30);
 			
 			last_data.bids = last_data.bids.map(function(item) {
 				item[1] += diff;
 				return item;
+			}).filter(function(item) {
+				return (parseFloat(item[0]) <= c_price);
 			});
 			
 			if (json_data.bids)
@@ -133,11 +136,14 @@ function graphOrders(json_data) {
 			c = (c > 30) ? 29 : c - 1;
 			
 			var diff = (last_data.asks[c][1] && json_data.asks[c][1]) ? parseFloat((parseFloat(json_data.asks[c][1]) - parseFloat(last_data.asks[c][1])).toFixed(2)) : 0;
+			var c_price = (diff) ? parseFloat(json_data.bids[c][0]) : Number.NEGATIVE_INFINITY;
 			last_data.asks.splice(0,30);
 			
 			last_data.asks = last_data.asks.map(function(item) {
 				item[1] += diff;
 				return item;
+			}).filter(function(item) {
+				return (parseFloat(item[0]) >= c_price);
 			});
 			
 			if (json_data.asks)
