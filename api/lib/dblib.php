@@ -402,7 +402,7 @@ function memcached_safe_set($set,$time_seconds,$attempts=1) {
 	if (!$set)
 		return false;
 
-	$locked = $CFG->m->add('lock');
+	$locked = $CFG->m->add('lock',true,1);
 	if ($locked && $attempts < 5) {
 		usleep(200);
 		$attempts++;
