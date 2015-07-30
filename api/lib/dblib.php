@@ -402,13 +402,9 @@ function memcached_safe_set($set,$time_seconds,$attempts=1) {
 	if (!$set)
 		return false;
 
-	$locked = $CFG->m->add('lock',true,1);
-	if ($locked && $attempts < 5) {
-		usleep(200);
-		$attempts++;
-		memcached_safe_set($set,$time_seconds,$attempts);
+	$locked = $CFG->m->add('lock',true,2);
+	if ($locked)
 		return false;
-	}
 	
 	$cache_log = $CFG->m->get('cache_log');
 	$cache_log = (!$cache_log) ? array() : $cache_log;

@@ -1,5 +1,6 @@
 <?php
 class Orders {
+	public static $bid_ask;
 	public static function get($count=false,$page=false,$per_page=false,$currency=false,$user=false,$start_date=false,$show_bids=false,$order_by1=false,$order_desc=false,$open_orders=false,$public_api_open_orders=false,$public_api_order_book=false) {
 		global $CFG;
 		
@@ -219,7 +220,7 @@ class Orders {
 		return $result[0];
 	}
 	
-	public static function getBidAsk($currency=false,$currency_id=false,$absolute=false) {
+	public static function getBidAsk($currency=false,$currency_id=false,$absolute=false,$dont_cache=false) {
 		global $CFG;
 
 		if (empty($currency) && empty($currency_id))
@@ -230,13 +231,13 @@ class Orders {
 		$currency_info = ($currency_id > 0) ? $CFG->currencies[$currency_id] : $CFG->currencies[strtoupper($currency)];
 		$usd_field = 'usd_ask';
 		
-		if (!empty($CFG->bid_ask[$currency_info['currency']]))
-			return $CFG->bid_ask[$currency_info['currency']];
+		if (!empty(self::$bid_ask[$currency_info['currency']]))
+			return self::$bid_ask[$currency_info['currency']];
 		
 		if ($CFG->memcached && !$absolute) {
 			$cached = $CFG->m->get('bid_ask_'.$currency_info['currency']);
 			if ($cached) {
-				$CFG->bid_ask[$currency_info['currency']] = $cached;
+				self::$bid_ask[$currency_info['currency']] = $cached;
 				return $cached;
 			}
 		}
@@ -300,7 +301,10 @@ class Orders {
 				$res = array('bid'=>$result[0]['fiat_price'],'ask'=>$result[0]['fiat_price']);
 		}
 		
-		$CFG->bid_ask[$currency_info['currency']] = $res;
+		self::$bid_ask[$currency_info['currency']] = $res;
+		if ($CFG->memcached && !$dont_cache)
+			memcached_safe_set(array('bid_ask_'.$currency_info['currency']),300);
+		
 		return $res;
 	}
 	
@@ -664,7 +668,7 @@ class Orders {
 		else 
 			$currency_info = $CFG->currencies[strtoupper($currency1)];
 		
-		$bid_ask = self::getBidAsk($currency1);
+		$bid_ask = self::getBidAsk($currency1,false,false,true);
 		$bid = $bid_ask['bid'];
 		$ask = $bid_ask['ask'];
 		$bid = ($bid > $ask) ? $ask : $bid;
@@ -680,7 +684,7 @@ class Orders {
 		$fee = (!$use_maker_fee) ? $user_fee['fee'] : $user_fee['fee1'];
 		$fee = ($buy && $price < $ask || !$buy && $price > $bid) ? $user_fee['fee1'] : $fee;
 		$last_price = ($buy) ? $ask : $bid;
-		$CFG->bid_ask[$currency_info['currency']] = array('bid'=>$bid,'ask'=>$ask);
+		self::$bid_ask[$currency_info['currency']] = array('bid'=>$bid,'ask'=>$ask);
 		
 		$insert_id = 0;
 		$transactions = 0;
@@ -798,7 +802,7 @@ class Orders {
 					if (!$comp_user_info)
 						continue;
 					
-					$CFG->bid_ask[$currency_info['currency']]['ask'] = $comp_order['fiat_price'];
+					self::$bid_ask[$currency_info['currency']]['ask'] = $comp_order['fiat_price'];
 					$comp_order = array_merge($comp_order,$comp_user_info);
 					$max_amount = ((($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) > ($amount + (($fee * 0.01) * $amount))) ? $amount : (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) - (($fee * 0.01) * (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']));
 					$max_comp_amount = (($comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding'])) > $comp_order['btc_outstanding']) ? $comp_order['btc_outstanding'] : $comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding']);
@@ -993,7 +997,7 @@ class Orders {
 					if (!$comp_user_info)
 						continue;
 						
-					$CFG->bid_ask[$currency_info['currency']]['bid'] = $comp_order['fiat_price'];
+					self::$bid_ask[$currency_info['currency']]['bid'] = $comp_order['fiat_price'];
 					$comp_order = array_merge($comp_order,$comp_user_info);											
 					$comp_fiat_this_on_hold = $comp_order['fiat_on_hold'] - (($comp_order['btc_outstanding'] * $comp_order['orig_btc_price']) + (($comp_order['fee1'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['orig_btc_price'])));
 					$max_amount = (($this_btc_balance - $this_btc_on_hold) > $amount) ? $amount : $this_btc_balance - $this_btc_on_hold;
@@ -1191,7 +1195,7 @@ class Orders {
 		
 		if (array_key_exists('orders',$unset)) {
 			$delete_keys = array();
-			$CFG->m->set('lock',true,1);
+			$CFG->m->set('lock',true,2);
 			$cached = $CFG->m->get('cache_log');
 			$delete_keys[] = 'cache_log';
 			
@@ -1214,21 +1218,6 @@ class Orders {
 			}
 			
 			$CFG->m->deleteMulti($delete_keys);
-		}
-	}
-	
-	public static function setBidAskCache($values) {
-		global $CFG;
-		
-		$cached = array();
-		if (is_array($values)) {
-			$keys = array();
-			foreach ($values as $k => $v) {
-				$key = 'bid_ask_'.$k;
-				$keys[$key] = $v;
-			}
-			
-			memcached_safe_set($keys,300);
 		}
 	}
 	

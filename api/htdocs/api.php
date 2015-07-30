@@ -26,7 +26,6 @@ $CFG->session_api = false;
 $CFG->token_verified = false;
 $CFG->email_2fa_verified = false;
 $CFG->unset_cache = false;
-$CFG->bid_ask = false;
 
 // commands is of form array('Class1'=>array('method1'=>array('arg1'=>blah,'arg2'=>bob)));
 $commands = (!empty($_POST['commands'])) ? json_decode($_POST['commands'],true) : false;
@@ -250,10 +249,6 @@ if ($update_nonce) {
 // delete cache if necessary
 if ($CFG->memcached && $CFG->unset_cache)
 	Orders::unsetCache($CFG->unset_cache);
-
-// set bid/ask if necessary
-if ($CFG->memcached && $CFG->bid_ask)
-	Orders::setBidAskCache($CFG->bid_ask);
 
 if (is_array($return))
 	echo json_encode($return);
