@@ -133,7 +133,7 @@
                 	<select id="language_selector" class="lang">
                 		<option value="en" <?= ($CFG->language == 'en') ? 'selected="selected"' : '' ?>>English</option>
                 		<option value="es" <?= ($CFG->language == 'es') ? 'selected="selected"' : '' ?>>Español</option>
-                		<option value="ru" <?= ($CFG->language == 'ru') ? 'selected="selected"' : '' ?>>русский</option>
+                		<option value="ru" <?= ($CFG->language == 'ru') ? 'selected="selected"' : '' ?>>Pусский</option>
                 		<option value="zh" <?= ($CFG->language == 'zh') ? 'selected="selected"' : '' ?>>中文</option>
                 	</select>
                 </li>
