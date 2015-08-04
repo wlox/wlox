@@ -9,29 +9,6 @@ if ($_REQUEST['users_form']) {
 	$form->get($_REQUEST['id']);
 	$form->show_errors();
 	$form->show_messages();
-	
-	if (!$form->errors && $form->info['verified_authy'] == 'Y') {
-		$response = shell_exec("
-				curl https://api.authy.com/protected/json/users/new?api_key=$CFG->authy_api_key \
-				-d user[email]='".$form->info['email']."' \
-				-d user[cellphone]='".$form->info['phone']."' \
-				-d user[country_code]='".$form->info['country_code']."'");
-		$response1 = json_decode($response,true);
-		$authy_id = $response1['user']['id'];
-
-		if (!$response || !is_array($response1))
-			Errors::merge(Lang::string('security-com-error'));
-		
-		if ($response1['success'] == 'false' || !$response1['success'])
-			Errors::merge($response1['errors']);
-		
-		if (!is_array(Errors::$errors)) {
-			db_update('admin_users',$form->record_id,array('authy_id'=>$authy_id));
-		}
-		else {
-			db_update('admin_users',$form->record_id,array('verified_authy'=>'N'));
-		}
-	}
 
 	PermissionEditor::save();
 }
