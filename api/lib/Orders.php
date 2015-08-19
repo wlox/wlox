@@ -803,6 +803,8 @@ class Orders {
 						continue;
 					
 					self::$bid_ask[$currency_info['currency']]['ask'] = $comp_order['fiat_price'];
+					$bid = self::$bid_ask[$currency_info['currency']]['bid'];
+					$ask = self::$bid_ask[$currency_info['currency']]['ask'];
 					$comp_order = array_merge($comp_order,$comp_user_info);
 					$max_amount = ((($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) > ($amount + (($fee * 0.01) * $amount))) ? $amount : (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']) - (($fee * 0.01) * (($this_fiat_balance - $this_fiat_on_hold) / $comp_order['fiat_price']));
 					$max_comp_amount = (($comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding'])) > $comp_order['btc_outstanding']) ? $comp_order['btc_outstanding'] : $comp_order['btc_balance'] - ($comp_order['btc_on_hold'] - $comp_order['btc_outstanding']);
@@ -998,6 +1000,8 @@ class Orders {
 						continue;
 						
 					self::$bid_ask[$currency_info['currency']]['bid'] = $comp_order['fiat_price'];
+					$bid = self::$bid_ask[$currency_info['currency']]['bid'];
+					$ask = self::$bid_ask[$currency_info['currency']]['ask'];
 					$comp_order = array_merge($comp_order,$comp_user_info);											
 					$comp_fiat_this_on_hold = $comp_order['fiat_on_hold'] - (($comp_order['btc_outstanding'] * $comp_order['orig_btc_price']) + (($comp_order['fee1'] * 0.01) * ($comp_order['btc_outstanding'] * $comp_order['orig_btc_price'])));
 					$max_amount = (($this_btc_balance - $this_btc_on_hold) > $amount) ? $amount : $this_btc_balance - $this_btc_on_hold;
