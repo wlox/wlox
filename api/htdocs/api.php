@@ -184,6 +184,7 @@ if ($token1 > 0) {
 // email 2fa for settings changes
 if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 	$request_id = Encryption::decrypt(hex2bin($settings_change_id1));
+	$request_id = preg_replace("/[^0-9]/", "",$request_id);
 	if ($request_id > 0) {
 		$change_request = DB::getRecord('change_settings',$request_id,0,1);
 		if ($change_request) {

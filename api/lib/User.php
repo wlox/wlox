@@ -838,6 +838,10 @@ class User {
 		if (!($request_id > 0))
 			return false;
 		
+		$request_id = preg_replace("/[^0-9]/", "",$request_id);
+		if (!($request_id > 0))
+			return false;
+		
 		$change_request = DB::getRecord('change_settings',$request_id,0,1);
 		return $change_request['request'];
 
