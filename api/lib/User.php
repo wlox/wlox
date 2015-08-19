@@ -419,7 +419,7 @@ class User {
 	}
 	
 	public static function randomPassword($length = 8) {
-		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*?";
+		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		$password = substr(str_shuffle($chars),0,$length);
 		return $password;
 	}
@@ -526,11 +526,11 @@ class User {
 		db_query($sql);
 		
 		self::deleteCache();
-		
-		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1,'type'=>'r'));
+		$email_token = self::randomPassword(12);
+		$request_id = db_insert('change_settings',array('email_token'=>$email_token,'date'=>date('Y-m-d H:i:s'),'site_user'=>$id,'request'=>1,'type'=>'r'));
 		if ($request_id > 0) {
 			$vars = User::$info;
-			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['authcode'] = urlencode(Encryption::encrypt($email_token));
 			$vars['baseurl'] = $CFG->frontend_baseurl;
 		
 			$email1 = SiteEmail::getRecord('forgot');
@@ -813,10 +813,11 @@ class User {
 		$sql = "DELETE FROM change_settings WHERE site_user = ".User::$info['id'];
 		db_query($sql);
 		
-		$request_id = db_insert('change_settings',array('date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request)),'site_user'=>User::$info['id'],'type'=>'s'));
+		$email_token = self::randomPassword(12);
+		$request_id = db_insert('change_settings',array('email_token'=>$email_token,'date'=>date('Y-m-d H:i:s'),'request'=>base64_encode(serialize($request)),'site_user'=>User::$info['id'],'type'=>'s'));
 		if ($request_id > 0) {
 			$vars = User::$info;
-			$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+			$vars['authcode'] = urlencode(Encryption::encrypt($email_token));
 			$vars['baseurl'] = $CFG->frontend_baseurl;
 		
 			if (!$security_page)
@@ -835,16 +836,20 @@ class User {
 			return false;
 		
 		$request_id = Encryption::decrypt(urldecode($settings_change_id1));
-		if (!($request_id > 0))
+		if (!$request_id)
 			return false;
 		
-		$request_id = preg_replace("/[^0-9]/", "",$request_id);
-		if (!($request_id > 0))
+		$request_id = preg_replace("/[^0-9a-zA-Z]/", "",$request_id);
+		if (!$request_id)
 			return false;
 		
-		$change_request = DB::getRecord('change_settings',$request_id,0,1);
-		return $change_request['request'];
-
+		$sql = 'SELECT request FROM change_settings WHERE email_token = "'.$request_id.'"';
+		$result = db_query_array($sql);
+		
+		if (!$result)
+			return false;
+		
+		return $result[0]['request'];
 	}
 	
 	public static function notifyLogin() {

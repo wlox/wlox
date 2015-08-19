@@ -184,12 +184,17 @@ if ($token1 > 0) {
 // email 2fa for settings changes
 if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 	$request_id = Encryption::decrypt(hex2bin($settings_change_id1));
-	$request_id = preg_replace("/[^0-9]/", "",$request_id);
-	if ($request_id > 0) {
-		$change_request = DB::getRecord('change_settings',$request_id,0,1);
-		if ($change_request) {
-			db_delete('change_settings',$request_id);
-			$CFG->email_2fa_verified = true;
+	if ($request_id) { 
+		$request_id = preg_replace("/[^0-9a-zA-Z]/", "",$request_id);
+		if ($request_id) {
+			$sql = 'SELECT id,request FROM change_settings WHERE email_token = "'.$request_id.'"';
+			$result = db_query_array($sql);
+			if ($result) {
+				db_delete('change_settings',$request[0]['id']);
+				$CFG->email_2fa_verified = true;
+			}
+			else
+				$return['error'] = 'request-expired';
 		}
 		else
 			$return['error'] = 'request-expired';
