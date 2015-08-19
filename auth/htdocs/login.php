@@ -16,15 +16,18 @@ $user_id = 0;
 
 if ($email_authcode) {
 	$authcode1 = Encryption::decrypt(urldecode($email_authcode));
-	if ($authcode1 > 0) {
-		if (!$email_authcode_request)
-			$sql = 'SELECT site_user FROM change_settings WHERE email_token = "'.$authcode1.'"';
-		else
-			$sql = 'SELECT site_user FROM requests WHERE email_token = "'.$authcode1.'"';
-		
-		$request = db_query_array($sql);
-		if ($request && $request[0]['site_user'])
-			$user_id = $request[0]['site_user'];
+	if ($authcode1) {
+		$authcode1 = preg_replace("/[^0-9a-zA-Z]/", "",$authcode1);
+		if ($authcode1) {
+			if (!$email_authcode_request)
+				$sql = 'SELECT site_user FROM change_settings WHERE email_token = "'.$authcode1.'"';
+			else
+				$sql = 'SELECT site_user FROM requests WHERE email_token = "'.$authcode1.'"';
+			
+			$request = db_query_array($sql);
+			if ($request && $request[0]['site_user'])
+				$user_id = $request[0]['site_user'];
+		}
 	}
 }
 
