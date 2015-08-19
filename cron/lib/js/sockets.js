@@ -39,7 +39,7 @@ else {
 		if (!ready)
 			return false;
 		
-		db_query('SELECT requests.*, bank_accounts.id AS user_acc_id, currencies.account_number AS sys_acc_num, currencies.currency AS currency_abbr FROM requests LEFT JOIN bank_accounts ON (bank_accounts.account_number = requests.account AND bank_accounts.site_user = requests.site_user AND bank_accounts.currency = requests.currency) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE requests.request_status = '+cfg.request_pending_id+' AND requests.request_type = '+cfg.request_withdrawal_id+' AND requests.currency != '+cfg.btc_currency_id+' AND crypto_id != 1 AND requests.done != "Y"', function (error,results) {
+		db_query('SELECT requests.*, bank_accounts.id AS user_acc_id, currencies.account_number AS sys_acc_num, currencies.currency AS currency_abbr FROM requests LEFT JOIN bank_accounts ON (bank_accounts.account_number = requests.account AND bank_accounts.site_user = requests.site_user AND bank_accounts.currency = requests.currency) LEFT JOIN currencies ON (requests.currency = currencies.id) WHERE requests.request_status = '+cfg.request_pending_id+' AND requests.request_type = '+cfg.request_withdrawal_id+' AND requests.currency != '+cfg.btc_currency_id+' AND crypto_id != 1 AND requests.done != "Y"'+(cfg.withdrawals_fiat_manual_approval == 'Y' ? ' AND requests.approved = "Y"' : ''), function (error,results) {
 			if (!error && results.length > 0) {
 				for (i in results) {
 					if (sent.indexOf(results[i].id) >= 0)
@@ -211,6 +211,12 @@ else {
 			});
 		}
 		else if (sys_bank_accounts[transfer.params.receiveAccount]) {
+			// if is internal conversion
+			if (sys_bank_accounts[transfer.params.sendAccount]) {
+				db_query('UPDATE requests LEFT JOIN currencies ON (requests.currency = currencies.id) SET requests.crypto_id = "" WHERE requests.request_status = '+cfg.request_pending_id+' AND requests.request_type = '+cfg.request_withdrawal_id+' AND crypto_id = 1 AND currencies.currency = "'+transfer.params.receiveCurrency+'"');
+				return false;
+			}
+			
 			// if is deposit
 			db_query('SELECT id FROM requests WHERE crypto_id = '+transfer.params.id+' LIMIT 0,1', function (error,results) {
 				if (!error && !results[0]) {
