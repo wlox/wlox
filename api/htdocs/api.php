@@ -190,7 +190,7 @@ if ($settings_change_id1 && ($CFG->session_active || $CFG->session_locked)) {
 			$sql = 'SELECT id,request FROM change_settings WHERE email_token = "'.$request_id.'"';
 			$result = db_query_array($sql);
 			if ($result) {
-				db_delete('change_settings',$request[0]['id']);
+				db_delete('change_settings',$result[0]['id']);
 				$CFG->email_2fa_verified = true;
 			}
 			else

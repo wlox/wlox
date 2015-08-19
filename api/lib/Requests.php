@@ -127,10 +127,12 @@ class Requests{
 			
 			if (User::$info['confirm_withdrawal_email_btc'] == 'Y' && !($CFG->token_verified || $CFG->session_api) && $request_id > 0) {
 				Status::sumFields(array('pending_withdrawals'=>$amount));
+				$email_token = User::randomPassword(12);
 				$vars = User::$info;
-				$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+				$vars['authcode'] = urlencode(Encryption::encrypt($email_token));
 				$vars['baseurl'] = $CFG->frontend_baseurl;
-					
+				db_update('requests',$request_id,array('email_token'=>$email_token));
+				
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
 			}
@@ -155,8 +157,10 @@ class Requests{
 			
 			if (User::$info['confirm_withdrawal_email_bank'] == 'Y' && !($CFG->token_verified || $CFG->session_api) && $request_id > 0) {
 				$vars = User::$info;
-				$vars['authcode'] = urlencode(Encryption::encrypt($request_id));
+				$email_token = User::randomPassword(12);
+				$vars['authcode'] = urlencode(Encryption::encrypt($email_token));
 				$vars['baseurl'] = $CFG->frontend_baseurl;
+				db_update('requests',$request_id,array('email_token'=>$email_token));
 			
 				$email = SiteEmail::getRecord('request-auth');
 				Email::send($CFG->form_email,User::$info['email'],$email['title'],$CFG->form_email_from,false,$email['content'],$vars);
@@ -191,28 +195,39 @@ class Requests{
 		if (!$CFG->session_active)
 			return false;
 		
-		$request_id = Encryption::decrypt(urldecode($authcode));
-		$request = DB::getRecord('requests',$request_id,0,1);
+		$authcode = Encryption::decrypt(urldecode($authcode));
+		if (!$authcode)
+			return false;
+
+		$authcode = preg_replace("/[^0-9a-zA-Z]/", "",$authcode);
+		if (!$authcode)
+			return false;
 		
+		$sql = 'SELECT * FROM requests WHERE email_token = "'.$authcode.'"';
+		$result = db_query_array($sql);
+		if (!$result)
+			return false;
+		
+		$request = $result[0];
 		if ($request['request_status'] != $CFG->request_awaiting_id)
 			return false;
 		
-		if ($request_id > 0) {
-		    if (User::$info['notify_withdraw_bank'] == 'Y') {
-		        $currency_info = DB::getRecord('currencies',$request['currency'],0,1);
-		        $info['amount'] = $request['amount'];
-		        $info['currency'] = $currency_info['currency'];
-		        $info['first_name'] = User::$info['first_name'];
-		        $info['last_name'] = User::$info['last_name'];
-		        $info['id'] = $request_id;
-		        $email = SiteEmail::getRecord('new-withdrawal');
-		        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($request['amount'],2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
-		    }
-			return db_update('requests',$request_id,array('request_status'=>$CFG->request_pending_id));
-		}
+	    if (User::$info['notify_withdraw_bank'] == 'Y') {
+	        $currency_info = DB::getRecord('currencies',$request['currency'],0,1);
+	        $info['amount'] = $request['amount'];
+	        $info['currency'] = $currency_info['currency'];
+	        $info['first_name'] = User::$info['first_name'];
+	        $info['last_name'] = User::$info['last_name'];
+	        $info['id'] = $request['id'];
+	        $email = SiteEmail::getRecord('new-withdrawal');
+	        Email::send($CFG->form_email,User::$info['email'],str_replace('[amount]',number_format($request['amount'],2),str_replace('[currency]',$currency_info['currency'],$email['title'])),$CFG->form_email_from,false,$email['content'],$info);
+	    }
+		return db_update('requests',$request['id'],array('request_status'=>$CFG->request_pending_id));
 	}
 	
 	public static function unsetCache($user_id) {
+		global $CFG;
+		
 		if (!$user_id || !$CFG->memcached)
 			return false;
 		
