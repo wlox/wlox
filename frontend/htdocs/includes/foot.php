@@ -59,7 +59,7 @@
             <ul class="list">   
                 <li><a href="<?= Lang::url('what-are-bitcoins.php') ?>"><?= Lang::string('what-are-bitcoins') ?></a></li>
                 <li><a href="<?= Lang::url('how-bitcoin-works.php') ?>"><?= Lang::string('how-bitcoin-works') ?></a></li>
-                <li><a href="<?= Lang::url('how-to-register.php') ?>"><?= Lang::string('how-to-register') ?></a></li>
+                <li><a href="<?= Lang::url('buy-and-sell-bitcoin.php') ?>"><?= Lang::string('how-to-register') ?></a></li>
             </ul>
          </div>
          <? } ?>
@@ -71,13 +71,11 @@
 
 
 <div class="copyright_info">
-
     <div class="container">
-    
         <div class="one_half">
-        
+
             <b>Copyright &copy; 2014 WLOX. All rights reserved.</b>
-            
+
         </div>
     
     	<div class="one_half last">
@@ -90,7 +88,6 @@
     	</div>
     
     </div>
-    
 </div><!-- end copyright info -->
 
 

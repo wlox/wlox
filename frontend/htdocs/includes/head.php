@@ -175,7 +175,7 @@
                         </ul>
                     </li -->
                     <li><a href="<?= Lang::url('our-security.php') ?>" <?= ($CFG->self == 'our-security.php') ? 'class="active"' : '' ?>><?= Lang::string('our-security') ?></a></li>
-                    <li><a href="<?= Lang::url('how-to-register.php') ?>" <?= ($CFG->self == 'how-to-register.php') ? 'class="active"' : '' ?>><?= Lang::string('how-to-register') ?> <!-- i class="fa fa-angle-down"></i --></a>
+                    <li><a href="<?= Lang::url('buy-and-sell-bitcoin.php') ?>" <?= ($CFG->self == 'buy-and-sell-bitcoin.php') ? 'class="active"' : '' ?>><?= Lang::string('how-to-register') ?> <!-- i class="fa fa-angle-down"></i --></a>
                     	<!-- ul>
                         	<li><a href="securing-account.php"><?= Lang::string('securing-account') ?></a></li>
                         	<li><a href="reset_2fa.php"><?= Lang::string('reset-2fa') ?></a></li>

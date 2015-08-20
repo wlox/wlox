@@ -35,10 +35,10 @@ class Lang {
 		$urls['our-security.php']['es'] = 'es/nuestra-seguridad.php';
 		$urls['our-security.php']['ru'] = 'ru/'.urlencode('наша-безопасность').'.php';
 		$urls['our-security.php']['zh'] = 'zh/'.urlencode('我们的安全').'.php';
-		$urls['how-to-register.php']['en'] = 'how-to-register.php';
-		$urls['how-to-register.php']['es'] = 'es/como-registrarse.php';
-		$urls['how-to-register.php']['ru'] = 'ru/'.urlencode('как-зарегистрироваться').'.php';
-		$urls['how-to-register.php']['zh'] = 'zh/'.urlencode('注册').'.php';
+		$urls['buy-and-sell-bitcoin.php']['en'] = 'buy-and-sell-bitcoin.php';
+		$urls['buy-and-sell-bitcoin.php']['es'] = 'es/comprar-y-vender-bitcoins.php';
+		$urls['buy-and-sell-bitcoin.php']['ru'] = 'ru/'.urlencode('как-зарегистрироваться').'.php';
+		$urls['buy-and-sell-bitcoin.php']['zh'] = 'zh/'.urlencode('注册').'.php';
 		$urls['fee-schedule.php']['en'] = 'fee-schedule.php';
 		$urls['fee-schedule.php']['es'] = 'es/tarifas-y-comisiones.php';
 		$urls['fee-schedule.php']['ru'] = 'ru/'.urlencode('комиссионные-сборы').'.php';
