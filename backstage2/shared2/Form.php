@@ -3070,7 +3070,7 @@ class Form {
 						//$files = DB::getFiles($this->table.'_files',$this->record_id);
 					}
 					else {
-						if ($this->info['cat_selects'] && $this->info['cat_selects'][$this->table.'_'.$subtable]) {
+						if ($this->info['cat_selects'] && $this->info['cat_selects'][$subtable]) {
 							$cats = DB::getCats($this->table.'_'.$subtable,$this->record_id);
 							if ($cats) {
 								foreach ($cats as $cat) {
