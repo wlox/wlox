@@ -188,7 +188,7 @@
                     	<!-- >ul>
                         	<li><a href="our-security.php"><?= Lang::string('our-security') ?></a></li>
                         	<li><a href="fee-schedule.php"><?= Lang::string('fee-schedule') ?></a></li->
-                        	<li><a href="news.php"><?= Lang::string('news') ?></a></li>
+                        	<li><a href="press-releases.php"><?= Lang::string('news') ?></a></li>
                         </ul -->
                     </li>
                     <li style="display:none;"><a href="login.php"><?= Lang::string('home-login') ?></a></li>

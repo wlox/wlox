@@ -14,9 +14,9 @@
             <!-- li><a href="trading-bitcoins.php" <?= ($CFG->self == 'trading-bitcoins.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('trading-bitcoins') ?></a></li -->
             <li><a href="<?= Lang::url('fee-schedule.php') ?>" <?= ($CFG->self == 'fee-schedule.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('fee-schedule') ?></a></li>
             <li><a href="help.php" <?= ($CFG->self == 'help.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('help') ?></a></li>
-            <li><a href="news.php" <?= ($CFG->self == 'news.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('news') ?></a></li>
-            <li><a href="contact.php" <?= ($CFG->self == 'contact.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('contact') ?></a></li>
-            <li><a href="api-docs.php" <?= ($CFG->self == 'api-docs.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('api-docs') ?></a></li>
+            <li><a href="<?= Lang::url('press-releases.php') ?>" <?= ($CFG->self == 'press-releases.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('news') ?></a></li>
+            <li><a href="<?= Lang::url('contact.php') ?>" <?= ($CFG->self == 'contact.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('contact') ?></a></li>
+			<li><a href="api-docs.php" <?= ($CFG->self == 'api-docs.php') ? 'class="active"' : '' ?>><i class="fa fa-angle-right"></i> <?= Lang::string('api-docs') ?></a></li>
 		</ul>
 	</div>
 </div>

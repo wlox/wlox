@@ -59,10 +59,10 @@ class Lang {
 		$urls['reset_2fa.php']['es'] = 'es/reiniciar_2fa.php';
 		$urls['reset_2fa.php']['ru'] = 'ru/'.urlencode('сброс-2fa').'.php';
 		$urls['reset_2fa.php']['zh'] = 'zh/'.urlencode('复位双因素身份验证').'.php';
-		$urls['news.php']['en'] = 'news.php';
-		$urls['news.php']['es'] = 'es/noticias.php';
-		$urls['news.php']['ru'] = 'ru/'.urlencode('новости').'.php';
-		$urls['news.php']['zh'] = 'zh/'.urlencode('消息').'.php';
+		$urls['press-releases.php']['en'] = 'press-releases.php';
+		$urls['press-releases.php']['es'] = 'es/comunicados-de-prensa.php';
+		$urls['press-releases.php']['ru'] = 'ru/'.urlencode('новости').'.php';
+		$urls['press-releases.php']['zh'] = 'zh/'.urlencode('消息').'.php';
 		$urls['terms.php']['en'] = 'terms.php';
 		$urls['terms.php']['es'] = 'es/terminos.php';
 		$urls['terms.php']['ru'] = 'ru/'.urlencode('условия').'.php';

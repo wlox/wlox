@@ -344,7 +344,7 @@ if (!User::isLoggedIn()) {
 		}
         ?>
         <div class="clearfix mar_top5"></div>
-        <a href="news.php" class="highlight gray bigger"><i class="fa fa-plus-square"></i> <?= Lang::string('news-see-all') ?></a>
+        <a href="<?= Lang::url('press-releases.php') ?>" class="highlight gray bigger"><i class="fa fa-plus-square"></i> <?= Lang::string('news-see-all') ?></a>
     </div>
 	<div class="clearfix mar_top8"></div>
 </div><!-- end features section 3 -->

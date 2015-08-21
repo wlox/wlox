@@ -35,7 +35,8 @@
             <ul class="list">
              	<li><a href="<?= Lang::url('about.php') ?>"><?= Lang::string('about') ?></a></li>
              	<li><a href="<?= Lang::url('our-security.php') ?>"><?= Lang::string('our-security') ?></a></li>
-             	<li><a href="<?= Lang::url('news.php') ?>"><?= Lang::string('news') ?></a></li>
+             	<li><a href="blog.php"><?= Lang::string('blog') ?></a></li>
+             	<li><a href="<?= Lang::url('press-releases.php') ?>"><?= Lang::string('news') ?></a></li>
              	<li><a href="<?= Lang::url('fee-schedule.php') ?>"><?= Lang::string('fee-schedule') ?></a></li>
              	<li><a href="https://github.com/wlox/wlox/" target="_blank"><?= Lang::string('home-github') ?></a></li>
             </ul>
@@ -77,7 +78,7 @@
             <b>Copyright &copy; 2014 WLOX. All rights reserved.</b>
 
         </div>
-    
+
     	<div class="one_half last">
      		
             <ul class="footer_social_links">
