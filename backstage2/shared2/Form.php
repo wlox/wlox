@@ -1456,7 +1456,7 @@ class Form {
 		elseif ($input_type && $aux_table_name) {
 			$this->db_fields[$aux_table_name] = 'cat_input';
 		}
-		
+
 		$cats = DB::getCats($subtable);
 		if ($this->record_id && !$input_type)
 			$cat_selection = DB::getCatSelection($this->table,$subtable,$this->record_id);
@@ -3070,7 +3070,7 @@ class Form {
 						//$files = DB::getFiles($this->table.'_files',$this->record_id);
 					}
 					else {
-						if ($this->info['cat_selects']) {
+						if ($this->info['cat_selects'] && $this->info['cat_selects'][$this->table.'_'.$subtable]) {
 							$cats = DB::getCats($this->table.'_'.$subtable,$this->record_id);
 							if ($cats) {
 								foreach ($cats as $cat) {
