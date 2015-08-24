@@ -12,7 +12,7 @@ class Lang {
 			return false;
 	}
 	
-	function url($url=false,$get_alts=false,$get_js=false) {
+	public static function url($url=false,$get_alts=false,$get_js=false) {
 		global $CFG;
 		
 		$urls['index.php']['en'] = 'index.php';
