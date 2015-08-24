@@ -61,7 +61,7 @@ class Link {
 			}
 			
 			$query_char = (!empty($all_variables)) ? $query_char : '';
-			$str = (!$CFG->url_rewrite) ? $url.$query_char.http_build_query($all_variables) : Rewrite::translateURL($url,$all_variables);
+			$str = $url.$query_char.http_build_query($all_variables);
 			if ($ajax) {
 				$url = " <a $window_target $class href=\"$str\" $title  onclick=\"ajaxGetPage('$str','$target_elem_id',false,'$custom_animation'); return false;\">$caption</a> ";
 			}
