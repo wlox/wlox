@@ -57,21 +57,15 @@ if (!$CFG->bypass || ($CFG->bypass && $CFG->print)) {
 }
 
 if ($_REQUEST['authy_form']) {
-	$token1 = ereg_replace("[^0-9]", "",$_REQUEST['authy_form']['token']);
+	$token1 = preg_replace("/[^0-9]/", "",$_REQUEST['authy_form']['token']);
 	
 	if (!($token1 > 0))
 		Errors::add('Invalid token.');
 
 	if (!is_array(Errors::$errors)) {
-		$authy_id = User::$info['authy_id'];
-		$response = shell_exec('curl "https://api.authy.com/protected/json/verify/'.$token1.'/'.User::$info['authy_id'].'?api_key='.$CFG->authy_api_key.'"');
-		$response1 = json_decode($response,true);
-
-		if (!$response || !is_array($response1))
-			Errors::merge('Authy communication error.');
-
-		if (!empty($response1['errors']) || $response1['success'] === false || $response1['success'] === 'false')
-			Errors::merge($response1['errors']);
+		$response = Google2FA::verify_key(User::$info['authy_id'],$token1);
+		if (!$response)
+			Errors::add('Invalid token.');
 
 		if (!is_array(Errors::$errors)) {
 			$_SESSION['token_verified'] = 1;
@@ -306,6 +300,9 @@ if (User::isLoggedIn() && !(User::$info['verified_authy'] == 'Y' && !($_SESSION[
 	elseif ($CFG->url == 'settings') {
 		include_once 'includes/settings.php';
 	}
+	elseif ($CFG->url == 'my-account') {
+		include_once 'includes/account.php';
+	}
 	else {
 		$form_name = ereg_replace("[^a-zA-Z_\-]", "",$_REQUEST['form_name']);
 		if (!empty($form_name) && $form_name != 'form_filters' && $form_name != 'loginform' && !$_REQUEST['return_to_self']) {
@@ -348,7 +345,7 @@ elseif (User::isLoggedIn() && (User::$info['verified_authy'] == 'Y' && !($_SESSI
 		';
 	
 	$l_form = new Form('authy_form');
-	$l_form->info['token'] = ereg_replace("[^0-9]", "",$l_form->info['token']);
+	$l_form->info['token'] = preg_replace("/[^0-9]/", "",$l_form->info['token']);
 	$l_form->textInput('token','Enter token');
 	$l_form->submitButton('submit','Verify Token');
 	$l_form->display();

@@ -51,13 +51,17 @@ class Link {
 			$p_variables = (is_array($p_variables)) ? $p_variables : array();
 			$q_variables = (is_array($q_variables)) ? $q_variables : array();
 			$all_variables = array_merge($p_variables,$q_variables,$variables);
+			
+			if ($all_variables)
+				unset($all_variables['submit']);
+			
 			if ($CFG->backstage_mode) {
 				$all_variables['current_url'] = $url;
 				$url = 'index.php';
 			}
 			
 			$query_char = (!empty($all_variables)) ? $query_char : '';
-			$str = (!$CFG->url_rewrite) ? $url.$query_char.Link::parseVariables($all_variables) : Rewrite::translateURL($url,$all_variables);
+			$str = (!$CFG->url_rewrite) ? $url.$query_char.http_build_query($all_variables) : Rewrite::translateURL($url,$all_variables);
 			if ($ajax) {
 				$url = " <a $window_target $class href=\"$str\" $title  onclick=\"ajaxGetPage('$str','$target_elem_id',false,'$custom_animation'); return false;\">$caption</a> ";
 			}

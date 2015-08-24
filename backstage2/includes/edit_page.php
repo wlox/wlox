@@ -153,7 +153,7 @@ else {
 				$form->autoComplete('argument_'.$name,ucfirst(str_replace('_',' ',$name)),$required,$fields_table,false,$db_tables);
 				$t_field = 'argument_'.$name;
 			}
-			elseif ($name == 'checked' || $name == 'is_media' || $name == 'accept_children' || $name == 'dragdrop' || $name == 'show_buttons' || $name == 'filter' || $name == 'return_to_self') {
+			elseif ($name == 'checked' || $name == 'is_media' || $name == 'accept_children' || $name == 'dragdrop' || $name == 'show_buttons' || $name == 'filter' || $name == 'return_to_self' || $name == 'not_equals') {
 				$form->checkBox('argument_'.$name,ucfirst(str_replace('_',' ',$name)));
 			}
 			elseif (stristr($name,'target') && $class != 'Form') {

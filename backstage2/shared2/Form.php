@@ -827,7 +827,7 @@ class Form {
 	// you can use both $options_array and $subtable_fields to populate
 	// $subtable_fields usage: table.field1, table.field2
 	// $level can be 1 to n -> used for tables with p_id
-	function selectInput($name,$caption=false,$required=false,$value=false,$options_array=false,$subtable=false,$subtable_fields=false,$subtable_f_id=false,$id=false,$class=false,$jscript=false,$style=false,$f_id_field=false,$default_text=false,$depends_on=false,$function_to_elements=false,$static=false,$j=false,$grid_input=false,$first_is_default=false,$level=false) {
+	function selectInput($name,$caption=false,$required=false,$value=false,$options_array=false,$subtable=false,$subtable_fields=false,$subtable_f_id=false,$id=false,$class=false,$jscript=false,$style=false,$f_id_field=false,$default_text=false,$depends_on=false,$function_to_elements=false,$static=false,$j=false,$grid_input=false,$first_is_default=false,$level=false,$use_enum_values=false) {
 		global $CFG;
 
 		$class = ($class) ? 'class="' . $class . '"' : false;
@@ -851,7 +851,20 @@ class Form {
 			}
 		}
 		
-		if ($subtable) {
+		if ($use_enum_values) {
+			$enum_table = ($subtable) ? $subtable : $this->table;
+			$fields = DB::getTableFields($enum_table);
+			$options_raw = $fields[$name]['Type'];
+			if (stristr($options_raw,'enum')) {
+				$options_split = explode(',',str_ireplace('enum(','',str_replace(')','',str_replace("'",'',str_replace('"','',$options_raw)))));
+				if (is_array($options_split)) {
+					foreach ($options_split as $option) {
+						$options_array[$option] = $option;
+					}
+				}
+			}
+		}
+		else if ($subtable) {
 			$db_output = DB::getSubTable($subtable,$subtable_fields,$subtable_f_id,false,$f_id_field);
 			if (in_array('p_id',$subtable_fields))
 				$db_output = DB::sortCats($db_output,0,1,$level);
@@ -1443,7 +1456,7 @@ class Form {
 		elseif ($input_type && $aux_table_name) {
 			$this->db_fields[$aux_table_name] = 'cat_input';
 		}
-		
+
 		$cats = DB::getCats($subtable);
 		if ($this->record_id && !$input_type)
 			$cat_selection = DB::getCatSelection($this->table,$subtable,$this->record_id);
@@ -3057,7 +3070,7 @@ class Form {
 						//$files = DB::getFiles($this->table.'_files',$this->record_id);
 					}
 					else {
-						if ($this->info['cat_selects']) {
+						if ($this->info['cat_selects'] && $this->info['cat_selects'][$subtable]) {
 							$cats = DB::getCats($this->table.'_'.$subtable,$this->record_id);
 							if ($cats) {
 								foreach ($cats as $cat) {
