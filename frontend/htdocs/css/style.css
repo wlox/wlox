@@ -425,7 +425,7 @@ height: 0;
 	height:34px;
 	margin-top:20px;
 	text-indent:-999em;
-	background:url(../images/logo3.png) no-repeat left bottom !important;
+	background:url(../images/logo31png) no-repeat left bottom !important;
 }
 
 .clear{clear:both;}
@@ -459,7 +459,7 @@ height: 0;
 .price-green{color:#0DD84D !important;}
 .price-red{color:#FF5151 !important;}
 
-.mobilebanner{background:background:url(../images/slider-bg1.jpg) no-repeat left top / cover;padding: 20px 0px;position:relative;}
+.mobilebanner{background:background:url(../images/bg1.jpg) no-repeat left top / cover;padding: 20px 0px;position:relative;}
 .mobilebanner h1{color: #fff;font-family: "Open Sans",sans;font-size:45px;font-weight: bold;letter-spacing: 0;margin: 0 10px 0px 0;padding: 0;text-shadow: none;text-transform: uppercase;}
 .mobilebanner h1.caption_ru {font-size: 48px;}
 .mobilebanner .line{background: url("../../../../images/opacity-line.png") repeat-x scroll left top rgba(0, 0, 0, 0);height: 1px;}
