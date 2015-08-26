@@ -413,7 +413,7 @@ function updateTransactions() {
 						if (this.btc_price > current_max)
 							$('#stats_max').html(formatCurrency(this.btc_price));
 						
-						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+(parseInt(Date.now()/1000) + 1)+'" /></td><td>'+this.btc+' BTC</td><td>' + this_fa_symbol + formatCurrency(this.btc_price) + this_currency_abbr + '</td></tr>').insertAfter(insert_elem);
+						var elem = $('<tr id="order_'+this.id+'"><td><span class="time_since"></span><input type="hidden" class="time_since_seconds" value="'+this.time_since+'" /></td><td>'+this.btc+' BTC</td><td>' + this_fa_symbol + formatCurrency(this.btc_price) + this_currency_abbr + '</td></tr>').insertAfter(insert_elem);
 						insert_elem = elem;
 						
 						timeSince($(elem).find('.time_since'));
@@ -1129,13 +1129,11 @@ function localDates() {
 
 function timeSince(elem) {
 	var miliseconds = $(elem).siblings('.time_since_seconds').val();
-	var date = new Date(parseInt(miliseconds)*1000);
-	//var offset = date.getTimezoneOffset() * 60;
-	//var date1 = new Date(parseInt(miliseconds) + (parseInt(offset)*1000));
-	var time_unit;
-	
+	var date1 = new Date(parseInt(miliseconds)*1000);
+	date1 = (date1.getTime() > Date.now()) ? new Date() : date1;
+
 	$(elem).countdown({ 
-	    since: date,
+	    since: date1,
 	    significant: 1,
 	    layout: '{o<}{on} {ol}{o>}{w<}{wn} {wl}{w>}{d<}{dn} {dl}{d>}{h<}{hn} {hl}{h>}{m<}{mn} {ml}{m>}{s<}{sn} {sl}{s>}'
 	});
