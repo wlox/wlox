@@ -132,6 +132,7 @@ if ((date('H') == 7 || date('H') == 16) && (date('i') >= 0 && date('i') < 5)) {
 	//////////////////////////////////////////
 	
 	// get current currency ledger
+	$ledger = array();
 	$sql = 'SELECT * FROM conversions WHERE is_active != "Y"';
 	$result = db_query_array($sql);
 	if ($result) {
