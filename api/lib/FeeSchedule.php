@@ -19,7 +19,7 @@ class FeeSchedule {
 			if ($CFG->memcached)
 				$CFG->m->set('fee_schedule_'.$currency_info['id'],$result[0],300);
 				
-			return $result[0];
+			return $result;
 		}
 		return false;
 	}
