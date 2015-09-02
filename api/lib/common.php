@@ -12,7 +12,7 @@ db_connect($CFG->dbhost,$CFG->dbname,$CFG->dbuser,$CFG->dbpass);
 $CFG->memcached = (class_exists('Memcached'));
 $CFG->m = false;
 if ($CFG->memcached) {
-	$CFG->m = new Memcached();
+	$CFG->m = (class_exists('MemcachedFallback')) ? new MemcachedFallback() : new Memcached();
 	$CFG->m->addServer('localhost', 11211);
 }
 

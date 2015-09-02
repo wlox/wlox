@@ -58,4 +58,19 @@ if (!function_exists('hex2bin')) {
 		return $sbin;
 	}
 }
+
+if (class_exists('Memcached')) {
+	if (!method_exists('Memcached','deleteMulti')) {
+		class MemcachedFallback extends Memcached {
+			public function deleteMulti($keys,$time=0) {
+				if (!is_array($keys))
+					return false;
+				
+				foreach ($keys as $k => $v) {
+					$this->delete($v,$time);
+				}
+			}
+		}
+	}
+}
 ?>
