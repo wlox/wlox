@@ -17,7 +17,7 @@ class FeeSchedule {
 		$result = db_query_array($sql);
 		if ($result) {
 			if ($CFG->memcached)
-				$CFG->m->set('fee_schedule_'.$currency_info['id'],$result[0],300);
+				$CFG->m->set('fee_schedule_'.$currency_info['id'],$result,300);
 				
 			return $result;
 		}
