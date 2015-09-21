@@ -24,6 +24,9 @@ if (!empty($_REQUEST['register']) && (empty($_SESSION["register_uniq"]) || $_SES
 if (!empty($_REQUEST['register']) && !$register->info['terms'])
 	$register->errors[] = Lang::string('settings-terms-error');
 
+if (!empty($_REQUEST['register']) && $CFG->register_status == 'suspended')
+	$register->errors[] = Lang::string('register-disabled');
+
 if (!empty($_REQUEST['register']) && (is_array($register->errors))) {
 	$errors = array();
 	
