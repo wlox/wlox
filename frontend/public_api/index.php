@@ -349,9 +349,9 @@ elseif ($endpoint == 'orders/new') {
 						$order['side'] = (!empty($order['side'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['side'])) : false;
 						$order['type'] = (!empty($order['type'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['type'])) : false;
 						$order['currency'] = (!empty($order['currency'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['currency'])) : false;
-						$order['limit_price'] = (!empty($order['limit_price'])) ? preg_replace("/[^0-9.]/", "",$order['limit_price']) : false;
-						$order['stop_price'] = (!empty($order['type']) && $order['type'] == 'stop') ? preg_replace("/[^0-9.]/", "",$order['stop_price']) : false;
-						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
+						$order['limit_price'] = (!empty($order['limit_price']) && $order['limit_price'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['limit_price']),2,'.','') : false;
+						$order['stop_price'] = (!empty($order['type']) && $order['type'] == 'stop' && $order['stop_price'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['stop_price']),2,'.','') : false;
+						$order['amount'] = (!empty($order['amount']) && $order['amount'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['amount']),8,'.','') : false;
 						
 						// preliminary validation
 						if ($CFG->trading_status == 'suspended') {
@@ -438,9 +438,9 @@ elseif ($endpoint == 'orders/edit') {
 					foreach ($orders as $order) {
 						$order['id'] = (!empty($order['id'])) ? preg_replace("/[^0-9]/", "",$order['id']) : false;
 						$order['type'] = (!empty($order['type'])) ? strtolower(preg_replace("/[^a-zA-Z]/","",$order['type'])) : false;
-						$order['limit_price'] = (!empty($order['limit_price'])) ? preg_replace("/[^0-9.]/", "",$order['limit_price']) : false;
-						$order['stop_price'] = (!empty($order['stop_price'])) ? preg_replace("/[^0-9.]/", "",$order['stop_price']) : false;
-						$order['amount'] = (!empty($order['amount'])) ? preg_replace("/[^0-9.]/", "",$order['amount']) : false;
+						$order['limit_price'] = (!empty($order['limit_price']) && $order['limit_price'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['limit_price']),2,'.','') : false;
+						$order['stop_price'] = (!empty($order['stop_price']) && $order['stop_price'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['stop_price']),2,'.','') : false;
+						$order['amount'] = (!empty($order['amount']) && $order['amount'] > 0) ? number_format(preg_replace("/[^0-9.]/", "",$order['amount']),8,'.','') : false;
 						
 						// preliminary validation
 						if ($CFG->trading_status == 'suspended') {
@@ -617,12 +617,15 @@ elseif ($endpoint == 'withdrawals/new') {
 	if ($post) {
 		if (!$invalid_signature && !$invalid_currency && $api_key1 && $nonce1 > 0) {
 			if ($permissions['p_withdraw'] == 'Y') {
-				$amount1 = (!empty($_POST['amount'])) ? preg_replace("/[^0-9.]/", "",$_POST['amount']) : false;
+				$amount1 = (!empty($_POST['amount'])) ? preg_replace("/[^0-9.]/", "",$_POST['amount']) : 0;
 				$address1 = (!empty($_POST['address'])) ? preg_replace("/[^\da-z]/i", "",$_POST['address']) : false;
 				$account1 = (!empty($_POST['account_number'])) ? preg_replace("/[^0-9]/", "",$_POST['account_number']) : false;
+				$amount1 = (strtolower($currency1) == 'btc') ? number_format($amount1,8,'.','') : number_format($amount1,2,'.','');
 				
-				if (($amount1 - $CFG->bitcoin_sending_fee) < 0.00000001)
+				if (strtolower($currency1) == 'btc' && ($amount1 - $CFG->bitcoin_sending_fee) < 0.00000001)
 					$return['errors'][] = array('message'=>Lang::string('withdraw-amount-zero'),'code'=>'WITHDRAW_INVALID_AMOUNT');
+				elseif (strtolower($currency1) != 'btc' && $amount1 < 1)
+					$return['errors'][] = array('message'=>Lang::string('withdraw-amount-one'),'code'=>'WITHDRAW_INVALID_AMOUNT');
 				elseif (strtolower($currency1) == 'btc' && !$address1)
 					$return['errors'][] = array('message'=>Lang::string('withdraw-address-invalid'),'code'=>'WITHDRAW_INVALID_ADDRESS');
 				elseif (strtolower($currency1) != 'btc' && !$account1)

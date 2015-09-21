@@ -11,9 +11,11 @@ elseif (!User::isLoggedIn())
 $page1 = (!empty($_REQUEST['page'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['page']) : false;
 $btc_address1 = (!empty($_REQUEST['btc_address'])) ?  preg_replace("/[^\da-z]/i", "",$_REQUEST['btc_address']) : false;
 $btc_amount1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['btc_amount']) : 0;
+$btc_amount1 = number_format($btc_amount1,8,'.','');
 $btc_total1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? $btc_amount1 - $CFG->bitcoin_sending_fee : 0;
 $account1 = (!empty($_REQUEST['account'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['account']) : false;
 $fiat_amount1 = (!empty($_REQUEST['fiat_amount']) && $_REQUEST['fiat_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['fiat_amount']) : 0;
+$fiat_amount1 = number_format($fiat_amount1,2,'.','');
 $fiat_total1 = (!empty($_REQUEST['btc_amount']) && $_REQUEST['btc_amount'] > 0) ? $fiat_amount1 - $CFG->fiat_withdraw_fee : 0;
 $token1 = (!empty($_REQUEST['token'])) ? preg_replace("/[^0-9]/", "",$_REQUEST['token']) : false;
 $authcode1 = (!empty($_REQUEST['authcode'])) ? $_REQUEST['authcode'] : false;
