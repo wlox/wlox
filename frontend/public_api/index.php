@@ -621,7 +621,7 @@ elseif ($endpoint == 'withdrawals/new') {
 				$address1 = (!empty($_POST['address'])) ? preg_replace("/[^\da-z]/i", "",$_POST['address']) : false;
 				$account1 = (!empty($_POST['account_number'])) ? preg_replace("/[^0-9]/", "",$_POST['account_number']) : false;
 				
-				if (!($amount1 > 0))
+				if (($amount1 - $CFG->bitcoin_sending_fee) < 0.00000001)
 					$return['errors'][] = array('message'=>Lang::string('withdraw-amount-zero'),'code'=>'WITHDRAW_INVALID_AMOUNT');
 				elseif (strtolower($currency1) == 'btc' && !$address1)
 					$return['errors'][] = array('message'=>Lang::string('withdraw-address-invalid'),'code'=>'WITHDRAW_INVALID_ADDRESS');
