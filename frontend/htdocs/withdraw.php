@@ -102,7 +102,7 @@ if ($CFG->withdrawals_status == 'suspended')
 	Errors::add(Lang::string('withdrawal-suspended'));
 
 if (!empty($_REQUEST['bitcoins'])) {
-	if (!($btc_amount1 > 0))
+	if (($btc_amount1 - $CFG->bitcoin_sending_fee) < 0.00000001)
 		Errors::add(Lang::string('withdraw-amount-zero'));
 	if ($btc_amount1 > $user_available['BTC'])
 		Errors::add(Lang::string('withdraw-too-much'));
