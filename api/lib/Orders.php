@@ -593,7 +593,7 @@ class Orders {
 		if (($buy && ($total - $edit_old_fiat) > $user_available) || (!$buy && ($amount - $edit_old_btc) > $user_available))
 			return array('error'=>array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW'));
 
-		if (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd)
+		if (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd || $subtotal < 0.00000001 || $price > 9999999999999999)
 			return array('error'=>array('message'=>str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))),'code'=>'ORDER_UNDER_MINIMUM'));
 		
 		if ((($buy && $stop_price > 0 && $stop_price <= $current_ask) || (!$buy && $stop_price >= $current_bid)) && $stop_price > 0)
@@ -634,9 +634,12 @@ class Orders {
 		}
 		
 		$amount = preg_replace("/[^0-9\.]/", "",$amount);
+		$amount = ($amount > 0) ? round($amount,8,PHP_ROUND_HALF_UP) : 0;
 		$orig_amount = $amount;
 		$price = preg_replace("/[^0-9\.]/", "",$price);
+		$price = ($price > 0) ? round($price,2,PHP_ROUND_HALF_UP) : 0;
 		$stop_price = preg_replace("/[^0-9\.]/", "",$stop_price);
+		$stop_price = ($stop_price > 0) ? round($stop_price,2,PHP_ROUND_HALF_UP) : 0;
 		$currency1 = strtolower(preg_replace("/[^a-zA-Z]/", "",$currency1));
 		$edit_id = preg_replace("/[^0-9]/", "",$edit_id);
 		
