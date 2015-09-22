@@ -55,16 +55,16 @@ $user_fee_bid = ($buy && ((!empty($_REQUEST['buy_amount']) && $_REQUEST['buy_amo
 $user_fee_ask = ($sell && ((!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 0 && $_REQUEST['sell_price'] <= $bids[0]['btc_price']) || !empty($_REQUEST['sell_market_price']) || empty($_REQUEST['sell_amount']))) ? $query['FeeSchedule']['getRecord']['results'][0]['fee'] : $query['FeeSchedule']['getRecord']['results'][0]['fee1'];
 $bank_accounts = $query['BankAccounts']['get']['results'][0];
 
-$buy_amount1 = floatval(number_format((($buy && $_REQUEST['buy_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']) : 0),8,'.',''));
-$buy_price1 = floatval(number_format((($buy && $_REQUEST['buy_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']) : $current_ask),2,'.',''));
+$buy_amount1 = (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_amount'] > 0) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['buy_amount']),8,'.',''),'0') : 0;
+$buy_price1 = (!empty($_REQUEST['buy_price']) && $_REQUEST['buy_price'] > 0) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['buy_price']),2,'.',''),'0') : $current_ask;
 $buy_subtotal1 = $buy_amount1 * $buy_price1;
 $buy_fee_amount1 = ($user_fee_bid * 0.01) * $buy_subtotal1;
 $buy_total1 = round($buy_subtotal1 + $buy_fee_amount1,2,PHP_ROUND_HALF_UP);
 $buy_stop = false;
 $buy_stop_price1 = false;
 
-$sell_amount1 = floatval(number_format(((!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']) : 0),8,'.',''));
-$sell_price1 = floatval(number_format(((!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0) ? preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']) : $current_bid),2,'.',''));
+$sell_amount1 = (!empty($_REQUEST['sell_amount']) && $_REQUEST['sell_amount'] > 0) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['sell_amount']),8,'.',''),'0') : 0;
+$sell_price1 = (!empty($_REQUEST['sell_price']) && $_REQUEST['sell_price'] > 0) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['sell_price']),2,'.',''),'0') : $current_bid;
 $sell_subtotal1 = $sell_amount1 * $sell_price1;
 $sell_fee_amount1 = ($user_fee_ask * 0.01) * $sell_subtotal1;
 $sell_total1 = round($sell_subtotal1 - $sell_fee_amount1,2,PHP_ROUND_HALF_UP);
@@ -78,7 +78,7 @@ if ($buy && !is_array(Errors::$errors)) {
 	$buy_market_price1 = (!empty($_REQUEST['buy_market_price']));
 	$buy_price1 = ($buy_market_price1) ? $current_ask : $buy_price1;
 	$buy_stop = (!empty($_REQUEST['buy_stop']));
-	$buy_stop_price1 = ($buy_stop) ? floatval(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']),2,'.','')) : false;
+	$buy_stop_price1 = ($buy_stop) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['buy_stop_price']),2,'.',''),'0') : false;
 	$buy_limit = (!empty($_REQUEST['buy_limit']));
 	$buy_limit = (!$buy_stop && !$buy_market_price1) ? 1 : $buy_limit;
 	
@@ -131,7 +131,7 @@ if ($sell && !is_array(Errors::$errors)) {
 	$sell_market_price1 = (!empty($_REQUEST['sell_market_price']));
 	$sell_price1 = ($sell_market_price1) ? $current_bid : $sell_price1;
 	$sell_stop = (!empty($_REQUEST['sell_stop']));
-	$sell_stop_price1 = ($sell_stop) ? floatval(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']),2,'.','')) : false;
+	$sell_stop_price1 = ($sell_stop) ? rtrim(number_format(preg_replace("/[^0-9.]/", "",$_REQUEST['sell_stop_price']),2,'.',''),'0') : false;
 	$sell_limit = (!empty($_REQUEST['sell_limit']));
 	$sell_limit = (!$sell_stop && !$sell_market_price1) ? 1 : $sell_limit;
 	
