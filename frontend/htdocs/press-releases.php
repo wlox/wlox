@@ -5,15 +5,12 @@ $page1 = (!empty($_REQUEST['page'])) ? ereg_replace("[^0-9]", "",$_REQUEST['page
 $bypass = !empty($_REQUEST['bypass']);
 
 API::add('News','get',array(1));
-$query = API::send();
-$total = $query['News']['get']['results'][0];
-
 API::add('News','get',array(false,$page1,10));
-API::add('Transactions','pagination',array('press-releases.php',$page1,$total,10,5,false));
 $query = API::send();
 
-$news = $query['News']['get']['results'][0];
-$pagination = $query['Transactions']['pagination']['results'][0];
+$total = $query['News']['get']['results'][0];
+$news = $query['News']['get']['results'][1];
+$pagination = Content::pagination('press-releases.php',$page1,$total,10,5,false);
 
 $page_title = Lang::string('news');
 
