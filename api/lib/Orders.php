@@ -583,17 +583,15 @@ class Orders {
 		$subtotal = $amount * (($stop_price > 0 && !($price) > 0) ? $stop_price : $price);
 		$fee_amount = ($fee * 0.01) * $subtotal;
 		$total = ($buy) ? round($subtotal + $fee_amount,2,PHP_ROUND_HALF_UP) : $subtotal - $fee_amount;
-		$edit_old_fiat = ($orig_order) ? round(($orig_order['btc'] * $orig_order['btc_price']) + (($orig_order['btc'] * $orig_order['btc_price']) * ($fee * 0.01)),2,PHP_ROUND_HALF_UP) : 0; 
-		$edit_old_btc = ($orig_order) ? $orig_order['btc'] : 0;
 		$user_id = (!$user_id) ? User::$info['id'] : $user_id;
 		
 		if ($price == $stop_price)
 			$price = 0;
 		
-		if (($buy && ($total - $edit_old_fiat) > $user_available) || (!$buy && ($amount - $edit_old_btc) > $user_available))
+		if (($buy && $total > $user_available) || (!$buy && $amount > $user_available))
 			return array('error'=>array('message'=>Lang::string('buy-errors-balance-too-low'),'code'=>'ORDER_BALANCE_TOO_LOW'));
 
-		if (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd || $subtotal < 0.00000001 || $price > 9999999999999999)
+		if (($subtotal * $currency_info['usd_ask']) < $CFG->orders_min_usd || $subtotal < 0.00000001 || $price > 9999999999999999 || ($buy ? (($amount * $current_ask) < 0.01) : (($amount * $current_bid) < 0.01)))
 			return array('error'=>array('message'=>str_replace('[amount]',number_format(($CFG->orders_min_usd/$currency_info['usd_ask']),2),str_replace('[fa_symbol]',$currency_info['fa_symbol'],Lang::string('buy-errors-too-little'))),'code'=>'ORDER_UNDER_MINIMUM'));
 		
 		if ((($buy && $stop_price > 0 && $stop_price <= $current_ask) || (!$buy && $stop_price >= $current_bid)) && $stop_price > 0)
@@ -710,12 +708,12 @@ class Orders {
 		$triggered_rows = false;
 		
 		if (!empty($on_hold['BTC']['total']))
-			$this_btc_on_hold = ($edit_id > 0 && !$buy) ? $on_hold['BTC']['total'] - $amount : $on_hold['BTC']['total'];
+			$this_btc_on_hold = ($edit_id > 0 && !$buy) ? max($on_hold['BTC']['total'] - $orig_order['btc'],0) : $on_hold['BTC']['total'];
 		else
 			$this_btc_on_hold = 0;
 		
 		if (!empty($on_hold[strtoupper($currency1)]['total']))
-			$this_fiat_on_hold = ($edit_id > 0 && $buy) ? $on_hold[strtoupper($currency1)]['total'] - (($amount * $orig_order['btc_price']) + (($amount * $orig_order['btc_price']) * ($fee * 0.01))) : $on_hold[strtoupper($currency1)]['total'];
+			$this_fiat_on_hold = ($edit_id > 0 && $buy) ? max($on_hold[strtoupper($currency1)]['total'] - (($orig_order['btc'] * $orig_order['btc_price']) + (($orig_order['btc'] * $orig_order['btc_price']) * ($fee * 0.01))),0) : $on_hold[strtoupper($currency1)]['total'];
 		else 
 			$this_fiat_on_hold = 0;
 			
