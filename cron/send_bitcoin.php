@@ -4,7 +4,7 @@ echo "Beginning Send Bitcoin processing...".PHP_EOL;
 
 include 'common.php';
 
-$sql = "SELECT requests.site_user, requests.amount, requests.send_address, requests.id, site_users_balances.balance, site_users_balances.id AS balance_id FROM requests LEFT JOIN site_users_balances ON (site_users_balances.site_user = requests.site_user AND site_users_balances.currency = requests.currency) WHERE requests.request_status = {$CFG->request_pending_id} AND requests.currency = {$CFG->btc_currency_id} AND requests.request_type = {$CFG->request_withdrawal_id}".(($CFG->withdrawals_btc_manual_approval == 'Y') ? " AND requests.approved = 'Y'" : '');
+$sql = "SELECT requests.site_user, requests.amount, requests.send_address, requests.id, site_users_balances.balance, site_users_balances.id AS balance_id FROM requests LEFT JOIN site_users ON (requests.site_user = site_users.id) LEFT JOIN site_users_balances ON (site_users_balances.site_user = requests.site_user AND site_users_balances.currency = requests.currency) WHERE requests.request_status = {$CFG->request_pending_id} AND requests.currency = {$CFG->btc_currency_id} AND requests.request_type = {$CFG->request_withdrawal_id}".(($CFG->withdrawals_btc_manual_approval == 'Y') ? " AND (requests.approved = 'Y' OR site_users.trusted = 'Y')" : '');
 $result = db_query_array($sql);
 if (!$result) {
 	echo 'done'.PHP_EOL;
