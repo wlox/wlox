@@ -189,7 +189,7 @@ if ($total_received > 0) {
 	$warm_wallet_a['address'] = $warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
-	if (($reserve['hot_wallet_btc'] + $total_received) > $CFG->bitcoin_reserve_min && $warm_wallet) {
+	if (($reserve['hot_wallet_btc'] + $total_received) > $CFG->bitcoin_reserve_min && $warm_wallet && $reserve_surplus > 0) {
 		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
 		$transferred = 0;
@@ -213,7 +213,7 @@ if ($total_received > 0) {
 		}
 	}
 }
-elseif ($reserve['hot_wallet_btc'] > $CFG->bitcoin_reserve_min && $warm_wallet) {
+elseif ($reserve['hot_wallet_btc'] > $CFG->bitcoin_reserve_min && $warm_wallet && $reserve_surplus > 0) {
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
 	$warm_wallet_a['address'] = $warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
