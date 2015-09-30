@@ -9,10 +9,10 @@ include 'common.php';
 echo "Beginning Historical Data processing...".PHP_EOL;
 
 // QUANDL HISTORICAL DATA
-$currency = 'USD';
-$exchange = 'BTCE';
+$currency = 'BTCUSD';
+$exchange = 'BITFINEX';
 
-$data = file_get_contents('http://www.quandl.com/api/v1/datasets/BITCOIN/'.$exchange.$currency.'.csv?trim_start=2011-01-01');
+$data = file_get_contents('https://www.quandl.com/api/v3/datasets/'.$exchange.'/'.$currency.'.csv?trim_start=2011-01-01');
 $data1 = explode("\n",$data);
 if ($data1) {
 	$i = 1;
@@ -33,10 +33,10 @@ if ($data1) {
 		$result = db_query_array($sql);
 		
 		if (!$result) {
-			db_insert('historical_data',array('date'=>$row1[0],strtolower($currency)=>$row1[4]));
+			db_insert('historical_data',array('date'=>$row1[0],'usd'=>$row1[4]));
 		}
 		else {
-			db_update('historical_data',$result[0]['id'],array(strtolower($currency)=>$row1[4]));
+			db_update('historical_data',$result[0]['id'],array('usd'=>$row1[4]));
 		}
 		
 		$i++;
