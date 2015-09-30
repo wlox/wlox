@@ -157,12 +157,15 @@ foreach ($transactions as $t_id) {
 			}
 			
 			db_insert('bitcoind_log',array('transaction_id'=>$transaction['txid'],'amount'=>$hot_wallet_in,'date'=>date('Y-m-d H:i:s')));
+			$sql = 'UPDATE status SET hot_wallet_notified = "N" WHERE id = 1';
+			db_query($sql);
 		}
 	}
 }
 
-$havelock_warm_wallet = $CFG->bitcoin_warm_wallet_address;
-$reserve_surplus = Status::getReserveSurplus();
+$warm_wallet = $CFG->bitcoin_warm_wallet_address;
+$reserve = Status::getReserveSurplus();
+$reserve_surplus = $reserve['surplus'] + $total_received;
 echo 'Reserve surplus: '.sprintf("%.8f", $reserve_surplus).PHP_EOL;
 
 /*
@@ -174,7 +177,7 @@ if ($total_received > 0 || $reserve_surplus > $CFG->bitcoin_reserve_min) {
 	$result1 = curl_exec($ch);
 	$result = json_decode($result1,true);
 	curl_close($ch);
-	$havelock_warm_wallet = $result['address'];
+	$warm_wallet = $result['address'];
 }
 */
 
@@ -183,10 +186,10 @@ if ($total_received > 0) {
 	$update = Status::sumFields(array('hot_wallet_btc'=>$total_received,'total_btc'=>$total_received));
 	
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
-	$warm_wallet_a['address'] = $havelock_warm_wallet;
+	$warm_wallet_a['address'] = $warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
-	if ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
+	if (($reserve['hot_wallet_btc'] + $total_received) > $CFG->bitcoin_reserve_min && $warm_wallet) {
 		$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);
 		$response = $bitcoin->sendfrom($CFG->bitcoin_accountname,$warm_wallet_a['address'],floatval($reserve_surplus));
 		$transferred = 0;
@@ -210,9 +213,9 @@ if ($total_received > 0) {
 		}
 	}
 }
-elseif ($reserve_surplus > $CFG->bitcoin_reserve_min && $havelock_warm_wallet) {
+elseif ($reserve['hot_wallet_btc'] > $CFG->bitcoin_reserve_min && $warm_wallet) {
 	//$warm_wallet_a = BitcoinAddresses::getWarmWallet();
-	$warm_wallet_a['address'] = $havelock_warm_wallet;
+	$warm_wallet_a['address'] = $warm_wallet;
 	$hot_wallet_a = BitcoinAddresses::getHotWallet();
 	
 	$bitcoin->walletpassphrase($CFG->bitcoin_passphrase,3);

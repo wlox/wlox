@@ -74,11 +74,11 @@ class Status{
 		$reserve_ratio = ($CFG->bitcoin_reserve_ratio) ? $CFG->bitcoin_reserve_ratio : '0';
 		$sending_fee = ($CFG->bitcoin_sending_fee) ? $CFG->bitcoin_sending_fee : '0';
 	
-		$sql = 'SELECT (hot_wallet_btc - (total_btc * '.$reserve_ratio.') - pending_withdrawals - '.$sending_fee.') AS surplus FROM status WHERE id = 1';
+		$sql = 'SELECT (hot_wallet_btc - ((total_btc * '.$reserve_ratio.') + pending_withdrawals) - '.$sending_fee.') AS surplus, hot_wallet_btc FROM status WHERE id = 1';
 		$result = db_query_array($sql);
 		if (!$result)
 			return 0;
 	
-		return $result[0]['surplus'];
+		return $result[0];
 	}
 }

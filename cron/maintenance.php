@@ -74,17 +74,32 @@ if ($result) {
 
 // notify pending withdrawals
 if ($CFG->email_notify_fiat_withdrawals == 'Y') {
+	$reserve = Status::getReserveSurplus();
+	$hot_wallet_notified = 'N';
 	$sql = 'SELECT 1 FROM requests WHERE notified = 0 AND request_type = '.$CFG->request_widthdrawal_id.' AND request_status = '.$CFG->request_pending_id.' AND `date` < DATE_SUB(DATE_ADD(NOW(), INTERVAL '.((($CFG->timezone_offset)/60)/60).' HOUR), INTERVAL 5 MINUTE) AND done != \'Y\' LIMIT 0,1';
 	$result = db_query_array($sql);
 	
-	if ($result) {
+	if ($reserve['surplus'] < 0) {
+		$sql = 'SELECT hot_wallet_notified FROM status WHERE id = 1 LIMIT 0,1';
+		$result1 = db_query_array($sql);
+		$hot_wallet_notified = $result1[0]['hot_wallet_notified'];
+	}
+	
+	if ($result || ($hot_wallet_notified == 'N' && $reserve['surplus'] < 0)) {
 		$sql = 'SELECT ROUND(SUM(requests.amount),2) AS amount, LOWER(currencies.currency) AS currency FROM requests LEFT JOIN currencies ON (currencies.id = requests.currency) WHERE requests.request_type = '.$CFG->request_widthdrawal_id.' AND requests.request_status = '.$CFG->request_pending_id.' AND requests.done != \'Y\' GROUP BY requests.currency';
 		$result = db_query_array($sql);
 		
-		if ($result) {
+		if ($result || $reserve['surplus'] < 0) {
 			$info['pending_withdrawals'] = '';
-			foreach ($result as $row) {
-				$info['pending_withdrawals'] .= strtoupper($row['currency']).': '.$row['amount'].'<br/>';
+			
+			if ($reserve['surplus'] < 0) {
+				$info['pending_withdrawals'] .= 'Hot Wallet Deficit: '.abs($reserve['surplus']).'<br/>';
+			}
+			
+			if ($result) {
+				foreach ($result as $row) {
+					$info['pending_withdrawals'] .= strtoupper($row['currency']).': '.$row['amount'].'<br/>';
+				}
 			}
 			
 			$CFG->language = 'en';
@@ -92,6 +107,9 @@ if ($CFG->email_notify_fiat_withdrawals == 'Y') {
 			Email::send($CFG->form_email,$CFG->contact_email,$email['title'],$CFG->form_email_from,false,$email['content'],$info);
 			
 			$sql = 'UPDATE requests SET notified = 1 WHERE notified = 0';
+			db_query($sql);
+			
+			$sql = 'UPDATE status SET hot_wallet_notified = "Y" WHERE id = 1';
 			db_query($sql);
 		}
 	}
