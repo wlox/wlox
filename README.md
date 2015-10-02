@@ -64,7 +64,7 @@ Once you have managed to install and access **backstage2**, log in using admin/a
 **Global App Settings**
 - **Application Timezone:** The default timezone of WLOX (the frontend will be seen in each user's timezone).
 - **BTC Miner's Fee:** The fee for sending Bitcoin, collected by the network. We recommend 0.001.
-- **Currency Conversion Fee (%):** A number between 0 and 100 (decimals allowed). The fee collected by WLOX when a trade happens accross currencies.
+- **Currency Conversion Fee (%):** A number between 0 and 100 (decimals allowed). The fee collected by WLOX when a trade happens across currencies.
 - **Exchange's Name:** For example 'MyExchange'. Will be used in place of [exchange_name] in site content.
 - **Fiat Withdrawal Fee:** Not implemented. Leave at 0 for now, unless you want to develop this feature!
 - **Min. Order Amnt. (USD):** The minimum order that can be placed. 
