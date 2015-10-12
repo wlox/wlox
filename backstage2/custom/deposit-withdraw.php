@@ -106,7 +106,7 @@ if ($_REQUEST['withadrawals'] && !is_array($download->errors)) {
 						foreach ($row['id'] as $i => $val) {
 							$narrative[] = '#'.$val.' @'.$row['date'][$i];
 						}
-						$_SESSION['export_withdrawals'][] = array($row['escrow_account'],$account_num,array_sum($row['amount']),'1BTCXE: '.implode(', ',$narrative));
+						$_SESSION['export_withdrawals'][] = array($row['escrow_account'],$account_num,array_sum($row['amount']),$CFG->exchange_name.': '.implode(', ',$narrative));
 					}
 				}
 				
