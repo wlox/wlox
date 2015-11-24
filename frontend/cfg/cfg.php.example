@@ -1,0 +1,9 @@
+<?php
+
+class object {}
+$CFG = new object ( );
+$CFG->api_url = 'http://your.api.server/api.php';
+$CFG->auth_login_url = 'http://your.auth.server/login.php';
+$CFG->auth_verify_token_url = 'http://your.auth.server/verify_token.php';
+
+?>
