@@ -1,0 +1,24 @@
+HTML, BODY, DIV, SPAN, APPLET, OBJECT, IFRAME,
+H1, H2, H3, H4, H5, H6, P, BLOCKQUOTE, PRE,
+A, ABBR, ACRONYM, ADDRESS, BIG, CITE, CODE,
+DEL, DFN, EM, FONT, IMG, INS, KBD, Q, S, SAMP,
+SMALL, STRIKE, STRONG, B, SUB, SUP, TT, VAR,
+DL, DT, DD, OL, UL, LI,
+FIELDSET, FORM, LABEL, LEGEND,
+TABLE, CAPTION, TBODY, TFOOT, THEAD, TR, TH, TD
+									{ margin:0;padding:0;border:0;outline:0;
+									/*font-weight:inherit;font-style:inherit;font-size:100%;font-family:inherit;
+									vertical-align:baseline*/ }
+
+:focus								{ outline:0 } /* Scoate patratul din jurul link-ului focusat */
+
+OL, UL								{ list-style:none }
+
+TABLE								{ border-collapse:separate;border-spacing:0 } /* Trebuie pus in markup cellspacing="0" */
+
+CAPTION, TH, TD						{ text-align:left;font-weight:normal }
+
+BLOCKQUOTE:before, BLOCKQUOTE:after,
+Q:before, Q:after					{ content:"" }
+
+BLOCKQUOTE, Q						{ quotes: "" "" }

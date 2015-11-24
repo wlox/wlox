@@ -1,0 +1,16 @@
+.checkbox{padding:0 !important;border:0 !important;background:transparent !important;}
+.grid_select{padding:0 !important;border:0 !important;background:transparent !important;margin:0;}
+.file_manager table td.navigator,.flow_chart table td.navigator{height:500px;overflow-y:scroll;}
+.file_manager table td.navigator{width:140%;display:table-cell;margin:0 -30px;}
+.file_manager table td.tree{height:500px;width:80%;display:table-cell;margin:0;}
+.file_manager table{background-color: #F6FCEA;}
+form input{position:relative;}
+form select{position:relative;}
+form .area input{margin-left:250px;}
+form .area select{margin-left:250px;}
+form .record_item {margin-left:248px;}
+.form .cats_ul .checkbox{margin-top:0px;margin-left:0px;}
+.form_filters #button{left:0px !important;}
+.form_filters .checkbox{margin-top:0;}
+#loading_mask{zoom:1;top:0;left:0;}
+.area .group ul li {margin-left:0;}

@@ -1,0 +1,35 @@
+Variables
+[next friday],[+1 day], etc - you can do anything that is parsed by strtotime
+[variable] - A variable from the current table row.
+[table.column,table.column] - In this case, it will get the second table.column using the first as f_id and so on.
+[variable++] - You can increment or decrement variables.
+[table.column,table.column|modifier1|modifier2] - Extra join clauses can be added like this. Modifiers:
+-closest_date: Will sort dates by closest to current date (for status indicators).
+-last_id: Uses last id returned in formula to make join on = id.
+
+System Variables
+[cfg::variable] - Loads $CFG->variable
+
+Javascript Functions - can go in the $jscript argument - no handler needed
+operation(example:[field]+[field])
+getValue([field])
+displayIf([field to check],"value to check for")
+
+Indicator Conditions (PHP Conditional or MySql Conditional)
+** if [run_in_sql] selected, SQL will attempt to plug in each condition in the database and return a row **
+** to include fields from other tables in coditionals, put them in [] and include join path **
+if (x) {
+	return y;
+}
+elseif(w) {
+	return z;
+}
+
+User Account Page: current_url=my-account&action=form&is_tab=1
+
+Classes:
+Textbox: narrow,wide
+Group: nav
+Checkbox: strech_label
+Areas: box_left, box_right, box, three_quarters_left, three_quarters_right, quarter_left, quarter_right 
+
