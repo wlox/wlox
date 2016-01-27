@@ -1,0 +1,4 @@
+Header add Access-Control-Allow-Origin "*"
+RewriteEngine on
+RewriteBase /api/
+RewriteRule ^([a-z/-]*)$ index.php?endpoint=$1&%{QUERY_STRING} [L,QSA]

@@ -1,0 +1,24 @@
+.tabs .ui-state-hover { border-top:2px solid #D2FF00;margin-top:-2px;padding-top:1px;}
+.tabs ul li a:hover{margin:0;border-top:0;}
+.tabs ul{height:42px;overflow:hidden;}
+.checkbox{padding:0 !important;border:0 !important;background:transparent !important;}
+.grid_select{padding:0 !important;border:0 !important;background:transparent !important;margin:0;}
+.cats_ul li label{padding-left:7px;top:-4px;}
+.cats_ul li input{top:-6px; left:5px;}
+.file_manager table td.navigator,.flow_chart table td.navigator{height:500px;}
+.file_manager table td.tree{height:500px;}
+.file_manager table td.navigator .folder_container .folder{margin-left:0;}
+.file_manager table td.navigator .file_container .file{margin-left:0;}
+form .record_item {margin-top:-13px;}
+form input{position:relative;}
+form select{position:relative;}
+form .area input{margin-left:250px;}
+form .area select{margin-left:250px;}
+form .record_item {margin-left:248px;}
+.form .cats_ul .checkbox{margin-top:0px;margin-left:8px;}
+.form_filters input,.form_filters select{left:250px;}
+.form_filters #button{left:0px !important;}
+.form_filters .checkbox{margin-top:0;}
+#loading_mask{zoom:1;top:0;left:0;}
+.group ul li {margin-left:-40px;}
+.area .group ul li {margin-left:0;}

@@ -1,0 +1,8 @@
+<?php
+class object {}
+$CFG = new object ( );
+$CFG->dbhost = "";
+$CFG->dbname = "";
+$CFG->dbuser = "";
+$CFG->dbpass = "";
+?>
